@@ -1,0 +1,602 @@
+{
+  "index.md": {
+    "icon": "lucide/house",
+    "subtitle": "What CAPTF is and where to start"
+  },
+  "getting-started/quick-start.md": {
+    "icon": "lucide/rocket",
+    "subtitle": "No cloud account needed"
+  },
+  "concepts/architecture.md": {
+    "icon": "lucide/blocks",
+    "subtitle": "Manager, runner Jobs and state"
+  },
+  "concepts/kinds.md": {
+    "icon": "lucide/shapes",
+    "subtitle": "The three Terraform kinds"
+  },
+  "reference/glossary.md": {
+    "icon": "lucide/book-a",
+    "subtitle": "Terms used across the docs"
+  },
+  "concepts/security-model.md": {
+    "icon": "lucide/shield-check",
+    "subtitle": "Trust boundaries and guards"
+  },
+  "operator-guide/limitations.md": {
+    "icon": "lucide/triangle-alert",
+    "subtitle": "Gaps to know before you adopt"
+  },
+  "operator-guide/compatibility.md": {
+    "icon": "lucide/git-compare",
+    "subtitle": "Supported versions and runtimes"
+  },
+  "user-guide/identities.md": {
+    "icon": "lucide/key-round",
+    "subtitle": "Point clusters at credentials"
+  },
+  "user-guide/variables.md": {
+    "icon": "lucide/sliders-horizontal",
+    "subtitle": "Pass inputs to a module"
+  },
+  "user-guide/clusterclass.md": {
+    "icon": "lucide/copy",
+    "subtitle": "Reuse one cluster shape"
+  },
+  "user-guide/machine-pools.md": {
+    "icon": "lucide/boxes",
+    "subtitle": "Scale groups of machines"
+  },
+  "user-guide/job-tuning.md": {
+    "icon": "lucide/gauge",
+    "subtitle": "Resources, deadlines and retries"
+  },
+  "concepts/drift-and-health.md": {
+    "icon": "lucide/heart-pulse",
+    "subtitle": "How CAPTF notices changes"
+  },
+  "user-guide/drift.md": {
+    "icon": "lucide/scan-search",
+    "subtitle": "Turn on drift checks"
+  },
+  "user-guide/remediation.md": {
+    "icon": "lucide/stethoscope",
+    "subtitle": "Replace unhealthy machines"
+  },
+  "concepts/approvals/README.md": {
+    "icon": "lucide/clipboard-check",
+    "subtitle": "Gate changes behind a review"
+  },
+  "user-guide/plan-approval.md": {
+    "icon": "lucide/circle-check",
+    "subtitle": "Gate destructive or manual applies"
+  },
+  "concepts/approvals/manual-approval.md": {
+    "icon": "lucide/hand",
+    "subtitle": "Approve by annotating the object"
+  },
+  "concepts/approvals/fingerprint.md": {
+    "icon": "lucide/fingerprint",
+    "subtitle": "What an approval is tied to"
+  },
+  "concepts/approvals/destructive-guard.md": {
+    "icon": "lucide/shield-alert",
+    "subtitle": "Extra check for plans that delete"
+  },
+  "concepts/approvals/limits.md": {
+    "icon": "lucide/octagon-alert",
+    "subtitle": "What an approval cannot promise"
+  },
+  "concepts/deletion/README.md": {
+    "icon": "lucide/trash-2",
+    "subtitle": "How a cluster goes away"
+  },
+  "concepts/deletion/order.md": {
+    "icon": "lucide/list-ordered",
+    "subtitle": "Which object goes first"
+  },
+  "concepts/deletion/destroy-job.md": {
+    "icon": "lucide/bomb",
+    "subtitle": "The Job that tears down infra"
+  },
+  "concepts/deletion/namespaces.md": {
+    "icon": "lucide/folder-x",
+    "subtitle": "Deleting inside a dying namespace"
+  },
+  "concepts/deletion/cleanup.md": {
+    "icon": "lucide/brush-cleaning",
+    "subtitle": "What is removed after destroy"
+  },
+  "cloud-modules/README.md": {
+    "icon": "lucide/cloud",
+    "subtitle": "Five clouds and a no-op set"
+  },
+  "cloud-modules/shared-behavior.md": {
+    "icon": "lucide/layers",
+    "subtitle": "What every cloud module does"
+  },
+  "cloud-modules/aws/README.md": {
+    "icon": "lucide/cloud",
+    "subtitle": "NLB, EC2, Auto Scaling groups"
+  },
+  "cloud-modules/aws/cluster.md": {
+    "icon": "lucide/network",
+    "subtitle": "VPC, load balancer, IAM"
+  },
+  "cloud-modules/aws/machine.md": {
+    "icon": "lucide/server",
+    "subtitle": "One EC2 instance"
+  },
+  "cloud-modules/aws/machinepool.md": {
+    "icon": "lucide/boxes",
+    "subtitle": "Auto Scaling group of nodes"
+  },
+  "cloud-modules/gcp/README.md": {
+    "icon": "lucide/cloud-cog",
+    "subtitle": "Proxy NLB, VMs, instance groups"
+  },
+  "cloud-modules/gcp/cluster.md": {
+    "icon": "lucide/network",
+    "subtitle": "VPC, firewall, load balancer"
+  },
+  "cloud-modules/gcp/machine.md": {
+    "icon": "lucide/server",
+    "subtitle": "One Compute Engine VM"
+  },
+  "cloud-modules/gcp/machinepool.md": {
+    "icon": "lucide/boxes",
+    "subtitle": "Managed instance group"
+  },
+  "cloud-modules/azure/README.md": {
+    "icon": "lucide/cloudy",
+    "subtitle": "Standard LB, VMs, scale sets"
+  },
+  "cloud-modules/azure/cluster.md": {
+    "icon": "lucide/network",
+    "subtitle": "VNet, security group, LB"
+  },
+  "cloud-modules/azure/machine.md": {
+    "icon": "lucide/server",
+    "subtitle": "One virtual machine"
+  },
+  "cloud-modules/azure/machinepool.md": {
+    "icon": "lucide/boxes",
+    "subtitle": "Virtual machine scale set"
+  },
+  "cloud-modules/oci/README.md": {
+    "icon": "lucide/database",
+    "subtitle": "Network LB, instances, pools"
+  },
+  "cloud-modules/oci/cluster.md": {
+    "icon": "lucide/network",
+    "subtitle": "VCN, subnets, load balancer"
+  },
+  "cloud-modules/oci/machine.md": {
+    "icon": "lucide/server",
+    "subtitle": "One compute instance"
+  },
+  "cloud-modules/oci/machinepool.md": {
+    "icon": "lucide/boxes",
+    "subtitle": "Instance pool of nodes"
+  },
+  "cloud-modules/openstack/README.md": {
+    "icon": "lucide/container",
+    "subtitle": "Octavia LB, Nova servers"
+  },
+  "cloud-modules/openstack/cluster.md": {
+    "icon": "lucide/network",
+    "subtitle": "Network, router, Octavia LB"
+  },
+  "cloud-modules/openstack/machine.md": {
+    "icon": "lucide/server",
+    "subtitle": "One Nova server"
+  },
+  "getting-started/first-module.md": {
+    "icon": "lucide/puzzle",
+    "subtitle": "Write, lint and package a module"
+  },
+  "concepts/inputs.md": {
+    "icon": "lucide/workflow",
+    "subtitle": "Pipeline, exports, user variables"
+  },
+  "module-author/contract/v1alpha1/README.md": {
+    "icon": "lucide/file-json",
+    "subtitle": "The module contract at a glance"
+  },
+  "module-author/contract/v1alpha1/common.md": {
+    "icon": "lucide/list-checks",
+    "subtitle": "Rules shared by every role"
+  },
+  "module-author/contract/v1alpha1/cluster.md": {
+    "icon": "lucide/network",
+    "subtitle": "Inputs and outputs for clusters"
+  },
+  "module-author/contract/v1alpha1/machine.md": {
+    "icon": "lucide/server",
+    "subtitle": "Inputs and outputs for machines"
+  },
+  "module-author/contract/v1alpha1/machinepool.md": {
+    "icon": "lucide/boxes",
+    "subtitle": "Inputs and outputs for pools"
+  },
+  "module-author/image-contract.md": {
+    "icon": "lucide/package",
+    "subtitle": "Paths and labels an image needs"
+  },
+  "module-author/contract/v1alpha1/CHANGELOG.md": {
+    "icon": "lucide/history",
+    "subtitle": "Contract changes by version"
+  },
+  "module-author/contract/README.md": {
+    "icon": "lucide/files",
+    "subtitle": "Contract versions in one table"
+  },
+  "module-author/runtime-environment.md": {
+    "icon": "lucide/terminal",
+    "subtitle": "What a module sees at run time"
+  },
+  "module-author/design-patterns.md": {
+    "icon": "lucide/ruler",
+    "subtitle": "Patterns that keep modules safe"
+  },
+  "module-author/tfcapi-lint.md": {
+    "icon": "lucide/spell-check",
+    "subtitle": "Check a module for contract errors"
+  },
+  "module-author/control-planes/README.md": {
+    "icon": "lucide/crown",
+    "subtitle": "Wire a module to a control plane"
+  },
+  "module-author/control-planes/kubeadm.md": {
+    "icon": "lucide/ship-wheel",
+    "subtitle": "Requirements for kubeadm"
+  },
+  "module-author/control-planes/rke2.md": {
+    "icon": "lucide/mountain",
+    "subtitle": "Requirements for RKE2"
+  },
+  "module-author/control-planes/checklist.md": {
+    "icon": "lucide/list-todo",
+    "subtitle": "Check a module is ready"
+  },
+  "operator-guide/installation.md": {
+    "icon": "lucide/download",
+    "subtitle": "Install the manager"
+  },
+  "operator-guide/configuration.md": {
+    "icon": "lucide/settings",
+    "subtitle": "Tune the manager's behavior"
+  },
+  "operator-guide/upgrades.md": {
+    "icon": "lucide/circle-arrow-up",
+    "subtitle": "Move to a new release safely"
+  },
+  "operator-guide/rbac.md": {
+    "icon": "lucide/user-lock",
+    "subtitle": "Permissions CAPTF needs"
+  },
+  "operator-guide/secrets.md": {
+    "icon": "lucide/vault",
+    "subtitle": "Every Secret CAPTF reads or writes"
+  },
+  "operator-guide/multi-tenancy.md": {
+    "icon": "lucide/users",
+    "subtitle": "Isolate teams on one manager"
+  },
+  "operator-guide/production-readiness.md": {
+    "icon": "lucide/badge-check",
+    "subtitle": "Checklist before you go live"
+  },
+  "operator-guide/observability.md": {
+    "icon": "lucide/chart-line",
+    "subtitle": "Metrics, alerts and events"
+  },
+  "concepts/approvals/operating.md": {
+    "icon": "lucide/toggle-right",
+    "subtitle": "Run the approval gates"
+  },
+  "concepts/approvals/other-manual-actions.md": {
+    "icon": "lucide/pointer",
+    "subtitle": "Other annotations you can set"
+  },
+  "operator-guide/disaster-recovery.md": {
+    "icon": "lucide/hard-drive",
+    "subtitle": "Plan for lost state or clusters"
+  },
+  "operator-guide/runbooks/state-restore.md": {
+    "icon": "lucide/archive-restore",
+    "subtitle": "Recover from a versioned backup"
+  },
+  "operator-guide/runbooks/total-state-loss.md": {
+    "icon": "lucide/import",
+    "subtitle": "Rebuild state by import"
+  },
+  "operator-guide/runbooks/move.md": {
+    "icon": "lucide/move-right",
+    "subtitle": "Move clusters between managers"
+  },
+  "concepts/deletion/move.md": {
+    "icon": "lucide/arrow-right-left",
+    "subtitle": "What a move deletes on purpose"
+  },
+  "operator-guide/troubleshooting/README.md": {
+    "icon": "lucide/life-buoy",
+    "subtitle": "Find the cause of a problem"
+  },
+  "operator-guide/runbooks/README.md": {
+    "icon": "lucide/book-open-check",
+    "subtitle": "Start from what you see"
+  },
+  "concepts/jobs/troubleshooting.md": {
+    "icon": "lucide/hourglass",
+    "subtitle": "Read the wait reason"
+  },
+  "operator-guide/troubleshooting/conditions.md": {
+    "icon": "lucide/badge-info",
+    "subtitle": "Every reason, cause and fix"
+  },
+  "operator-guide/troubleshooting/events.md": {
+    "icon": "lucide/bell",
+    "subtitle": "Every event and what it means"
+  },
+  "operator-guide/runbooks/job-failures.md": {
+    "icon": "lucide/circle-x",
+    "subtitle": "Find why a Job failed"
+  },
+  "operator-guide/runbooks/slow-jobs.md": {
+    "icon": "lucide/timer",
+    "subtitle": "Find why a Job is slow"
+  },
+  "operator-guide/runbooks/reconcile-errors.md": {
+    "icon": "lucide/refresh-cw-off",
+    "subtitle": "Fix errors from the reconciler"
+  },
+  "operator-guide/runbooks/state-unreadable.md": {
+    "icon": "lucide/file-warning",
+    "subtitle": "Recover state that will not load"
+  },
+  "operator-guide/runbooks/stale-lock.md": {
+    "icon": "lucide/lock-keyhole",
+    "subtitle": "Clear a lock left behind"
+  },
+  "operator-guide/runbooks/size-limits.md": {
+    "icon": "lucide/ruler-dimension-line",
+    "subtitle": "Fix state or plan too large"
+  },
+  "concepts/deletion/troubleshooting.md": {
+    "icon": "lucide/trash",
+    "subtitle": "Find what blocks a delete"
+  },
+  "concepts/deletion/held.md": {
+    "icon": "lucide/circle-pause",
+    "subtitle": "Why a deletion is held"
+  },
+  "operator-guide/runbooks/stuck-destroy.md": {
+    "icon": "lucide/bug",
+    "subtitle": "Unstick a destroy that hangs"
+  },
+  "concepts/deletion/manual-finalizer.md": {
+    "icon": "lucide/scissors",
+    "subtitle": "Last-resort finalizer removal"
+  },
+  "operator-guide/runbooks/identity-and-credentials.md": {
+    "icon": "lucide/id-card",
+    "subtitle": "Fix credential and identity errors"
+  },
+  "operator-guide/runbooks/webhook-unavailable.md": {
+    "icon": "lucide/plug-zap",
+    "subtitle": "Recover a failing webhook"
+  },
+  "concepts/lifecycle.md": {
+    "icon": "lucide/refresh-cw",
+    "subtitle": "From object change to infra"
+  },
+  "concepts/state.md": {
+    "icon": "lucide/database",
+    "subtitle": "Where Terraform state lives"
+  },
+  "concepts/secret-management/README.md": {
+    "icon": "lucide/lock",
+    "subtitle": "Every secret CAPTF handles"
+  },
+  "concepts/secret-management/state.md": {
+    "icon": "lucide/file-lock",
+    "subtitle": "How state Secrets are stored"
+  },
+  "concepts/secret-management/backups.md": {
+    "icon": "lucide/database-backup",
+    "subtitle": "Back up and restore state"
+  },
+  "concepts/secret-management/credentials.md": {
+    "icon": "lucide/key",
+    "subtitle": "How credentials reach a Job"
+  },
+  "concepts/secret-management/run-inputs.md": {
+    "icon": "lucide/file-key",
+    "subtitle": "Where inputs live and for how long"
+  },
+  "concepts/secret-management/job.md": {
+    "icon": "lucide/cog",
+    "subtitle": "Secrets inside the runner Pod"
+  },
+  "concepts/secret-management/lifecycle.md": {
+    "icon": "lucide/route",
+    "subtitle": "Secrets through create to delete"
+  },
+  "concepts/secret-management/operator-files.md": {
+    "icon": "lucide/folder-key",
+    "subtitle": "Credentials, RBAC, keys, backups"
+  },
+  "concepts/secret-management/security.md": {
+    "icon": "lucide/shield",
+    "subtitle": "Risks and how to reduce them"
+  },
+  "concepts/jobs/README.md": {
+    "icon": "lucide/square-stack",
+    "subtitle": "How runner Jobs are managed"
+  },
+  "concepts/jobs/naming.md": {
+    "icon": "lucide/tag",
+    "subtitle": "How Jobs are named and kept"
+  },
+  "concepts/jobs/operations.md": {
+    "icon": "lucide/split",
+    "subtitle": "How apply or destroy is picked"
+  },
+  "concepts/jobs/retries.md": {
+    "icon": "lucide/rotate-cw",
+    "subtitle": "How failed Jobs are retried"
+  },
+  "concepts/jobs/deadlines.md": {
+    "icon": "lucide/alarm-clock",
+    "subtitle": "Time limits on Jobs and locks"
+  },
+  "concepts/jobs/leases.md": {
+    "icon": "lucide/ticket",
+    "subtitle": "One operation per object at a time"
+  },
+  "concepts/jobs/cache-lag.md": {
+    "icon": "lucide/clock-fading",
+    "subtitle": "Why the manager sees stale data"
+  },
+  "concepts/jobs/state-lock.md": {
+    "icon": "lucide/lock-keyhole-open",
+    "subtitle": "How locks work and go stale"
+  },
+  "concepts/jobs/leader-election.md": {
+    "icon": "lucide/vote",
+    "subtitle": "What happens on leader change"
+  },
+  "tags.md": {
+    "icon": "lucide/tags",
+    "subtitle": "Browse pages by topic"
+  },
+  "reference/annotations-labels.md": {
+    "icon": "lucide/bookmark",
+    "subtitle": "Keys CAPTF reads and sets"
+  },
+  "reference/clusterctl-variables.md": {
+    "icon": "lucide/variable",
+    "subtitle": "Variables for clusterctl templates"
+  },
+  "reference/conditions.md": {
+    "icon": "lucide/list-checks",
+    "subtitle": "Every status condition"
+  },
+  "reference/events.md": {
+    "icon": "lucide/calendar-clock",
+    "subtitle": "Every event the manager emits"
+  },
+  "reference/alerts.md": {
+    "icon": "lucide/siren",
+    "subtitle": "Shipped alert rules"
+  },
+  "reference/metrics.md": {
+    "icon": "lucide/chart-column",
+    "subtitle": "Every Prometheus metric"
+  },
+  "reference/manager-flags.md": {
+    "icon": "lucide/flag",
+    "subtitle": "Command-line flags and defaults"
+  },
+  "concepts/jobs/schedules.md": {
+    "icon": "lucide/repeat",
+    "subtitle": "How often objects are requeued"
+  },
+  "reference/environment.md": {
+    "icon": "lucide/variable",
+    "subtitle": "Variables set in the Job"
+  },
+  "reference/runner-cli.md": {
+    "icon": "lucide/square-terminal",
+    "subtitle": "Runner commands and exit codes"
+  },
+  "reference/tfcapi-lint-cli.md": {
+    "icon": "lucide/scan-line",
+    "subtitle": "Lint flags and rule IDs"
+  },
+  "developer-guide/contributing.md": {
+    "icon": "lucide/git-pull-request",
+    "subtitle": "Set up, build and send a change"
+  },
+  "developer-guide/testing.md": {
+    "icon": "lucide/flask-conical",
+    "subtitle": "Run unit and cluster tests"
+  },
+  "developer-guide/documentation.md": {
+    "icon": "lucide/pencil-line",
+    "subtitle": "Write and check these docs"
+  },
+  "developer-guide/releasing.md": {
+    "icon": "lucide/package-check",
+    "subtitle": "Cut a release"
+  },
+  "reference/make-targets.md": {
+    "icon": "lucide/hammer",
+    "subtitle": "Every make target"
+  },
+  "reference/third-party-licenses.md": {
+    "icon": "lucide/scale",
+    "subtitle": "Licenses of bundled software"
+  },
+  "developer-guide/docs-workflow.md": {
+    "icon": "lucide/git-pull-request",
+    "subtitle": "From preview to pull request"
+  },
+  "developer-guide/website.md": {
+    "icon": "lucide/layout-template",
+    "subtitle": "Landing page, blog, nav and theme"
+  },
+  "cloud-modules/noop/README.md": {
+    "icon": "lucide/flask-conical",
+    "subtitle": "Real plans and state, no cloud"
+  },
+  "cloud-modules/noop/cluster.md": {
+    "icon": "lucide/network",
+    "subtitle": "A stand-in load balancer"
+  },
+  "cloud-modules/noop/machine.md": {
+    "icon": "lucide/server",
+    "subtitle": "A stand-in instance per Machine"
+  },
+  "cloud-modules/noop/machinepool.md": {
+    "icon": "lucide/boxes",
+    "subtitle": "A stand-in group per MachinePool"
+  },
+  "reference/resources/README.md": {
+    "icon": "lucide/layers",
+    "subtitle": "Every kind, field by field"
+  },
+  "reference/resources/common-fields.md": {
+    "icon": "lucide/component",
+    "subtitle": "Fields the module kinds share"
+  },
+  "reference/resources/terraformcluster.md": {
+    "icon": "lucide/network",
+    "subtitle": "One workload cluster"
+  },
+  "reference/resources/terraformclustertemplate.md": {
+    "icon": "lucide/copy",
+    "subtitle": "A TerraformCluster to clone"
+  },
+  "reference/resources/terraformmachine.md": {
+    "icon": "lucide/server",
+    "subtitle": "One Machine's infrastructure"
+  },
+  "reference/resources/terraformmachinetemplate.md": {
+    "icon": "lucide/copy",
+    "subtitle": "A TerraformMachine to clone"
+  },
+  "reference/resources/terraformmachinepool.md": {
+    "icon": "lucide/boxes",
+    "subtitle": "One native scaling group"
+  },
+  "reference/resources/terraformmachinepooltemplate.md": {
+    "icon": "lucide/copy",
+    "subtitle": "A TerraformMachinePool to clone"
+  },
+  "reference/resources/terraformclusteridentity.md": {
+    "icon": "lucide/key-round",
+    "subtitle": "Credentials and who may use them"
+  }
+}

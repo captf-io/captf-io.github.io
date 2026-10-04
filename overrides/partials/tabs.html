@@ -1,0 +1,44 @@
+{#-
+  The theme's tabs partial (Zensical 0.0.67), limited to the docs: the tab
+  row is the second tier of the header (overrides/partials/header.html) and
+  lists tabs only on pages under docs/, and only the nav items whose first
+  page is under docs/ (so the Blog section, which the blog plugin needs in
+  the nav, gets no tab). A tab's first page is found as tabs-item.html does:
+  through a section's index page, or its first child, one level down.
+
+  The <nav> itself is rendered on every page, empty outside docs/ (and
+  hidden by extra.css): instant navigation swaps this component only where
+  the current page has it, so leaving it out of the home page would leave
+  the docs without tabs after clicking through from there.
+
+  After the tabs, at the row's end, a chip naming the module contract
+  version, linking to its changelog ([project.extra.tabs.contract]);
+  extra.css shows it only on windows wide enough to fit it beside every
+  tab. Tab icons come from tabs-item.html.
+-#}
+{% import "partials/tabs-item.html" as item with context %}
+{%- set url = page.url if page is defined and page and page.url is defined and page.url else "" -%}
+<nav class="md-tabs" aria-label="{{ lang.t('tabs') }}" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      {% if url[:5] == "docs/" %}
+        {% for nav_item in nav.items %}
+          {%- set first = nav_item -%}
+          {%- if first.children -%}{%- set first = first.children | first -%}{%- endif -%}
+          {%- if first.children -%}{%- set first = first.children | first -%}{%- endif -%}
+          {%- set first_url = first.url if first.url is defined and first.url else "" -%}
+          {% if first_url[:5] == "docs/" %}
+            {{ item.render(nav_item) }}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    </ul>
+    {%- set chip = config.extra.tabs.contract if config.extra.tabs is defined and config.extra.tabs.contract is defined else none -%}
+    {% if chip and url[:5] == "docs/" %}
+      <a class="captf-tabs-chip" href="{{ chip.href | url }}" aria-label="{{ chip.note }} {{ chip.label }}: changelog">
+        {% include ".icons/" ~ chip.icon ~ ".svg" %}
+        <span class="captf-tabs-chip__label">{{ chip.label }}</span>
+      </a>
+    {% endif %}
+  </div>
+</nav>

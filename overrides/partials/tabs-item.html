@@ -1,0 +1,54 @@
+{#-
+  The theme's tabs-item partial (Zensical 0.0.67), plus, for each tab:
+  the Lucide icon that [project.extra.sections] in zensical.toml gives
+  the top-level section's title, the title, and the section's short label
+  (the title if it has none). extra.css shows the parts that fit the
+  window (section 1b); aria-label keeps the full title as the link's name
+  whichever are shown. The rest is the theme's, unchanged: a section's tab
+  links to its index page or its first child, one level down at a time.
+-#}
+{% macro render_content(nav_item, ref) %}
+  {% set ref = ref or nav_item %}
+  {%- set sections = config.extra.sections if config.extra.sections is defined else {} -%}
+  {%- set title = ref.title or nav_item.title -%}
+  {%- set section = sections[title] if title in sections else {} -%}
+  {% if section.icon is defined %}
+    {% include ".icons/" ~ section.icon ~ ".svg" %}
+  {% endif %}
+  <span class="md-tabs__label">{{ title }}</span>
+  <span class="md-tabs__short">{{ section.short if section.short is defined else title }}</span>
+{% endmacro %}
+{% macro render(nav_item, ref) %}
+  {% set ref = ref or nav_item %}
+  {% set class = "md-tabs__item" %}
+  {% if ref.active %}
+    {% set class = class ~ " md-tabs__item--active" %}
+  {% endif %}
+  {% if nav_item.children %}
+    {% set _ = namespace(index = none) %}
+      {% if "navigation.indexes" in features %}
+      {% for item in nav_item.children %}
+        {% if item.is_index and _.index is none %}
+          {% set _.index = item %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {% set index = _.index %}
+    {% set first = index or nav_item.children | first %}
+    {% if first.children %}
+      {{ render(first, ref) }}
+    {% else %}
+      <li class="{{ class }}">
+        <a href="{{ first.url | url }}" class="md-tabs__link" aria-label="{{ ref.title or first.title }}"{% if ref.active %} aria-current="true"{% endif %}>
+          {{ render_content(first, ref) }}
+        </a>
+      </li>
+    {% endif %}
+  {% else %}
+    <li class="{{ class }}">
+      <a href="{{ nav_item.url | url }}" class="md-tabs__link" aria-label="{{ nav_item.title }}"{% if ref.active %} aria-current="true"{% endif %}>
+        {{ render_content(nav_item) }}
+      </a>
+    </li>
+  {% endif %}
+{% endmacro %}

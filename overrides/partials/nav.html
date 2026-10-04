@@ -1,0 +1,119 @@
+{#-
+  The theme's nav partial (Zensical 0.0.67): the primary navigation, which
+  is the left sidebar from 76.25em and the drawer below that. Four changes,
+  all seen only in the drawer (extra.css hides them on the sidebar):
+
+  - the title is the short brand (config.extra.brand), as in the header,
+    so it fits on one line;
+  - a close button (it matters on phones, where the drawer covers the whole
+    window and leaves nothing outside it to tap);
+  - under it, the site switch: Home, Docs and Blog, as in the header's site
+    bar, which is hidden below 45em. The active one is picked from the page
+    URL here and kept up to date by sitenav.js (it marks every
+    .captf-sitenav__link), since instant navigation keeps the drawer.
+
+  Below the switch, the list follows where the reader is:
+
+  - docs pages: the docs sections only (the blog's nav section is left
+    out);
+  - blog pages: the blog's section only, then its newest posts, which the
+    blog plugin keeps out of the nav ([[project.extra.recent_posts]] in
+    zensical.toml, written by tools/gen_blog_nav.py);
+  - the home page: its own sections, as anchors, from the `anchors:` list
+    in docs/index.md's front matter (the landing page has no Markdown
+    headings for a table of contents).
+
+  On the sidebar (76.25em and up) only the current section ever shows, so
+  this changes the drawer alone. A nav section counts as the blog's when
+  its first page is under blog/.
+
+  The repository widget is left out (the site has none). Re-copy from the
+  theme when upgrading Zensical.
+-#}
+{% import "partials/nav-item.html" as item with context %}
+{% set class = "md-nav md-nav--primary" %}
+{% if "navigation.tabs" in features %}
+  {% set class = class ~ " md-nav--lifted" %}
+{% endif %}
+{% if "toc.integrate" in features %}
+  {% set class = class ~ " md-nav--integrated" %}
+{% endif %}
+{%- set url = page.url if page is defined and page and page.url is defined and page.url else "" -%}
+{%- set site_links = [
+  {"name": "Home", "href": ".", "icon": "lucide/house", "active": url == "" and page is defined and page},
+  {"name": "Docs", "href": "docs/", "icon": "lucide/book-open-text", "active": url[:5] == "docs/"},
+  {"name": "Blog", "href": "blog/", "icon": "lucide/newspaper", "active": url[:5] == "blog/"},
+] -%}
+<nav class="{{ class }}" aria-label="{{ lang.t('nav') }}" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="{{ config.extra.homepage | d(nav.homepage.url, true) | url }}" class="md-nav__button md-logo" aria-label="{{ config.site_name }}" data-md-component="logo">
+      {% include "partials/logo.html" %}
+    </a>
+    {{ config.extra.brand or config.site_name }}
+  </label>
+  <label class="captf-drawer-close" for="__drawer" aria-label="Close navigation" tabindex="0">
+    {% include ".icons/lucide/x.svg" %}
+  </label>
+  <ul class="captf-drawer-sites" aria-label="Site">
+    {% for link in site_links %}
+      <li>
+        <a href="{{ link.href | url }}" class="captf-sitenav__link captf-drawer-sites__link{% if link.active %} captf-sitenav__link--active{% endif %}"{% if link.active %} aria-current="page"{% endif %}>
+          {% include ".icons/" ~ link.icon ~ ".svg" %}
+          {{ link.name }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+  {%- set area = "blog" if url[:5] == "blog/" else ("home" if url == "" else "docs") -%}
+  {%- set anchors = page.meta.anchors if area == "home" and page.meta and page.meta.anchors is defined else [] -%}
+  {% if anchors %}
+    <p class="captf-drawer-heading">On this page</p>
+    <ul class="md-nav__list captf-drawer-anchors" data-md-scrollfix>
+      {% for anchor in anchors %}
+        <li class="md-nav__item">
+          <a href="#{{ anchor.id }}" class="md-nav__link">
+            {% include ".icons/" ~ anchor.icon ~ ".svg" %}
+            <span class="md-ellipsis">
+              {{ anchor.title }}
+              <br>
+              <small>{{ anchor.subtitle }}</small>
+            </span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <ul class="md-nav__list" data-md-scrollfix>
+      {% for nav_item in nav.items %}
+        {%- set first = nav_item -%}
+        {%- if first.children -%}{%- set first = first.children | first -%}{%- endif -%}
+        {%- if first.children -%}{%- set first = first.children | first -%}{%- endif -%}
+        {%- if first.children -%}{%- set first = first.children | first -%}{%- endif -%}
+        {%- set first_url = first.url if first.url is defined and first.url else "" -%}
+        {% if (area == "blog") == (first_url[:5] == "blog/") %}
+          {% set path = "__nav_" ~ loop.index %}
+          {{ item.render(nav_item, path, 1) }}
+        {% endif %}
+      {% endfor %}
+    </ul>
+    {%- set recent = config.extra.recent_posts if area == "blog" and config.extra.recent_posts is defined else [] -%}
+    {% if recent %}
+      <p class="captf-drawer-heading">Recent posts</p>
+      <ul class="md-nav__list captf-drawer-posts">
+        {% for post in recent %}
+          {%- set current = url == post.href -%}
+          <li class="md-nav__item">
+            <a href="{{ post.href | url }}" class="md-nav__link{% if current %} md-nav__link--active{% endif %}"{% if current %} aria-current="page"{% endif %}>
+              {% include ".icons/lucide/file-text.svg" %}
+              <span class="md-ellipsis">
+                {{ post.title }}
+                <br>
+                <small><time datetime="{{ post.date }}">{{ post.when }}</time></small>
+              </span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endif %}
+</nav>

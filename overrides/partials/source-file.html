@@ -1,0 +1,51 @@
+{#-
+  The theme's source-file partial (Zensical 0.0.67), reworked: each fact
+  carries a visible label ("Updated", "Created", "By") instead of an
+  icon-only title, a page created and last updated on the same day shows
+  one date, and authors come from page metadata. Titles are dropped: the
+  theme turns them into JavaScript tooltips, which can outlive an instant
+  page change. This site is not a git repo, so tools/import_git_meta.py
+  copies each page's dates and authors from the original repo's history
+  into its front matter.
+-#}
+{% macro render_fact(icon, label, value) %}
+  <span class="md-source-file__fact">
+    <span class="md-icon" aria-hidden="true">
+      {% include ".icons/" ~ icon ~ ".svg" %}
+    </span>
+    <span class="captf-source__label">{{ label }}</span>
+    {{ value }}
+  </span>
+{% endmacro %}
+{% if page.meta %}
+  {% if page.meta.git_revision_date_localized %}
+    {% set updated = page.meta.git_revision_date_localized %}
+  {% elif page.meta.revision_date %}
+    {% set updated = page.meta.revision_date %}
+  {% endif %}
+  {% if page.meta.git_creation_date_localized %}
+    {% set created = page.meta.git_creation_date_localized %}
+  {% endif %}
+  {#- Blog posts list their authors (by key) in the blog's own sidebar card,
+      so only docs pages show them here. -#}
+  {% set is_post = page.authors is defined and page.authors %}
+  {% if git_info is defined and git_info %}
+    {% set authors = git_info["page_authors"] | map(attribute="name") | list %}
+  {% elif page.meta.authors and not is_post %}
+    {% set authors = page.meta.authors %}
+  {% endif %}
+{% endif %}
+{% if updated or created or authors %}
+  <aside class="md-source-file">
+    {% if updated %}
+      {{ render_fact("material/clock-edit-outline", "Updated", updated) }}
+    {% endif %}
+    {% if created and created != updated %}
+      {{ render_fact("material/clock-plus-outline", "Created", created) }}
+    {% endif %}
+    {% if authors %}
+      {% set icon = "material/account" if authors | length == 1 else "material/account-group" %}
+      {{ render_fact(icon, "By", authors | join(", ")) }}
+    {% endif %}
+  </aside>
+{% endif %}

@@ -1,0 +1,473 @@
+{#-
+  The captf.io landing page, ported from the Hugo site (captf-io.github.io:
+  layouts/home.html and its partials). Selected by `template: home.html` in
+  docs/index.md; the feature grid comes from that page's front matter. The
+  copy is mirrored from the org profile in captf-io/.github: keep it word
+  for word. Everything is under .captf-landing (landing.css), so nothing
+  leaks into the docs pages.
+
+  The theme's header, tabs, search and our footer stay. The two sidebars and
+  the article wrapper are replaced: `site_nav` renders only the drawer (the
+  navigation sidebar, shown on narrow windows only) and `container` renders
+  full-bleed sections.
+-#}
+{% extends "main.html" %}
+
+{% block extrahead %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ 'assets/stylesheets/landing.css' | url }}">
+  <link rel="apple-touch-icon" href="{{ 'assets/landing/apple-touch-icon.png' | url }}">
+{% endblock %}
+
+{#- The drawer only: on narrow windows the header's menu button opens the
+    primary navigation, as on every other page; from 76.25em, where it
+    would be the left sidebar, extra.css hides it (.captf-drawer-only). -#}
+{% block site_nav %}
+  <div class="md-sidebar md-sidebar--primary captf-drawer-only" data-md-component="sidebar" data-md-type="navigation">
+    <div class="md-sidebar__scrollwrap">
+      <div class="md-sidebar__inner">
+        {% include "partials/nav.html" %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block container %}
+{#- A 24px line icon in the diagram's stroke style, by name; it draws in
+    currentColor. terraform, opentofu and kubernetes are the Simple Icons
+    marks (simple-icons 15.22.0, CC0-1.0; the names are their owners'
+    trademarks). -#}
+{% macro glyph(name) -%}
+  {%- set paths = {
+    'globe': '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>',
+    'module': '<text x="12" y="16" text-anchor="middle" font-size="12.5" font-weight="800" fill="currentColor" stroke="none" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">.tf</text>',
+    'cluster': '<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>',
+    'lock': '<rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2"/>',
+    'pulse': '<path d="M3 12h4l2.5-6 5 12 2.5-6H21"/>',
+    'shield': '<path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.2-7.5 9.5-4.3-1.3-7.5-4.9-7.5-9.5V6z"/><path d="M8.8 12.2l2.2 2.2 4.4-4.6"/>',
+    'checks': '<path d="M4 6.5l1.6 1.6L8.8 5M4 12.5l1.6 1.6 3.2-3.1M4 18.5l1.6 1.6 3.2-3.1M11.5 7h8.5M11.5 13h8.5M11.5 19h8.5"/>',
+    'chart': '<path d="M3 20.5h18M6 17v-5M11 17V6M16 17v-8"/>',
+    'layers': '<path d="M12 3.5l8.5 4-8.5 4-8.5-4z"/><path d="M3.5 12l8.5 4 8.5-4M3.5 16.5l8.5 4 8.5-4"/>',
+    'link': '<path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/>',
+    'inbox': '<path d="M4 14v5.5h16V14M12 3.5v10.5M8 10l4 4 4-4"/>',
+    'terraform': '<path fill="currentColor" stroke="none" d="M1.44 0v7.575l6.561 3.79V3.787zm21.12 4.227l-6.561 3.791v7.574l6.56-3.787zM8.72 4.23v7.575l6.561 3.787V8.018zm0 8.405v7.575L15.28 24v-7.578z"/>',
+    'opentofu': '<path fill="currentColor" stroke="none" d="m10.184 23.25.002-.01-.033-.017-8.388-4.611a1.6841 1.6841 0 0 1-.873-1.475V6.864c0-.614.335-1.18.873-1.476l9.424-5.18a1.6868 1.6868 0 0 1 1.622 0l8.31 4.568.022.012.006.002-.004-.001 1.09.599c.538.296.873.862.873 1.476v10.273c0 .614-.335 1.179-.873 1.475l-8.388 4.611-.03.016-1.006.553c-.505.277-1.117.277-1.622 0l-1.003-.552-.002.01Zm.603-1.158-.005-.001.012.006c.252.123.55-.055.558-.338l.001-9.147c0-.141-.078-.272-.202-.34L2.763 7.661c-.259-.142-.576.045-.576.341v9.135c0 .141.077.272.201.34l8.394 4.613.005.002Zm.556-.327Zm0 0Zm-2.539-4.802-.005.003-1.959-1.031-.003-.004c.001-.003.001-.007.001-.01.023-.305.153-.525.346-.632.194-.107.45-.101.72.041.272.143.508.397.671.691.163.293.252.628.229.935v.007ZM5.71 15.177l-.005.002-1.96-1.031-.002-.004.001-.01c.022-.304.152-.524.346-.632.194-.107.449-.101.72.042.271.143.508.396.671.69.162.294.252.628.229.935v.008Zm14.981-8.999-.003-.018a.382.382 0 0 0-.191-.25l-8.31-4.567a.3883.3883 0 0 0-.374 0L3.503 5.91c-.162.089-.226.265-.193.423l.009.007-.009-.007c.022.1.083.194.183.253l8.32 4.572c.116.064.258.064.374 0l8.321-4.573c.151-.089.212-.256.183-.407Zm-17.37.16Zm-.002.002c0-.001-.003-.003-.005-.006-.002-.002-.004-.004-.004-.003l.009.009Zm-.467-1.56-.003.002c.002.004.005.006.005.006l-.002-.008Zm.007.007c-.001.001-.002.001-.003.001h-.002l.005-.001Z"/>',
+    'kubernetes': '<path fill="currentColor" stroke="none" d="M10.204 14.35l.007.01-.999 2.413a5.171 5.171 0 0 1-2.075-2.597l2.578-.437.004.005a.44.44 0 0 1 .484.606zm-.833-2.129a.44.44 0 0 0 .173-.756l.002-.011L7.585 9.7a5.143 5.143 0 0 0-.73 3.255l2.514-.725.002-.009zm1.145-1.98a.44.44 0 0 0 .699-.337l.01-.005.15-2.62a5.144 5.144 0 0 0-3.01 1.442l2.147 1.523.004-.002zm.76 2.75l.723.349.722-.347.18-.78-.5-.623h-.804l-.5.623.179.779zm1.5-3.095a.44.44 0 0 0 .7.336l.008.003 2.134-1.513a5.188 5.188 0 0 0-2.992-1.442l.148 2.615.002.001zm10.876 5.97l-5.773 7.181a1.6 1.6 0 0 1-1.248.594l-9.261.003a1.6 1.6 0 0 1-1.247-.596l-5.776-7.18a1.583 1.583 0 0 1-.307-1.34L2.1 5.573c.108-.47.425-.864.863-1.073L11.305.513a1.606 1.606 0 0 1 1.385 0l8.345 3.985c.438.209.755.604.863 1.073l2.062 8.955c.108.47-.005.963-.308 1.34zm-3.289-2.057c-.042-.01-.103-.026-.145-.034-.174-.033-.315-.025-.479-.038-.35-.037-.638-.067-.895-.148-.105-.04-.18-.165-.216-.216l-.201-.059a6.45 6.45 0 0 0-.105-2.332 6.465 6.465 0 0 0-.936-2.163c.052-.047.15-.133.177-.159.008-.09.001-.183.094-.282.197-.185.444-.338.743-.522.142-.084.273-.137.415-.242.032-.024.076-.062.11-.089.24-.191.295-.52.123-.736-.172-.216-.506-.236-.745-.045-.034.027-.08.062-.111.088-.134.116-.217.23-.33.35-.246.25-.45.458-.673.609-.097.056-.239.037-.303.033l-.19.135a6.545 6.545 0 0 0-4.146-2.003l-.012-.223c-.065-.062-.143-.115-.163-.25-.022-.268.015-.557.057-.905.023-.163.061-.298.068-.475.001-.04-.001-.099-.001-.142 0-.306-.224-.555-.5-.555-.275 0-.499.249-.499.555l.001.014c0 .041-.002.092 0 .128.006.177.044.312.067.475.042.348.078.637.056.906a.545.545 0 0 1-.162.258l-.012.211a6.424 6.424 0 0 0-4.166 2.003 8.373 8.373 0 0 1-.18-.128c-.09.012-.18.04-.297-.029-.223-.15-.427-.358-.673-.608-.113-.12-.195-.234-.329-.349-.03-.026-.077-.062-.111-.088a.594.594 0 0 0-.348-.132.481.481 0 0 0-.398.176c-.172.216-.117.546.123.737l.007.005.104.083c.142.105.272.159.414.242.299.185.546.338.743.522.076.082.09.226.1.288l.16.143a6.462 6.462 0 0 0-1.02 4.506l-.208.06c-.055.072-.133.184-.215.217-.257.081-.546.11-.895.147-.164.014-.305.006-.48.039-.037.007-.09.02-.133.03l-.004.002-.007.002c-.295.071-.484.342-.423.608.061.267.349.429.645.365l.007-.001.01-.003.129-.029c.17-.046.294-.113.448-.172.33-.118.604-.217.87-.256.112-.009.23.069.288.101l.217-.037a6.5 6.5 0 0 0 2.88 3.596l-.09.218c.033.084.069.199.044.282-.097.252-.263.517-.452.813-.091.136-.185.242-.268.399-.02.037-.045.095-.064.134-.128.275-.034.591.213.71.248.12.556-.007.69-.282v-.002c.02-.039.046-.09.062-.127.07-.162.094-.301.144-.458.132-.332.205-.68.387-.897.05-.06.13-.082.215-.105l.113-.205a6.453 6.453 0 0 0 4.609.012l.106.192c.086.028.18.042.256.155.136.232.229.507.342.84.05.156.074.295.145.457.016.037.043.09.062.129.133.276.442.402.69.282.247-.118.341-.435.213-.71-.02-.039-.045-.096-.065-.134-.083-.156-.177-.261-.268-.398-.19-.296-.346-.541-.443-.793-.04-.13.007-.21.038-.294-.018-.022-.059-.144-.083-.202a6.499 6.499 0 0 0 2.88-3.622c.064.01.176.03.213.038.075-.05.144-.114.28-.104.266.039.54.138.87.256.154.06.277.128.448.173.036.01.088.019.13.028l.009.003.007.001c.297.064.584-.098.645-.365.06-.266-.128-.537-.423-.608zM16.4 9.701l-1.95 1.746v.005a.44.44 0 0 0 .173.757l.003.01 2.526.728a5.199 5.199 0 0 0-.108-1.674A5.208 5.208 0 0 0 16.4 9.7zm-4.013 5.325a.437.437 0 0 0-.404-.232.44.44 0 0 0-.372.233h-.002l-1.268 2.292a5.164 5.164 0 0 0 3.326.003l-1.27-2.296h-.01zm1.888-1.293a.44.44 0 0 0-.27.036.44.44 0 0 0-.214.572l-.003.004 1.01 2.438a5.15 5.15 0 0 0 2.081-2.615l-2.6-.44-.004.005z"/>',
+    'scale': '<path d="M12 3.5v17M7.5 20.5h9M5 7h14M12 7V5.5"/><path d="M5 7l-2.5 6a2.5 2.5 0 0 0 5 0zM19 7l-2.5 6a2.5 2.5 0 0 0 5 0z"/>',
+    'home': '<path d="M3.5 11 12 4l8.5 7M6 9.5V20h12V9.5M10 20v-5h4v5"/>',
+    'job': '<circle cx="12" cy="12" r="8.5"/><path d="M12 12L12.0 3.5M12 12L18.6 6.7M12 12L20.3 13.9M12 12L15.7 19.7M12 12L8.3 19.7M12 12L3.7 13.9M12 12L5.4 6.7"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>',
+    'book': '<path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5zM12 6.5v13"/>',
+    'bolt': '<path d="M13 2.5 4.5 13.5H12l-1 8 8.5-11H12z"/>',
+    'github': '<path transform="translate(2 2) scale(1.25)" fill="currentColor" stroke="none" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>'
+  } -%}
+  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ paths[name] | safe }}</svg>
+{%- endmacro %}
+<div class="md-content captf-landing-content" data-md-component="content">
+<article class="captf-landing">
+<div class="hero-band">
+  <section class="hero hero-split wrap">
+    <div class="hero-copy">
+      <p class="eyebrow-pill">
+        <img src="{{ 'assets/brand/mark.svg' | url }}" alt="" width="18" height="18">
+        <span>Cluster API · Terraform · OpenTofu</span>
+      </p>
+      <h1 id="__skip"><span class="h1-line">Your modules</span> <span class="grad">are the provider.</span></h1>
+      <p class="lede">
+        Turn the Terraform and OpenTofu you already trust into Kubernetes clusters, on any platform.
+        No Go controller to write. No second copy of your infrastructure logic to keep in sync.
+      </p>
+      <p class="actions">
+        <a class="btn btn-primary" href="{{ 'docs/getting-started/quick-start/' | url }}">{{ glyph("bolt") }}<span>Get started</span></a>
+        <a class="btn" href="{{ 'docs/' | url }}">{{ glyph("book") }}<span>Read the docs</span></a>
+      </p>
+      <ul class="pills" aria-label="Works with">
+        <li class="pill-capi">{{ glyph("kubernetes") }}Cluster API provider</li>
+        <li class="pill-tofu">{{ glyph("opentofu") }}OpenTofu</li>
+        <li class="pill-tf">{{ glyph("terraform") }}Terraform</li>
+        <li class="pill-license">{{ glyph("scale") }}Apache 2.0</li>
+      </ul>
+    </div>
+    <figure class="hero-visual">
+      {#- The profile hero's visual (captf-io/.github, profile/assets/hero.svg):
+          a module, the Job that runs it, and the cluster it builds. -#}
+      <svg viewBox="640 112 500 228" role="img" aria-labelledby="hv-t">
+        <title id="hv-t">A Terraform module runs as a Kubernetes Job and builds a cluster</title>
+        <defs>
+          <linearGradient id="hv-wire" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#A974FF"/>
+            <stop offset="1" stop-color="#5B8CFF"/>
+          </linearGradient>
+        </defs>
+        <rect x="664" y="130" width="140" height="168" rx="14" fill="#141A38" stroke="#A974FF" stroke-opacity=".6"/>
+        <text x="680" y="156" class="hv-mono" font-size="13" fill="#A974FF">main.tf</text>
+        <g class="hv-mono" font-size="11.5">
+          <text x="680" y="184" fill="#5B8CFF">module</text><text x="730" y="184" fill="#FFD84D">"vpc"</text>
+          <text x="680" y="204" fill="#5B8CFF">resource</text>
+          <text x="690" y="222" fill="#C9D1F0">"server"</text>
+          <text x="680" y="242" fill="#5B8CFF">output</text>
+          <text x="690" y="260" fill="#C9D1F0">"endpoint"</text>
+          <rect class="hv-cursor" x="680" y="270" width="7" height="13" fill="#C9D1F0"/>
+        </g>
+        <path class="hv-wire" d="M806 214H824" stroke="url(#hv-wire)" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <circle cx="876" cy="214" r="50" fill="#1A2350" stroke="#5B8CFF" stroke-width="2"/>
+        <g class="hv-wheel" stroke="#8FB0FF" stroke-width="3" stroke-linecap="round" fill="none">
+          <line x1="876" y1="214" x2="876" y2="180"/>
+          <line x1="876" y1="214" x2="902.6" y2="192.8"/>
+          <line x1="876" y1="214" x2="909.1" y2="221.6"/>
+          <line x1="876" y1="214" x2="890.8" y2="244.6"/>
+          <line x1="876" y1="214" x2="861.2" y2="244.6"/>
+          <line x1="876" y1="214" x2="842.9" y2="221.6"/>
+          <line x1="876" y1="214" x2="849.4" y2="192.8"/>
+          <circle cx="876" cy="214" r="34" stroke-width="2.5"/>
+        </g>
+        <circle cx="876" cy="214" r="9" fill="#5B8CFF"/>
+        <text x="876" y="318" class="hv-label" text-anchor="middle">Job</text>
+        <path class="hv-wire" d="M928 214H958" stroke="url(#hv-wire)" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <g stroke-width="1.5">
+          <rect class="hv-node" x="964" y="138" width="44" height="44" rx="9" style="animation-delay:0s"/>
+          <rect class="hv-node" x="1016" y="138" width="44" height="44" rx="9" style="animation-delay:0.25s"/>
+          <rect class="hv-node" x="1068" y="138" width="44" height="44" rx="9" style="animation-delay:0.5s"/>
+          <rect class="hv-node" x="964" y="190" width="44" height="44" rx="9" style="animation-delay:0.75s"/>
+          <rect class="hv-node" x="1016" y="190" width="44" height="44" rx="9" style="animation-delay:1s"/>
+          <rect class="hv-node" x="1068" y="190" width="44" height="44" rx="9" style="animation-delay:1.25s"/>
+          <rect class="hv-node" x="964" y="242" width="44" height="44" rx="9" style="animation-delay:1.5s"/>
+          <rect class="hv-node" x="1016" y="242" width="44" height="44" rx="9" style="animation-delay:1.75s"/>
+          <rect class="hv-node" x="1068" y="242" width="44" height="44" rx="9" style="animation-delay:2s"/>
+        </g>
+        <text x="1038" y="318" class="hv-label" text-anchor="middle">Cluster</text>
+      </svg>
+    </figure>
+  </section>
+</div>
+
+<section class="wrap section" aria-labelledby="solves">
+  <p class="kicker">01 · What this solves</p>
+  <h2 id="solves">Cluster API moves fast. Its providers can't always keep up.</h2>
+  <p class="section-lede">
+    Every cloud needs its own Cluster API infrastructure provider: a Go controller that re-implements that cloud's API,
+    often maintained by a small team. When Cluster API ships a release, or your cloud launches something new,
+    you wait for that provider to catch up. On some clouds, that wait is a long one.
+  </p>
+  <div class="compare">
+    <div>
+      <h3><span class="tag">The usual way</span></h3>
+      <ul>
+        <li><strong>Someone rewrites the cloud in Go.</strong> Every instance type, network and load balancer the provider supports is code that a maintainer wrote, tested and has to keep working.</li>
+        <li><strong>Upgrades wait in line.</strong> A new Cluster API release, or a new feature from your cloud, reaches you only once the provider supports it.</li>
+        <li><strong>Your infrastructure lives twice.</strong> The Terraform your team trusts builds everything else, while clusters go through a separate code path with its own gaps.</li>
+      </ul>
+    </div>
+    <div>
+      <h3><span class="tag">With CAPTF</span></h3>
+      <ul>
+        <li><strong>The cloud is already covered.</strong> Terraform providers are maintained by, or with, the cloud vendors, and they tend to pick up new services quickly.</li>
+        <li><strong>Cluster API is tracked in one place.</strong> CAPTF keeps up with Cluster API once, for every platform, so a new release isn't waiting on a separate project per cloud.</li>
+        <li><strong>One source of truth.</strong> Your clusters are built by the same modules as the rest of your infrastructure, and reviewed the same way.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="aside-note">
+    <strong>This isn't a knock on the native providers.</strong> Their maintainers do careful, demanding work,
+    and if one already serves you well, keep using it. CAPTF is a different trade-off: it leans on the
+    Terraform ecosystem the clouds already maintain, so your platform isn't waiting on one project to move.
+  </p>
+</section>
+
+<section class="wrap section" aria-labelledby="how">
+  <p class="kicker">02 · How it works</p>
+  <h2 id="how">Your module, packaged, run and reconciled.</h2>
+  <p class="section-lede">
+    You already have the Terraform that builds your platform. <strong>CAPTF makes that module the provider.</strong>
+  </p>
+  <figure class="diagram">
+    <img src="{{ 'assets/landing/how-it-works.svg' | url }}" width="1200" height="330"
+      alt="How it works: write a Terraform or OpenTofu module, package it as an OCI image, CAPTF runs it as Kubernetes Jobs, and Cluster API gets a real cluster.">
+  </figure>
+
+  <div class="integrate">
+    <div>
+      <h3>One estate, not two</h3>
+      <p>
+        CAPTF doesn't sit off to the side of your Terraform. Its modules read from the infrastructure you already run,
+        your pipelines feed them, and the rest of your estate can read the clusters back. Clusters become one more part
+        of the same system, not a second one to keep in sync.
+      </p>
+      <ul class="points">
+        <li>
+          <span class="glyph">{{ glyph("link") }}</span>
+          <div>
+            <h4>Build on what's already there</h4>
+            <p>A CAPTF module is plain Terraform, so data sources and <code>terraform_remote_state</code> reach your existing network, DNS and IAM as they do in any root, using the credentials CAPTF hands the Job and the network access your cluster allows.</p>
+          </div>
+        </li>
+        <li>
+          <span class="glyph">{{ glyph("inbox") }}</span>
+          <div>
+            <h4>Fed by your pipelines</h4>
+            <p>Point <code>spec.variablesFrom</code> at a ConfigMap or Secret your existing tooling writes, and every key becomes a module variable. No copying values into YAML by hand.</p>
+          </div>
+        </li>
+        <li>
+          <span class="glyph">{{ glyph("lock") }}</span>
+          <div>
+            <h4>State your other roots can read</h4>
+            <p>Each cluster's state lives in a Kubernetes Secret written by Terraform's own <code>kubernetes</code> backend. Give another root read access to that namespace and it can read the cluster's outputs, like the control plane endpoint. The state holds sensitive inputs, so grant that access deliberately.</p>
+          </div>
+        </li>
+        <li>
+          <span class="glyph">{{ glyph("checks") }}</span>
+          <div>
+            <h4>Reviewed like every other change</h4>
+            <p>The same modules go through the same review. With manual approval, each cluster plan waits in <code>status.plan</code> until someone approves it, so cluster changes fit the workflow your team already trusts.</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div class="stack">
+      <div class="window">
+        <div class="window-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>machine/main.tf · reads your network</span><button type="button" class="copy">Copy</button></div>
+        <div class="captf-code"><pre tabindex="0"><code><span style="color: #FF79C6">data</span><span style="color: #F8F8F2"> </span><span style="color: #50FA7B">"terraform_remote_state"</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">"network"</span><span style="color: #F8F8F2"> {</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">backend</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #BD93F9">"gcs"</span>
+<span style="color: #F8F8F2">  </span><span style="color: #8BE9FD; font-style: italic">config</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> {</span>
+<span style="color: #F8F8F2">    </span><span style="color: #50FA7B">bucket</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #BD93F9">"acme-terraform"</span>
+<span style="color: #F8F8F2">    </span><span style="color: #50FA7B">prefix</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #BD93F9">"network/prod"</span>
+<span style="color: #F8F8F2">  }</span>
+<span style="color: #F8F8F2">}</span>
+
+<span style="color: #8BE9FD; font-style: italic">locals</span><span style="color: #F8F8F2"> {</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">network</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">data.terraform_remote_state.network.outputs</span>
+<span style="color: #F8F8F2">}</span>
+
+<span style="color: #FF79C6">resource</span><span style="color: #F8F8F2"> </span><span style="color: #50FA7B">"google_compute_instance"</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">"this"</span><span style="color: #F8F8F2"> {</span>
+<span style="color: #6272A4">  # ...</span>
+<span style="color: #F8F8F2">  </span><span style="color: #8BE9FD; font-style: italic">network_interface</span><span style="color: #F8F8F2"> {</span>
+<span style="color: #F8F8F2">    </span><span style="color: #50FA7B">subnetwork</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">local.network.private_subnetwork</span>
+<span style="color: #F8F8F2">  }</span>
+<span style="color: #F8F8F2">}</span></code></pre></div>
+      </div>
+      <div class="window">
+        <div class="window-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>platform/dns.tf · reads the cluster</span><button type="button" class="copy">Copy</button></div>
+        <div class="captf-code"><pre tabindex="0"><code><span style="color: #FF79C6">data</span><span style="color: #F8F8F2"> </span><span style="color: #50FA7B">"terraform_remote_state"</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">"cluster"</span><span style="color: #F8F8F2"> {</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">backend</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #BD93F9">"kubernetes"</span>
+<span style="color: #F8F8F2">  </span><span style="color: #8BE9FD; font-style: italic">config</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> {</span>
+<span style="color: #F8F8F2">    </span><span style="color: #50FA7B">namespace</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #BD93F9">"clusters"</span>
+<span style="color: #6272A4">    # The TerraformCluster's status.stateSecretSuffix</span>
+<span style="color: #F8F8F2">    </span><span style="color: #50FA7B">secret_suffix</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #BD93F9">"4f1c2a9e7b3d5a60-c"</span>
+<span style="color: #F8F8F2">    </span><span style="color: #50FA7B">config_path</span><span style="color: #F8F8F2">   </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #BD93F9">"~/.kube/config"</span>
+<span style="color: #F8F8F2">  }</span>
+<span style="color: #F8F8F2">}</span>
+
+<span style="color: #8BE9FD; font-style: italic">locals</span><span style="color: #F8F8F2"> {</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">cluster</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">data.terraform_remote_state.cluster.outputs</span>
+<span style="color: #F8F8F2">}</span>
+
+<span style="color: #FF79C6">resource</span><span style="color: #F8F8F2"> </span><span style="color: #50FA7B">"google_dns_record_set"</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">"api"</span><span style="color: #F8F8F2"> {</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">managed_zone</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">google_dns_managed_zone.internal.name</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">name</span><span style="color: #F8F8F2">         </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #BD93F9">"prod-api.internal.acme.example."</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">type</span><span style="color: #F8F8F2">         </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #BD93F9">"CNAME"</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">ttl</span><span style="color: #F8F8F2">          </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #FFB86C">300</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">rrdatas</span><span style="color: #F8F8F2">      </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> [</span><span style="color: #BD93F9">"${local.cluster.control_plane_endpoint.host}."</span><span style="color: #F8F8F2">]</span>
+<span style="color: #F8F8F2">}</span></code></pre></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap section" aria-labelledby="features">
+  <p class="kicker">03 · Features</p>
+  <h2 id="features">Why you should reach for CAPTF</h2>
+  <ul class="features">
+    {%- for f in page.meta.features %}
+    <li class="card">
+      <span class="glyph">{{ glyph(f.icon) }}</span>
+      <h3>{{ f.title }}</h3>
+      <p>{{ f.body | safe }}</p>
+      {%- if f.href %}
+      <a class="more" href="{{ f.href | url }}">{{ f.more }}</a>
+      {%- endif %}
+    </li>
+    {%- endfor %}
+  </ul>
+</section>
+
+<section class="wrap section" aria-labelledby="hood">
+  <p class="kicker">04 · Under the hood</p>
+  <h2 id="hood">Simple parts, stated plainly.</h2>
+  <p class="section-lede">Before you trust it with clusters, here's what actually runs, what you're trusting, and where the edges are.</p>
+  <div class="hood">
+    <article class="card">
+      <span class="glyph">{{ glyph("job") }}</span>
+      <h3>Architecture</h3>
+      <p>One manager Deployment runs the controllers and the validating webhooks; there are no mutating webhooks. Every apply, destroy, plan or drift check is its own Job in the object's namespace, the manager owns the retries, and state lives in a Secret beside the object.</p>
+      <a class="more" href="{{ 'docs/concepts/architecture/' | url }}">How it fits together</a>
+    </article>
+    <article class="card">
+      <span class="glyph">{{ glyph("shield") }}</span>
+      <h3>Security model</h3>
+      <p>The module image is the trust boundary. A <code>Terraform*</code> object effectively runs a Pod with its namespace's Secrets and the identity's cloud credentials, so decide carefully who may set <code>spec.source.image</code>, and keep tenants in separate namespaces.</p>
+      <a class="more" href="{{ 'docs/concepts/security-model/' | url }}">What you're trusting</a>
+    </article>
+    <article class="card">
+      <span class="glyph">{{ glyph("checks") }}</span>
+      <h3>Honest limits</h3>
+      <ul class="limits">
+        <li>Approval gates cluster applies only; machines and pools apply without a gate.</li>
+        <li>A gate is a review step, not a sandbox for a module you don't trust.</li>
+        <li>Pre-alpha: no release yet, and no end-to-end tests.</li>
+      </ul>
+      <a class="more" href="{{ 'docs/concepts/approvals/limits/' | url }}">Read the limits</a>
+    </article>
+  </div>
+</section>
+
+<section class="wrap section" aria-labelledby="moves">
+  <p class="kicker">05 · Get started</p>
+  <h2 id="moves">From module to cluster in three steps</h2>
+  <div class="reqs" aria-label="Before you start">
+    <div>{{ glyph("kubernetes") }}<p><b>Cluster API v1.14</b><span>Core, bootstrap and control-plane providers initialized (contract <code>v1beta2</code>).</span></p></div>
+    <div>{{ glyph("lock") }}<p><b>cert-manager</b><span><code>clusterctl init</code> installs it if it's missing.</span></p></div>
+    <div>{{ glyph("layers") }}<p><b>Terraform or OpenTofu 1.x</b><span>Carried in your module image; our base images bring either.</span></p></div>
+    <div>{{ glyph("cluster") }}<p><b>ClusterClass, if you use it</b><span>Turn on Cluster API's <code>ClusterTopology</code> feature gate.</span></p></div>
+  </div>
+  <p class="reqs-more"><a href="{{ 'docs/operator-guide/installation/' | url }}">Installation requirements</a></p>
+  <ol class="moves">
+    <li>
+      <p>Start from the Terraform you already have. A machine module takes the inputs CAPTF passes in and returns the outputs Cluster API needs:</p>
+      <div class="window">
+        <div class="window-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>main.tf</span><button type="button" class="copy">Copy</button></div>
+        <div class="captf-code"><pre tabindex="0"><code><span style="color: #FF79C6">resource</span><span style="color: #F8F8F2"> </span><span style="color: #50FA7B">"aws_instance"</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">"this"</span><span style="color: #F8F8F2"> {</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">ami</span><span style="color: #F8F8F2">              </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">var.ami</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">instance_type</span><span style="color: #F8F8F2">    </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">var.instance_type</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">subnet_id</span><span style="color: #F8F8F2">        </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">var.subnet_id</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">user_data_base64</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">var.bootstrap_data</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">tags</span><span style="color: #F8F8F2">             </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #50FA7B">merge</span><span style="color: #F8F8F2">(</span><span style="color: #8BE9FD; font-style: italic">var.captf_tags</span><span style="color: #F8F8F2">, { </span><span style="color: #50FA7B">Name</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">var.machine_name</span><span style="color: #F8F8F2"> })</span>
+<span style="color: #F8F8F2">}</span>
+
+<span style="color: #FF79C6">output</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">"provider_id"</span><span style="color: #F8F8F2"> {</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">value</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #BD93F9">"aws:///${aws_instance.this.availability_zone}/${aws_instance.this.id}"</span>
+<span style="color: #F8F8F2">}</span>
+<span style="color: #FF79C6">output</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">"addresses"</span><span style="color: #F8F8F2"> {</span>
+<span style="color: #F8F8F2">  </span><span style="color: #50FA7B">value</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> [{ </span><span style="color: #50FA7B">type</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #BD93F9">"InternalIP"</span><span style="color: #F8F8F2">, </span><span style="color: #50FA7B">address</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">aws_instance.this.private_ip</span><span style="color: #F8F8F2"> }]</span>
+<span style="color: #F8F8F2">}</span>
+<span style="color: #FF79C6">output</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">"failure_domain"</span><span style="color: #F8F8F2"> { </span><span style="color: #50FA7B">value</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">aws_instance.this.availability_zone</span><span style="color: #F8F8F2"> }</span>
+<span style="color: #FF79C6">output</span><span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">"interruptible"</span><span style="color: #F8F8F2"> { </span><span style="color: #50FA7B">value</span><span style="color: #F8F8F2"> </span><span style="color: #FF79C6">=</span><span style="color: #F8F8F2"> false }</span></code></pre></div>
+      </div>
+    </li>
+    <li>
+      <p>Package it on one of our base images, using its example <code>Dockerfile</code>:</p>
+      <div class="window">
+        <div class="window-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>terminal</span><button type="button" class="copy">Copy</button></div>
+        <div class="captf-code"><pre tabindex="0"><code>podman<span style="color: #F8F8F2"> </span>build<span style="color: #F8F8F2"> </span>--build-arg<span style="color: #F8F8F2"> </span><span style="color: #8BE9FD; font-style: italic">ROLE</span><span style="color: #FF79C6">=</span>machine<span style="color: #F8F8F2"> </span>-t<span style="color: #F8F8F2"> </span>registry.example.com/acme/machine:v1.0.0<span style="color: #F8F8F2"> </span>.</code></pre></div>
+      </div>
+    </li>
+    <li>
+      <p>Point Cluster API at the image:</p>
+      <div class="window">
+        <div class="window-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>machine-template.yaml</span><button type="button" class="copy">Copy</button></div>
+        <div class="captf-code"><pre tabindex="0"><code><span style="color: #FF79C6">apiVersion</span><span style="color: #F8F8F2">: infrastructure.cluster.x-k8s.io/v1alpha1</span>
+<span style="color: #FF79C6">kind</span><span style="color: #F8F8F2">: TerraformMachineTemplate</span>
+<span style="color: #FF79C6">metadata</span><span style="color: #F8F8F2">:</span>
+<span style="color: #F8F8F2">  </span><span style="color: #FF79C6">name</span><span style="color: #F8F8F2">: acme</span>
+<span style="color: #FF79C6">spec</span><span style="color: #F8F8F2">:</span>
+<span style="color: #F8F8F2">  </span><span style="color: #FF79C6">template</span><span style="color: #F8F8F2">:</span>
+<span style="color: #F8F8F2">    </span><span style="color: #FF79C6">spec</span><span style="color: #F8F8F2">:</span>
+<span style="color: #F8F8F2">      </span><span style="color: #FF79C6">source</span><span style="color: #F8F8F2">:</span>
+<span style="color: #F8F8F2">        </span><span style="color: #FF79C6">image</span><span style="color: #F8F8F2">: registry.example.com/acme/machine:v1.0.0</span></code></pre></div>
+      </div>
+    </li>
+  </ol>
+  <p class="moves-after">
+    That's the core of it: every machine stamped from that template is now built by your module.
+    <a href="{{ 'docs/getting-started/first-module/' | url }}">Your First Module</a> walks through it end to end.
+  </p>
+</section>
+
+<section class="wrap section" aria-labelledby="faq">
+  <p class="kicker">06 · FAQ</p>
+  <h2 id="faq">Questions you're probably asking</h2>
+  <div class="faq">
+    <details>
+      <summary>Do my existing modules work unchanged?</summary>
+      <p>Your infrastructure code does; the module around it needs to speak the contract. It takes the inputs CAPTF passes, like <code>machine_name</code> and <code>bootstrap_data</code>, returns the outputs Cluster API needs, like <code>provider_id</code> and <code>addresses</code>, and leaves the backend to CAPTF. <a href="{{ 'docs/module-author/tfcapi-lint/' | url }}"><code>tfcapi-lint</code></a> tells you what's missing, and <a href="{{ 'docs/module-author/contract/v1alpha1/' | url }}">the contract</a> spells it out.</p>
+    </details>
+    <details>
+      <summary>Does CAPTF replace CAPA, CAPZ or CAPG?</summary>
+      <p>No. It's one more infrastructure provider alongside them. If a native provider serves you well, keep it. CAPTF is for platforms that don't have one, or for teams that would rather drive clusters from the Terraform they already maintain.</p>
+    </details>
+    <details>
+      <summary>Terraform or OpenTofu?</summary>
+      <p>Either. Each module image carries its own runtime, Terraform 1.x or OpenTofu 1.x, and we publish a multi-arch base image for each.</p>
+    </details>
+    <details>
+      <summary>Where does the state live?</summary>
+      <p>In a Kubernetes Secret in the same namespace as the object, written by Terraform's <code>kubernetes</code> backend. It moves with <code>clusterctl move</code>, and the manager keeps backup copies you can restore from. <a href="{{ 'docs/concepts/state/' | url }}">More on state</a></p>
+    </details>
+    <details>
+      <summary>Do I need to write any Go?</summary>
+      <p>No. CAPTF is the infrastructure controller, and it's generic; everything specific to your platform stays in your Terraform or OpenTofu module.</p>
+    </details>
+    <details>
+      <summary>Can it run air-gapped?</summary>
+      <p>The module side can: bake a provider filesystem mirror into the image and a run needs no registry access. The images themselves still have to come from a registry your cluster can reach. <a href="{{ 'docs/module-author/image-contract/' | url }}">Image contract</a></p>
+    </details>
+    <details>
+      <summary>Is it ready for production?</summary>
+      <p>Not yet. CAPTF is pre-alpha: no release is published, and nothing has created a real cluster end to end. The <a href="{{ 'docs/operator-guide/production-readiness/' | url }}">production-readiness checklist</a> covers what a trial you intend to keep needs.</p>
+    </details>
+  </div>
+</section>
+
+<section class="wrap section">
+  <aside class="cta" aria-labelledby="early">
+    <div class="cta-copy">
+      <p class="status-pill"><span class="live" aria-hidden="true"></span>v1alpha1 · pre-alpha</p>
+      <h2 id="early">Get in <span class="grad">early.</span></h2>
+      <p>
+        CAPTF is pre-alpha: nothing is released yet, and its module contract is still open to change. If you have
+        Terraform that builds clusters, this is the moment to shape how CAPTF runs it.
+      </p>
+      <p class="actions">
+        <a class="btn btn-primary" href="{{ 'docs/getting-started/quick-start/' | url }}">{{ glyph("book") }}<span>Read the quick start</span></a>
+      </p>
+    </div>
+    <div class="window status-board">
+      <div class="window-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>where things stand</span></div>
+      <ul class="checklist">
+        <li class="done"><b>Module contract <code>v1alpha1</code></b><span>Frozen for implementation, still open to change. <a href="{{ 'docs/module-author/contract/v1alpha1/CHANGELOG/' | url }}">Changelog</a></span></li>
+        <li class="done"><b>Base images</b><span><code>terraform-base</code> 1.16 and <code>opentofu-base</code> 1.12, multi-arch, on GHCR.</span></li>
+        <li class="done"><b>No-op module images</b><span>Edge builds of all three roles, on GHCR.</span></li>
+        <li class="done"><b>The provider</b><span>Manager, webhooks and every kind, built and unit-tested.</span></li>
+        <li class="todo"><b>First release</b><span>Not published yet.</span></li>
+        <li class="todo"><b>End-to-end tests</b><span>No run has created a real cluster yet.</span></li>
+        <li class="todo"><b>A real cloud module</b><span>The first one to provision a cluster settles the contract.</span></li>
+      </ul>
+    </div>
+    <ul class="paths">
+      <li>
+        <a href="{{ 'docs/getting-started/quick-start/' | url }}">
+          <span class="glyph">{{ glyph("bolt") }}</span>
+          <span><b>Walk through the quick start</b><span>The whole flow with the no-op modules, from install to a reconciled cluster.</span></span>
+        </a>
+      </li>
+      <li>
+        <a href="{{ 'docs/getting-started/first-module/' | url }}">
+          <span class="glyph">{{ glyph("module") }}</span>
+          <span><b>Bring your own module</b><span>Your First Module packages a module and points Cluster API at it, end to end.</span></span>
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/captf-io/.github/blob/main/CONTRIBUTING.md">
+          <span class="glyph">{{ glyph("github") }}</span>
+          <span><b>Shape the contract</b><span>Tell us what your platform needs while the contract is still open to change.</span></span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+</section>
+</article>
+</div>
+{#- The Copy buttons in the code windows. Loaded here, in the body, so that it
+    also runs when the page is reached through instant navigation; the script
+    guards against binding twice. -#}
+<script src="{{ 'assets/javascripts/landing.js' | url }}"></script>
+{% endblock %}

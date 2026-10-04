@@ -1,0 +1,23 @@
+{
+  "name": "Cluster API Terraform",
+  "short_name": "CAPI Terraform",
+  "description": "Turn the Terraform and OpenTofu modules you already trust into Kubernetes clusters, on any platform.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#0A0D1C",
+  "theme_color": "#0A0D1C",
+  "icons": [
+    {
+      "src": "/assets/brand/mark.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/landing/apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "180x180"
+    }
+  ]
+}

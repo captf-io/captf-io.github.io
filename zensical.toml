@@ -1,0 +1,714 @@
+# captf.io, built with Zensical: the landing page, the documentation at
+# /docs/ and the blog at /blog/. Build with `make build`, preview with
+# `make serve`; `make help` for more.
+
+[project]
+site_name = "Cluster API Terraform"
+site_description = "Cluster API Provider Terraform. Your modules are the provider."
+site_url = "https://captf.io/"
+repo_url = "https://github.com/captf-io/captf-io.github.io"
+repo_name = "captf-io/captf-io.github.io"
+# Pages are Markdown under docs/; edit and view links open the page there.
+edit_uri = "edit/main/docs/"
+copyright = "Copyright &copy; The CAPTF Maintainers. Apache-2.0."
+site_dir = "site"
+extra_css = ["assets/stylesheets/extra.css"]
+# Break points in long identifiers in table cells (see the file).
+extra_javascript = ["assets/javascripts/tables.js", "assets/javascripts/sitenav.js", "assets/javascripts/doctabs.js"]
+
+# The book organized by reader and task: one tab per reader.
+nav = [
+  { "Overview" = [
+    "docs/index.md",
+    { "Quick Start" = "docs/getting-started/quick-start.md" },
+    { "Architecture" = "docs/concepts/architecture.md" },
+    { "The Kinds" = "docs/concepts/kinds.md" },
+    { "Glossary" = "docs/reference/glossary.md" },
+    { "Before You Adopt" = [
+      { "Security Model" = "docs/concepts/security-model.md" },
+      { "Known Limitations" = "docs/operator-guide/limitations.md" },
+      { "Compatibility" = "docs/operator-guide/compatibility.md" },
+    ] },
+  ] },
+  { "User Guide" = [
+    { "Identities and Credentials" = "docs/user-guide/identities.md" },
+    { "Module Variables" = "docs/user-guide/variables.md" },
+    { "Templates and ClusterClass" = "docs/user-guide/clusterclass.md" },
+    { "Machine Pools" = "docs/user-guide/machine-pools.md" },
+    { "Tuning Jobs" = "docs/user-guide/job-tuning.md" },
+    { "Drift and Health" = [
+      { "How Drift and Health Work" = "docs/concepts/drift-and-health.md" },
+      { "Configure Drift Detection" = "docs/user-guide/drift.md" },
+      { "Machine Remediation" = "docs/user-guide/remediation.md" },
+    ] },
+    { "Plan Approval" = [
+      "docs/concepts/approvals/README.md",
+      { "Approve a Plan" = "docs/user-guide/plan-approval.md" },
+      { "Manual Plan Approval" = "docs/concepts/approvals/manual-approval.md" },
+      { "What the Plan Hash Binds" = "docs/concepts/approvals/fingerprint.md" },
+      { "The Destructive-Plan Guard" = "docs/concepts/approvals/destructive-guard.md" },
+      { "What Approval Does Not Guarantee" = "docs/concepts/approvals/limits.md" },
+    ] },
+    { "Deleting Clusters" = [
+      "docs/concepts/deletion/README.md",
+      { "Order and Finalizers" = "docs/concepts/deletion/order.md" },
+      { "The Destroy Job" = "docs/concepts/deletion/destroy-job.md" },
+      { "Terminating Namespaces" = "docs/concepts/deletion/namespaces.md" },
+      { "Cleanup and Garbage Collection" = "docs/concepts/deletion/cleanup.md" },
+    ] },
+  ] },
+  { "Cloud Modules" = [
+    "docs/cloud-modules/README.md",
+    { "Shared Behavior" = "docs/cloud-modules/shared-behavior.md" },
+    { "AWS" = [
+      "docs/cloud-modules/aws/README.md",
+      { "Cluster" = "docs/cloud-modules/aws/cluster.md" },
+      { "Machine" = "docs/cloud-modules/aws/machine.md" },
+      { "MachinePool" = "docs/cloud-modules/aws/machinepool.md" },
+    ] },
+    { "Google Cloud" = [
+      "docs/cloud-modules/gcp/README.md",
+      { "Cluster" = "docs/cloud-modules/gcp/cluster.md" },
+      { "Machine" = "docs/cloud-modules/gcp/machine.md" },
+      { "MachinePool" = "docs/cloud-modules/gcp/machinepool.md" },
+    ] },
+    { "Azure" = [
+      "docs/cloud-modules/azure/README.md",
+      { "Cluster" = "docs/cloud-modules/azure/cluster.md" },
+      { "Machine" = "docs/cloud-modules/azure/machine.md" },
+      { "MachinePool" = "docs/cloud-modules/azure/machinepool.md" },
+    ] },
+    { "OCI" = [
+      "docs/cloud-modules/oci/README.md",
+      { "Cluster" = "docs/cloud-modules/oci/cluster.md" },
+      { "Machine" = "docs/cloud-modules/oci/machine.md" },
+      { "MachinePool" = "docs/cloud-modules/oci/machinepool.md" },
+    ] },
+    { "OpenStack" = [
+      "docs/cloud-modules/openstack/README.md",
+      { "Cluster" = "docs/cloud-modules/openstack/cluster.md" },
+      { "Machine" = "docs/cloud-modules/openstack/machine.md" },
+    ] },
+    { "No-op" = [
+      "docs/cloud-modules/noop/README.md",
+      { "Cluster" = "docs/cloud-modules/noop/cluster.md" },
+      { "Machine" = "docs/cloud-modules/noop/machine.md" },
+      { "MachinePool" = "docs/cloud-modules/noop/machinepool.md" },
+    ] },
+  ] },
+  { "Module Authors" = [
+    { "Your First Module" = "docs/getting-started/first-module.md" },
+    { "How Inputs Reach a Module" = "docs/concepts/inputs.md" },
+    { "Module Contract (v1alpha1)" = [
+      "docs/module-author/contract/v1alpha1/README.md",
+      { "Common" = "docs/module-author/contract/v1alpha1/common.md" },
+      { "Cluster Role" = "docs/module-author/contract/v1alpha1/cluster.md" },
+      { "Machine Role" = "docs/module-author/contract/v1alpha1/machine.md" },
+      { "MachinePool Role" = "docs/module-author/contract/v1alpha1/machinepool.md" },
+      { "Image Contract" = "docs/module-author/image-contract.md" },
+      { "Changelog" = "docs/module-author/contract/v1alpha1/CHANGELOG.md" },
+    ] },
+    { "Runtime Environment" = "docs/module-author/runtime-environment.md" },
+    { "Module Design Patterns" = "docs/module-author/design-patterns.md" },
+    { "Linting with tfcapi-lint" = "docs/module-author/tfcapi-lint.md" },
+    { "Control-Plane Integration" = [
+      "docs/module-author/control-planes/README.md",
+      { "KubeadmControlPlane" = "docs/module-author/control-planes/kubeadm.md" },
+      { "RKE2ControlPlane" = "docs/module-author/control-planes/rke2.md" },
+      { "Requirements Checklist" = "docs/module-author/control-planes/checklist.md" },
+    ] },
+  ] },
+  { "Operations" = [
+    { "Install and Configure" = [
+      { "Installation" = "docs/operator-guide/installation.md" },
+      { "Configuration" = "docs/operator-guide/configuration.md" },
+      { "Upgrades" = "docs/operator-guide/upgrades.md" },
+    ] },
+    { "Security and Access" = [
+      { "RBAC" = "docs/operator-guide/rbac.md" },
+      { "Secrets Inventory" = "docs/operator-guide/secrets.md" },
+      { "Multi-Tenancy" = "docs/operator-guide/multi-tenancy.md" },
+    ] },
+    { "Running in Production" = [
+      { "Production Readiness" = "docs/operator-guide/production-readiness.md" },
+      { "Observability" = "docs/operator-guide/observability.md" },
+    ] },
+    { "Gates and Manual Actions" = [
+      { "Operating the Gates" = "docs/concepts/approvals/operating.md" },
+      { "Other Manual Actions" = "docs/concepts/approvals/other-manual-actions.md" },
+    ] },
+    { "Backup and Recovery" = [
+      { "Disaster Recovery" = "docs/operator-guide/disaster-recovery.md" },
+      { "Restore State from a Backup" = "docs/operator-guide/runbooks/state-restore.md" },
+      { "Total State Loss and Import" = "docs/operator-guide/runbooks/total-state-loss.md" },
+      { "Move Clusters with clusterctl" = "docs/operator-guide/runbooks/move.md" },
+      { "What clusterctl move Deletes" = "docs/concepts/deletion/move.md" },
+    ] },
+  ] },
+  { "Troubleshooting" = [
+    "docs/operator-guide/troubleshooting/README.md",
+    { "Runbooks by Symptom" = "docs/operator-guide/runbooks/README.md" },
+    { "Nothing Is Happening" = "docs/concepts/jobs/troubleshooting.md" },
+    { "Every Condition" = "docs/operator-guide/troubleshooting/conditions.md" },
+    { "Every Event" = "docs/operator-guide/troubleshooting/events.md" },
+    { "Jobs" = [
+      { "Failing Jobs" = "docs/operator-guide/runbooks/job-failures.md" },
+      { "Slow Jobs" = "docs/operator-guide/runbooks/slow-jobs.md" },
+      { "Reconcile Errors" = "docs/operator-guide/runbooks/reconcile-errors.md" },
+    ] },
+    { "State" = [
+      { "Unreadable State" = "docs/operator-guide/runbooks/state-unreadable.md" },
+      { "Stale State Lock" = "docs/operator-guide/runbooks/stale-lock.md" },
+      { "Size Limits" = "docs/operator-guide/runbooks/size-limits.md" },
+    ] },
+    { "Deletion" = [
+      { "My Object Will Not Delete" = "docs/concepts/deletion/troubleshooting.md" },
+      { "Held Deletions" = "docs/concepts/deletion/held.md" },
+      { "Stuck Destroy" = "docs/operator-guide/runbooks/stuck-destroy.md" },
+      { "Stripping a Finalizer by Hand" = "docs/concepts/deletion/manual-finalizer.md" },
+    ] },
+    { "Access" = [
+      { "Identities and Credentials" = "docs/operator-guide/runbooks/identity-and-credentials.md" },
+      { "Webhook Unavailable" = "docs/operator-guide/runbooks/webhook-unavailable.md" },
+    ] },
+  ] },
+  { "How It Works" = [
+    { "The Reconcile Lifecycle" = "docs/concepts/lifecycle.md" },
+    { "Terraform State" = "docs/concepts/state.md" },
+    { "Secret Management" = [
+      "docs/concepts/secret-management/README.md",
+      { "Terraform State Secrets" = "docs/concepts/secret-management/state.md" },
+      { "Backups and Restore" = "docs/concepts/secret-management/backups.md" },
+      { "Credentials" = "docs/concepts/secret-management/credentials.md" },
+      { "Run Inputs and the Plan Key" = "docs/concepts/secret-management/run-inputs.md" },
+      { "Inside the Job" = "docs/concepts/secret-management/job.md" },
+      { "Lifecycle Walkthroughs" = "docs/concepts/secret-management/lifecycle.md" },
+      { "Operator Files and Settings" = "docs/concepts/secret-management/operator-files.md" },
+      { "Security Considerations" = "docs/concepts/secret-management/security.md" },
+    ] },
+    { "Jobs, Retries and Concurrency" = [
+      "docs/concepts/jobs/README.md",
+      { "Job Names, Attempts and History" = "docs/concepts/jobs/naming.md" },
+      { "Choosing the Operation" = "docs/concepts/jobs/operations.md" },
+      { "Retries and Backoff" = "docs/concepts/jobs/retries.md" },
+      { "Deadlines and Lock Timeouts" = "docs/concepts/jobs/deadlines.md" },
+      { "Leases and the Operation Gate" = "docs/concepts/jobs/leases.md" },
+      { "Cache Lag" = "docs/concepts/jobs/cache-lag.md" },
+      { "The State Lock and Stale Locks" = "docs/concepts/jobs/state-lock.md" },
+      { "Leader Election and Failover" = "docs/concepts/jobs/leader-election.md" },
+    ] },
+  ] },
+  { "Reference" = [
+    { "Custom Resources" = [
+      "docs/reference/resources/README.md",
+      { "TerraformCluster" = "docs/reference/resources/terraformcluster.md" },
+      { "TerraformClusterTemplate" = "docs/reference/resources/terraformclustertemplate.md" },
+      { "TerraformMachine" = "docs/reference/resources/terraformmachine.md" },
+      { "TerraformMachineTemplate" = "docs/reference/resources/terraformmachinetemplate.md" },
+      { "TerraformMachinePool" = "docs/reference/resources/terraformmachinepool.md" },
+      { "TerraformMachinePoolTemplate" = "docs/reference/resources/terraformmachinepooltemplate.md" },
+      { "TerraformClusterIdentity" = "docs/reference/resources/terraformclusteridentity.md" },
+      { "Common Fields" = "docs/reference/resources/common-fields.md" },
+    ] },
+    { "Metadata and Templates" = [
+      { "Annotations, Labels and Finalizers" = "docs/reference/annotations-labels.md" },
+      { "clusterctl Variables" = "docs/reference/clusterctl-variables.md" },
+    ] },
+    { "Status and Monitoring" = [
+      { "Conditions" = "docs/reference/conditions.md" },
+      { "Events" = "docs/reference/events.md" },
+      { "Alerts" = "docs/reference/alerts.md" },
+      { "Metrics" = "docs/reference/metrics.md" },
+    ] },
+    { "Manager" = [
+      { "Manager Flags" = "docs/reference/manager-flags.md" },
+      { "Requeue Intervals" = "docs/concepts/jobs/schedules.md" },
+    ] },
+    { "Modules and Runner" = [
+      { "Job Environment" = "docs/reference/environment.md" },
+      { "Runner CLI" = "docs/reference/runner-cli.md" },
+      { "tfcapi-lint CLI" = "docs/reference/tfcapi-lint-cli.md" },
+    ] },
+    { "Tags" = "docs/tags.md" },
+  ] },
+  { "Contributing" = [
+    { "Contributing" = "docs/developer-guide/contributing.md" },
+    { "Testing" = "docs/developer-guide/testing.md" },
+    { "Releasing" = "docs/developer-guide/releasing.md" },
+    { "Docs and Website" = [
+      { "Contributing to the Docs" = "docs/developer-guide/docs-workflow.md" },
+      { "Writing Documentation" = "docs/developer-guide/documentation.md" },
+      { "Updating the Website" = "docs/developer-guide/website.md" },
+    ] },
+    { "Make Targets" = "docs/reference/make-targets.md" },
+    { "Third-Party Licenses" = "docs/reference/third-party-licenses.md" },
+  ] },
+  { "Blog" = [
+    "blog/index.md",
+  ] },
+]
+
+# The one-row contract version index is a click-through layer with only
+# v1alpha1 behind it; the nav goes straight to v1alpha1.
+not_in_nav = "/docs/module-author/contract/README.md"
+
+[project.validation]
+nav.omitted_files = "warn"
+nav.not_found = "warn"
+links.not_found = "warn"
+links.anchors = "warn"
+links.unrecognized_links = "warn"
+
+# Theme -------------------------------------------------------------------
+
+[project.theme]
+custom_dir = "overrides"
+logo = "assets/brand/mark.svg"
+favicon = "assets/brand/favicon.svg"
+language = "en"
+font.text = "Inter"
+font.code = "JetBrains Mono"
+icon.repo = "fontawesome/brands/github"
+features = [
+  # Navigation
+  "navigation.tabs",
+  "navigation.tabs.sticky",
+  "navigation.sections",
+  "navigation.indexes",
+  "navigation.path",              # breadcrumbs above the page title
+  # navigation.prune is off on purpose: it leaves inactive sections out of
+  # the page, so in the mobile drawer their rows jumped to a page while the
+  # active one expanded in place. Every section now expands the same way,
+  # for about 11 KB (gzipped) more per docs page.
+  "navigation.top",
+  "navigation.footer",
+  "navigation.tracking",
+  "navigation.instant",
+  "navigation.instant.progress",
+  "navigation.instant.prefetch",  # fetch a page on link hover
+  "navigation.instant.preview",   # hover a link to preview its target
+  "header.autohide",              # header slides away while scrolling down
+  "announce.dismiss",             # the pre-release banner can be closed
+  # Table of contents and search
+  "toc.follow",
+  "search.highlight",
+  "search.share",
+  # Content
+  "content.action.edit",          # edit this page on GitHub (edit_uri)
+  "content.action.view",          # view this page's raw source
+  "content.action.copy",          # copy this page as Markdown
+  "content.code.copy",
+  "content.code.select",          # select lines, share a link to them
+  "content.code.annotate",
+  "content.tabs.link",
+  "content.tooltips",
+  "content.footnote.tooltips",
+]
+
+# Dark only: one palette, the slate scheme, no toggle. A single table (not
+# an array) is what tells the theme to render no colour toggle and load no
+# scheme-switching script. "custom" picks up the brand colours in
+# overrides/assets/stylesheets/extra.css.
+[project.theme.palette]
+scheme = "slate"
+primary = "custom"
+accent = "custom"
+
+[project.extra]
+generator = false
+# The short name in the header and footer logo lockups; site_name (above)
+# is the full name, used in the title bar, link previews and feeds.
+brand = "CAPI Terraform"
+
+[project.extra.status]
+new = "Recently added"
+deprecated = "Deprecated"
+encrypted = "Covers sensitive data"
+
+# The top-level nav sections, keyed by title: a Lucide icon, a subtitle
+# (at most 34 characters, like the pages' own) and, where the title is too
+# long for the compact tab row on narrow windows, a short label. The docs
+# tab row (tabs-item.html) and the drawer's top-level rows (nav-item.html)
+# both draw from here, so a section looks the same in each.
+[project.extra.sections]
+"Overview" = { icon = "lucide/compass", subtitle = "What CAPTF is and where to start" }
+"User Guide" = { icon = "lucide/book-open", short = "Guide", subtitle = "Run clusters day to day" }
+"Cloud Modules" = { icon = "lucide/cloud", short = "Cloud", subtitle = "Five clouds and a no-op set" }
+"Module Authors" = { icon = "lucide/package", short = "Authoring", subtitle = "Write and ship a module" }
+"Operations" = { icon = "lucide/server-cog", short = "Ops", subtitle = "Install, upgrade and run CAPTF" }
+"Troubleshooting" = { icon = "lucide/life-buoy", short = "Troubleshoot", subtitle = "Find the cause of a problem" }
+"How It Works" = { icon = "lucide/workflow", short = "Internals", subtitle = "The design behind CAPTF" }
+"Reference" = { icon = "lucide/library", subtitle = "Resources, flags, events, metrics" }
+"Contributing" = { icon = "lucide/heart-handshake", short = "Contribute", subtitle = "Code, docs, tests and releases" }
+"Blog" = { icon = "lucide/newspaper", subtitle = "News from the project" }
+
+# The contract chip at the end of the docs tab row (tabs.html).
+[project.extra.tabs]
+contract = { label = "v1alpha1", note = "Contract", icon = "lucide/scroll-text", href = "docs/module-author/contract/v1alpha1/CHANGELOG/" }
+
+# The newest blog posts, for the drawer on blog pages (nav.html): the blog
+# plugin keeps posts out of the nav. Run `make gen` after adding a post.
+# BEGIN recent posts (generated by tools/gen_blog_nav.py; do not edit)
+[[project.extra.recent_posts]]
+title = "Reference modules for five clouds"
+date = "2026-10-02"
+when = "October 2, 2026"
+href = "blog/2026/10/02/reference-cloud-modules/"
+[[project.extra.recent_posts]]
+title = "The CAPTF book is online"
+date = "2026-09-29"
+when = "September 29, 2026"
+href = "blog/2026/09/29/the-captf-book/"
+# END recent posts
+
+# The footer, mirroring captf.io's (captf-io.github.io's footer partial):
+# brand column, link columns, bottom line. Rendered by
+# overrides/partials/footer.html. An href without "://" is a page of this
+# site, relative to its root.
+[project.extra.footer]
+tagline_lead = "Your modules are"
+tagline_highlight = "the provider."
+about = "Cluster API Provider Terraform runs your Terraform and OpenTofu modules as a Cluster API infrastructure provider."
+status = { label = "v1alpha1 · pre-release", href = "docs/operator-guide/limitations/" }
+built_for = { name = "Cluster API", href = "https://cluster-api.sigs.k8s.io/" }
+
+[[project.extra.footer.columns]]
+title = "Docs"
+links = [
+  { name = "Quick Start", href = "docs/getting-started/quick-start/" },
+  { name = "User Guide", href = "docs/user-guide/identities/" },
+  { name = "Cloud Modules", href = "docs/cloud-modules/" },
+  { name = "Module Authors", href = "docs/getting-started/first-module/" },
+  { name = "Troubleshooting", href = "docs/operator-guide/troubleshooting/" },
+]
+
+[[project.extra.footer.columns]]
+title = "Community"
+links = [
+  { name = "GitHub", href = "https://github.com/captf-io" },
+  { name = "Contributing", href = "https://github.com/captf-io/.github/blob/main/CONTRIBUTING.md" },
+  { name = "Code of Conduct", href = "https://github.com/captf-io/.github/blob/main/CODE_OF_CONDUCT.md" },
+  { name = "Security", href = "https://github.com/captf-io/.github/blob/main/SECURITY.md" },
+]
+
+[[project.extra.footer.columns]]
+title = "Images"
+links = [
+  { name = "terraform-base", href = "https://github.com/captf-io/terraform-base" },
+  { name = "opentofu-base", href = "https://github.com/captf-io/opentofu-base" },
+  { name = "noop-modules", href = "https://github.com/captf-io/noop-modules" },
+]
+
+[[project.extra.footer.columns]]
+title = "Resources"
+links = [
+  { name = "Blog", href = "blog/" },
+  { name = "RSS feed", href = "feed_rss_created.xml" },
+  { name = "Tags", href = "docs/tags/" },
+  { name = "llms.txt", href = "llms.txt" },
+  { name = "llms-full.txt", href = "llms-full.txt" },
+]
+
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/captf-io"
+name = "captf-io on GitHub"
+
+[[project.extra.social]]
+icon = "material/web"
+link = "https://captf.io/"
+name = "captf.io"
+
+[[project.extra.social]]
+icon = "material/rss"
+link = "https://captf.io/feed_rss_created.xml"
+name = "RSS feed"
+
+# Plugins -----------------------------------------------------------------
+
+[project.plugins.search]
+
+# Directory defaults from docs/**/.meta.yml (tags per section).
+[project.plugins.meta]
+
+[project.plugins.tags]
+
+# News at /blog/: posts in docs/blog/posts/, authors in docs/blog/.authors.yml.
+[project.plugins.blog]
+blog_dir = "blog"
+post_date_format = "long"
+post_url_format = "{date}/{slug}"
+post_readtime = true
+post_excerpt = "required"
+archive = true
+categories = true
+pagination_per_page = 10
+
+# /feed_rss_created.xml and /feed_json_created.json for the blog posts.
+[project.plugins.rss]
+match_path = "blog/posts/.*"
+date_from_meta = { as_creation = "date" }
+categories = ["categories"]
+feed_title = "Cluster API Terraform"
+feed_description = "News from the CAPTF project: new modules, releases and changes to the module contract."
+image = "https://captf.io/assets/landing/og.jpg"
+use_git = false
+
+# A social preview card per page; overrides/main.html adds the og: tags.
+[project.plugins.social]
+cards_layout_options = { background_color = "#0A0D1C", color = "#E7E9F5" }
+
+# /llms.txt, /llms-full.txt and a Markdown copy of every page, for LLM
+# tools (https://llmstxt.org). The sections are generated from the nav and
+# each page's description by tools/gen_llms.py.
+[project.plugins.llmstxt]
+full_output = "llms-full.txt"
+markdown_description = """
+CAPTF (Cluster API Provider Terraform) is a Cluster API infrastructure provider. Instead of \
+cloud-specific Go controllers, it provisions cluster infrastructure by running Terraform or OpenTofu \
+modules, packaged as OCI images, as Kubernetes Jobs: "your modules are the provider".
+
+How it works: Cluster API's `Cluster`, `Machine` and `MachinePool` reference CAPTF's \
+`TerraformCluster`, `TerraformMachine` and `TerraformMachinePool`. The CAPTF manager renders each \
+object's inputs, runs the module image in a runner Job, keeps Terraform state in a Kubernetes Secret \
+next to the object, and reads the module's outputs back from that state. A module is written to the \
+`v1alpha1` module contract and linted with `tfcapi-lint`.
+
+Status: pre-release. Every kind and the module contract are `v1alpha1`; the contract is frozen for \
+implementation but may change. There are no end-to-end tests yet, and the reference cloud modules \
+(AWS, Google Cloud, Azure, OCI, OpenStack) have not yet been applied to a real cloud.
+
+Using this index: the docs are organized by reader. Overview and Start here for evaluators; User Guide \
+and Cloud Modules for people running clusters; Module Authors for people writing modules (the \
+contract is normative); Operations and Troubleshooting for people running the manager; How It Works \
+for internals; Reference for generated API, conditions, events, metrics, flags and environment. \
+Every page is also available as Markdown at its URL followed by `index.md`, and \
+https://captf.io/llms-full.txt is the whole site in one file. News: https://captf.io/feed_rss_created.xml.
+"""
+
+# BEGIN llmstxt sections (generated by tools/gen_llms.py; do not edit)
+[project.plugins.llmstxt.sections]
+"Start here" = [
+  { "index.md" = "Cluster API Provider Terraform: turn the Terraform and OpenTofu modules you already trust into Kubernetes clusters, on any platform." },
+  { "docs/index.md" = "Cluster API Provider Terraform runs your Terraform or OpenTofu modules as a Cluster API infrastructure provider." },
+  { "docs/getting-started/quick-start.md" = "Install CAPTF on a management cluster and bring up a TerraformCluster and control-plane TerraformMachine with the no-op modules." },
+]
+"Overview" = [
+  { "docs/concepts/architecture.md" = "The manager, webhooks, runner Jobs, module image and state backend, and how one apply flows through them." },
+  { "docs/concepts/kinds.md" = "How CAPTF's seven kinds relate to Cluster API's objects, what stays fixed once an object exists, and what a cluster passes down." },
+  { "docs/reference/glossary.md" = "Short definitions of CAPTF terms and the Cluster API and Terraform terms its docs assume, each linked to the page that covers it." },
+  { "docs/concepts/security-model.md" = "What creating a Terraform* object grants, what its Job can read, and what CAPTF keeps out of status, events and logs." },
+  { "docs/operator-guide/limitations.md" = "What CAPTF does not do yet or does with a catch, with the workaround and the page that has the detail." },
+  { "docs/operator-guide/compatibility.md" = "The versions CAPTF is built against, what the project tests, and what it only assumes." },
+]
+"User Guide" = [
+  { "docs/user-guide/identities.md" = "Create a credentials Secret and a TerraformClusterIdentity, choose the namespaces allowed to use it, reference it, rotate and revoke access." },
+  { "docs/user-guide/variables.md" = "Pass your own module variables inline or from labeled ConfigMaps and Secrets, and understand merge order, limits and sensitivity." },
+  { "docs/user-guide/clusterclass.md" = "Generate a cluster from the shipped clusterctl templates, understand the noop ClusterClass, and patch module variables through topology." },
+  { "docs/user-guide/machine-pools.md" = "Create a MachinePool backed by a TerraformMachinePool, choose fixed or autoscaled replicas, check members, and delete the group." },
+  { "docs/user-guide/job-tuning.md" = "Tune a Job's resources, deadlines, history, environment, pull secrets, ServiceAccount and security contexts, and how machines inherit cluster defaults." },
+  { "docs/concepts/drift-and-health.md" = "How CAPTF schedules drift checks, turns module health into InfrastructureHealthy and Ready, and counts unhealthy samples." },
+  { "docs/user-guide/drift.md" = "Set how often CAPTF checks for drift, whether it reports or remediates, and read the results." },
+  { "docs/user-guide/remediation.md" = "Ask Cluster API to replace an unhealthy TerraformMachine through a MachineHealthCheck, tune the threshold, and confirm the request." },
+  { "docs/concepts/approvals/README.md" = "The two approval gates on a TerraformCluster, what each stops and binds, what is not gated, and where to go next." },
+  { "docs/user-guide/plan-approval.md" = "Review and approve a destructive plan or, under applyPolicy Manual, every plan, with the exact kubectl commands and caveats." },
+  { "docs/concepts/approvals/manual-approval.md" = "How applyPolicy Manual plans every change first and applies it only after a person approves the plan hash, and what happens when the plan changes." },
+  { "docs/concepts/approvals/fingerprint.md" = "What goes into the p2: plan hash an approval names, what it binds and what it leaves out, so you know what an approval covers." },
+  { "docs/concepts/approvals/destructive-guard.md" = "How the always-on destructive-plan guard blocks a TerraformCluster apply that deletes or replaces a resource until you approve its inputs hash." },
+  { "docs/concepts/approvals/limits.md" = "What a plan approval does and does not promise: apply-time behavior, the plan key, ungated kinds, cluster outputs and state surgery." },
+  { "docs/concepts/deletion/README.md" = "How deleting a TerraformCluster, machine or pool runs a destroy Job, what holds a deletion, and what is left behind if you short-circuit it." },
+  { "docs/concepts/deletion/order.md" = "The fixed order in which Cluster API, the admission webhook and the controller delete machines, pools and clusters, and when the finalizer comes off." },
+  { "docs/concepts/deletion/destroy-job.md" = "What runs when a deleting object has readable state, what does not gate the destroy, what it waits on, and how it fails and retries." },
+  { "docs/concepts/deletion/namespaces.md" = "What a deletion can still finish in a terminating namespace, why a destroy waits there, and what the namespace takes with it." },
+  { "docs/concepts/deletion/cleanup.md" = "Which of the controller's cleanup, Kubernetes garbage collection and the namespace RBAC sweep removes what, and what nothing deletes." },
+]
+"Cloud Modules" = [
+  { "docs/cloud-modules/README.md" = "Reference Terraform and OpenTofu module sets for AWS, Google Cloud, Azure, OCI and OpenStack, and a no-op set, with their images, tags and conventions." },
+  { "docs/cloud-modules/shared-behavior.md" = "What all five cloud module sets have in common: the API endpoint, traffic rules, node identities, bootstrap data, health, tags and destroy." },
+  { "docs/cloud-modules/aws/README.md" = "Build a workload cluster in an AWS VPC you bring: the images, prerequisites, identity Secret, quick start, API endpoint, exports and tags." },
+  { "docs/cloud-modules/aws/cluster.md" = "Look up what the AWS cluster module creates, its inputs, outputs, health reporting and limits, with an example." },
+  { "docs/cloud-modules/aws/machine.md" = "Look up what the AWS machine module creates, its inputs, outputs, health, lifecycle and limits, with an example." },
+  { "docs/cloud-modules/aws/machinepool.md" = "Look up what the AWS machinepool module creates, its inputs, outputs, health, lifecycle and limits, with an example." },
+  { "docs/cloud-modules/gcp/README.md" = "Build a workload cluster in a Google Cloud VPC network you bring: the images, prerequisites, identity Secret, quick start, endpoint, exports and labels." },
+  { "docs/cloud-modules/gcp/cluster.md" = "Look up what the Google Cloud cluster module creates, its inputs, outputs, health reporting and limits, with an example." },
+  { "docs/cloud-modules/gcp/machine.md" = "Look up what the Google Cloud machine module creates, its inputs, outputs, health, lifecycle and limits, with an example." },
+  { "docs/cloud-modules/gcp/machinepool.md" = "Look up what the Google Cloud machinepool module creates, its inputs, outputs, health, lifecycle and limits, with an example." },
+  { "docs/cloud-modules/azure/README.md" = "Build a workload cluster in an Azure virtual network you bring: the images, prerequisites, identity Secret, quick start, endpoint, exports and tags." },
+  { "docs/cloud-modules/azure/cluster.md" = "Look up what the Azure cluster module creates, its inputs, outputs, health reporting and limits, with an example." },
+  { "docs/cloud-modules/azure/machine.md" = "Look up what the Azure machine module creates, its inputs, outputs, health, lifecycle and limits, with an example." },
+  { "docs/cloud-modules/azure/machinepool.md" = "Look up what the Azure machinepool module creates, its inputs, outputs, health, lifecycle and limits, with an example." },
+  { "docs/cloud-modules/oci/README.md" = "Build a workload cluster on an OCI VCN you bring: the images, prerequisites, identity Secret, quick start, API endpoint, exports and tags." },
+  { "docs/cloud-modules/oci/cluster.md" = "Look up what the OCI cluster module creates, its inputs, outputs, health reporting and limits, with an example." },
+  { "docs/cloud-modules/oci/machine.md" = "Look up what the OCI machine module creates, its inputs, outputs, health, lifecycle and limits, with an example." },
+  { "docs/cloud-modules/oci/machinepool.md" = "Look up what the OCI machinepool module creates, its inputs, outputs, health, lifecycle and limits, with an example." },
+  { "docs/cloud-modules/openstack/README.md" = "Build a workload cluster on an OpenStack network you bring: the images, prerequisites, identity Secret, quick start, endpoint, exports and tags." },
+  { "docs/cloud-modules/openstack/cluster.md" = "Look up what the OpenStack cluster module creates, its inputs, outputs, health reporting and limits, with an example." },
+  { "docs/cloud-modules/openstack/machine.md" = "Look up what the OpenStack machine module creates, its inputs, outputs, health, lifecycle and limits, with an example." },
+  { "docs/cloud-modules/noop/README.md" = "Try CAPTF or test a management cluster with no cloud account: the no-op module images, what they return, and a quick start." },
+  { "docs/cloud-modules/noop/cluster.md" = "The no-op cluster role: the stand-in resource it records, the contract inputs it reads, and the endpoint, failure domain and exports it returns." },
+  { "docs/cloud-modules/noop/machine.md" = "The no-op machine role: the stand-in instance it records, the contract inputs it reads, its provider ID, address and image labels." },
+  { "docs/cloud-modules/noop/machinepool.md" = "The no-op machinepool role: the stand-in scaling group it records, the contract inputs it reads, and the provider IDs and instances it returns." },
+]
+"Module Authors" = [
+  { "docs/getting-started/first-module.md" = "Write, lint, package and reference a small machine-role module from scratch, ending with a lint-clean module image." },
+  { "docs/concepts/inputs.md" = "Where every Terraform input of a CAPTF Job comes from: the pipeline, per-role inputs, exports, user variables, the inputs hash and safe inspection." },
+  { "docs/module-author/contract/v1alpha1/README.md" = "Overview of the v1alpha1 module contract: child-module rules, naming, null semantics, type conventions, injection mechanics and role summary." },
+  { "docs/module-author/contract/v1alpha1/common.md" = "Inputs injected into every role, the user-variable rules, and the health output every module must declare." },
+  { "docs/module-author/contract/v1alpha1/cluster.md" = "The cluster role of the v1alpha1 module contract: inputs, outputs, provisioned rule, lifecycle, control-plane requirements and a skeleton." },
+  { "docs/module-author/contract/v1alpha1/machine.md" = "The machine role of the v1alpha1 module contract: inputs, outputs, Ready timeline, lifecycle, providerID matching and a skeleton." },
+  { "docs/module-author/contract/v1alpha1/machinepool.md" = "The machinepool role of the v1alpha1 module contract: inputs, autoscaling, outputs, lifecycle, bootstrap rotation and a skeleton." },
+  { "docs/module-author/image-contract.md" = "The normative image contract: fixed paths, OCI labels, user, multi-arch publishing, and reference Containerfiles for Terraform and OpenTofu." },
+  { "docs/module-author/contract/v1alpha1/CHANGELOG.md" = "History of changes to the v1alpha1 module contract, newest first." },
+  { "docs/module-author/runtime-environment.md" = "What a module sees when the runner executes it: working directory, environment, provider mirror, command order, failure reporting and size limits." },
+  { "docs/module-author/design-patterns.md" = "Design modules that behave well under CAPTF: where resources belong, stable exports, health, autoscaling, import, destroy safety, secrets and testing." },
+  { "docs/module-author/tfcapi-lint.md" = "Install tfcapi-lint, lint a module or image against the CAPTF contracts, use strict mode and exit codes, and run it in CI." },
+  { "docs/module-author/control-planes/README.md" = "How CAPTF cluster and machine modules integrate with the KubeadmControlPlane and RKE2ControlPlane providers, and the load-balancer patterns that fit." },
+  { "docs/module-author/control-planes/kubeadm.md" = "What KubeadmControlPlane and CABPK require of your CAPTF cluster and machine modules: endpoint, load balancer, lifecycle and a module checklist." },
+  { "docs/module-author/control-planes/rke2.md" = "What RKE2ControlPlane and CAPRKE2 require of your CAPTF cluster and machine modules: listeners, addresses, lifecycle and a module checklist." },
+  { "docs/module-author/control-planes/checklist.md" = "Every port, health check and ordering rule a KCP or RCP cluster needs from a CAPTF cluster or machine module, grouped by topic." },
+]
+"Operations" = [
+  { "docs/operator-guide/installation.md" = "Install the CAPTF provider into a management cluster with clusterctl, set the runner image, add optional components and verify the install." },
+  { "docs/operator-guide/configuration.md" = "Change the CAPTF manager's flags and read what each group does: scoping, concurrency, leader election, sync period, runner image, backups and logging." },
+  { "docs/operator-guide/upgrades.md" = "Upgrade the CAPTF provider with clusterctl, understand what an upgrade triggers on existing objects, and roll back." },
+  { "docs/operator-guide/rbac.md" = "Read every role CAPTF ships: what the manager and the runner can do, how a namespace gets its runner identity, and how the orphan sweep removes it." },
+  { "docs/operator-guide/secrets.md" = "Inventory every Secret CAPTF reads or writes: name, namespace, owner, lifecycle, contents and sensitivity, plus what the manager caches and logs." },
+  { "docs/operator-guide/multi-tenancy.md" = "Lay out tenants on one management cluster: namespace isolation, identities, the runner's Secret access, quotas, network policy and an example." },
+  { "docs/operator-guide/production-readiness.md" = "Check the CAPTF manager and its namespaces before go-live: availability, sizing, certificates, secrets, alerts, approvals, network policy and Jobs." },
+  { "docs/operator-guide/observability.md" = "Read the manager's metrics endpoint, enable Prometheus and the alerts, find what to check first for each alert, and read conditions, events and logs." },
+  { "docs/concepts/approvals/operating.md" = "Run the plan-approval gates day to day: what the conditions and events mean, how retries and upgrades behave, and who can approve." },
+  { "docs/concepts/approvals/other-manual-actions.md" = "The manual actions besides plan approval: restore state, abandon an object, fix a Job policy, release a foreign lock and opt a ServiceAccount in." },
+  { "docs/operator-guide/disaster-recovery.md" = "Recover from lost Terraform state, a lost namespace or a lost management cluster: what to back up outside the cluster, how to rebuild and how to rehearse." },
+  { "docs/operator-guide/runbooks/state-restore.md" = "Restore an object's Terraform state from a versioned backup, or rebuild it by hand when no backup exists, and confirm the restore." },
+  { "docs/operator-guide/runbooks/total-state-loss.md" = "Recover an object whose Terraform state is lost with no backup: rebuild the state from a workstation, or abandon and recreate it with import blocks." },
+  { "docs/operator-guide/runbooks/move.md" = "Move a Cluster's Terraform objects to another management cluster with clusterctl move, copy what does not move, and clean up the source." },
+  { "docs/concepts/deletion/move.md" = "Understand how clusterctl move deletes the source objects, what moves and what does not, and what the target does on its first reconcile." },
+]
+"Troubleshooting" = [
+  { "docs/operator-guide/troubleshooting/README.md" = "Find the condition, event or runbook for a stuck CAPTF object, and learn how Ready is built from other conditions." },
+  { "docs/operator-guide/runbooks/README.md" = "Pick the runbook for a symptom, alert or condition reason, from failing Jobs to lost state." },
+  { "docs/concepts/jobs/troubleshooting.md" = "Find what a CAPTF object with no Job is waiting on, from its conditions and events, and what to do about each wait." },
+  { "docs/operator-guide/troubleshooting/conditions.md" = "Look up every CAPTF condition type, status and reason with its meaning, likely cause, action and a link to the deeper page." },
+  { "docs/operator-guide/troubleshooting/events.md" = "Read the Warning and informational events CAPTF emits, with what each means and what to do about it." },
+  { "docs/operator-guide/runbooks/job-failures.md" = "Diagnose a failing apply, destroy, drift check or refresh Job from the object's conditions, status and pod logs, and fix the cause." },
+  { "docs/operator-guide/runbooks/slow-jobs.md" = "Find out why Jobs run long or start late, from the CAPTFJobSlow and CAPTFJobQueueSlow alerts, leases, step durations and pod events." },
+  { "docs/operator-guide/runbooks/reconcile-errors.md" = "Diagnose the CAPTFReconcileErrors alert: read the manager's logs, narrow down the object and match the error to a common cause." },
+  { "docs/operator-guide/runbooks/state-unreadable.md" = "Read the StateReadable reason and fix lost, locked, encrypted, corrupt or inconsistent state, including held deletions and abandon." },
+  { "docs/operator-guide/runbooks/stale-lock.md" = "Find a held state lock, tell a stale one from a live one and clear it with force-unlock." },
+  { "docs/operator-guide/runbooks/size-limits.md" = "Find the object whose state or rendered inputs approach the Secret size cap, and shrink what it stores." },
+  { "docs/concepts/deletion/troubleshooting.md" = "Work out why a deleting CAPTF object keeps its finalizer, from its conditions, and follow the flowchart or table to the fix." },
+  { "docs/concepts/deletion/held.md" = "Understand why CAPTF holds a deletion when state is lost or unreadable, what ends the hold, and how the abandon annotation works." },
+  { "docs/operator-guide/runbooks/stuck-destroy.md" = "Recover from a destroy Job that cannot succeed: back up state, clean up cloud resources, then remove or abandon the finalizer." },
+  { "docs/concepts/deletion/manual-finalizer.md" = "Know what removing a CAPTF finalizer by hand deletes or leaves behind, and what to preserve before you do it." },
+  { "docs/operator-guide/runbooks/identity-and-credentials.md" = "Fix an object whose identity, credential mirror or runner RBAC is not ready, reason by reason." },
+  { "docs/operator-guide/runbooks/webhook-unavailable.md" = "Recognize writes blocked by an unreachable admission webhook and get it serving again: pods, Service, NetworkPolicy and certificate." },
+]
+"How It Works" = [
+  { "docs/concepts/lifecycle.md" = "Follow one reconcile pass: preamble, bookkeeping, choosing the operation, retry backoff, leases, deletion order and the clusterctl move block." },
+  { "docs/concepts/state.md" = "Learn where CAPTF keeps Terraform state, how it names, reads, locks and backs it up, and what happens to it on deletion." },
+  { "docs/concepts/secret-management/README.md" = "Inventory every Secret and Lease CAPTF keeps between Jobs, see how they connect, and find the page for each part." },
+  { "docs/concepts/secret-management/state.md" = "See how state Secrets are named, labeled, chunked, read, checked and attached to the object by the manager." },
+  { "docs/concepts/secret-management/backups.md" = "Learn when the manager backs up state, how backups are named and pruned, and how a restore Job pushes one back." },
+  { "docs/concepts/secret-management/credentials.md" = "Follow a credential from the source Secret through the per-namespace mirror to the Job, including rotation and revocation." },
+  { "docs/concepts/secret-management/run-inputs.md" = "Learn where rendered inputs are kept, how long, and what the plan key is for." },
+  { "docs/concepts/secret-management/job.md" = "See what a Job pod mounts, which environment and permissions it gets, and which runner steps run for each operation." },
+  { "docs/concepts/secret-management/lifecycle.md" = "Follow the Secrets and Leases through create, refresh, change, delete, clusterctl move, namespace deletion and lost state." },
+  { "docs/concepts/secret-management/operator-files.md" = "List what an operator provides or keeps right: credentials, runner ClusterRole, manager environment, encryption and backups." },
+  { "docs/concepts/secret-management/security.md" = "Understand what CAPTF's handling of Secrets does and does not protect, and where the trust boundaries lie." },
+  { "docs/concepts/jobs/README.md" = "Follow a Job from the decision to run it to bookkeeping, and find the pages on naming, retries, leases and failover." },
+  { "docs/concepts/jobs/naming.md" = "Learn how deterministic Job names make creation idempotent, how attempts count, and how finished Jobs are kept and pruned." },
+  { "docs/concepts/jobs/operations.md" = "Read the priority order CAPTF uses to pick the next operation, the reasons it reports, and the refresh and drift schedule." },
+  { "docs/concepts/jobs/retries.md" = "Learn what counts as a failed Job, how the retry delay grows, and which waits deliberately do not back off." },
+  { "docs/concepts/jobs/deadlines.md" = "Understand the two clocks on a Job, activeDeadlineSeconds and lockTimeoutSeconds, and the check that keeps them consistent." },
+  { "docs/concepts/jobs/leases.md" = "Learn how the run lease and cluster write lease decide who may start a Job, and what each wait reason means." },
+  { "docs/concepts/jobs/cache-lag.md" = "See how the controller checks the API server directly so a stale Job cache never clears a block or drops a finalizer." },
+  { "docs/concepts/jobs/state-lock.md" = "Tell CAPTF's leases from Terraform's state lock, and see how stale and foreign locks are handled." },
+  { "docs/concepts/jobs/leader-election.md" = "Configure leader election and see what a manager failover does to Jobs in flight." },
+]
+"Reference" = [
+  { "docs/reference/resources/README.md" = "Every CAPTF custom resource, one page each: what it is, YAML examples, and every spec and status field with its default, validation and behavior." },
+  { "docs/reference/resources/terraformcluster.md" = "Field-by-field reference for the TerraformCluster kind: spec, status, conditions, printer columns, admission rules and lifecycle." },
+  { "docs/reference/resources/terraformclustertemplate.md" = "Field-by-field reference for the TerraformClusterTemplate kind: the template a ClusterClass uses to create a TerraformCluster, with its immutability rules." },
+  { "docs/reference/resources/terraformmachine.md" = "Reference for the TerraformMachine kind: every spec and status field, conditions, printer columns, validation rules and lifecycle." },
+  { "docs/reference/resources/terraformmachinetemplate.md" = "Reference for the TerraformMachineTemplate kind: the template Cluster API clones into TerraformMachines, and the scale-from-zero status read from the image." },
+  { "docs/reference/resources/terraformmachinepool.md" = "Every field, status value, condition, printer column and admission rule of the TerraformMachinePool kind, with examples." },
+  { "docs/reference/resources/terraformmachinepooltemplate.md" = "Every field, printer column and admission rule of the TerraformMachinePoolTemplate kind, the ClusterClass template for TerraformMachinePool." },
+  { "docs/reference/resources/terraformclusteridentity.md" = "Reference for the cluster-scoped TerraformClusterIdentity kind: its credentials Secret, allowed namespaces, status, conditions, validation and lifecycle." },
+  { "docs/reference/resources/common-fields.md" = "Reference for the spec and status fields that TerraformCluster, TerraformMachine and TerraformMachinePool share: source, identity, Job policy, variables and run status." },
+  { "docs/reference/annotations-labels.md" = "Every annotation, label and finalizer CAPTF reads or sets: the keys you set to approve, restore or abandon, CAPTF's own bookkeeping keys and the captf_tags modules receive." },
+  { "docs/reference/clusterctl-variables.md" = "Every variable the CAPTF clusterctl templates read, with required and default values, grouped by flavor, plus the ClusterClass topology variables." },
+  { "docs/reference/conditions.md" = "Every status condition CAPTF sets, which kinds carry it, how to read its polarity, and what each reason means and what to do about it." },
+  { "docs/reference/events.md" = "Look up every Kubernetes Event the CAPTF manager and runner record: reason, type, object, when it fires and what to do." },
+  { "docs/reference/alerts.md" = "Look up the eleven Prometheus alerts CAPTF ships: severity, PromQL expression, what each means, likely causes and where to look first." },
+  { "docs/reference/metrics.md" = "Look up every Prometheus metric the CAPTF manager exposes: type, labels and their values, unit and meaning, grouped by topic with example queries." },
+  { "docs/reference/manager-flags.md" = "Every flag of the CAPTF manager, grouped by purpose, with type, default, what it does and when to change it, plus how to set flags on the Deployment." },
+  { "docs/concepts/jobs/schedules.md" = "Look up every requeue interval and schedule the CAPTF controller uses, with defaults and where each is set." },
+  { "docs/reference/environment.md" = "Anatomy of the runner Job: containers, environment, credentials, volumes, resources, security contexts, runner arguments and the names spec.jobs.env rejects." },
+  { "docs/reference/runner-cli.md" = "Look up the runner binary's subcommands, flags, exit codes and result error kinds. The runner is the entrypoint of every CAPTF Job." },
+  { "docs/reference/tfcapi-lint-cli.md" = "Look up the tfcapi-lint commands, flags, exit codes and every check it runs against a CAPTF module or image, with severity and fix." },
+  { "docs/tags.md" = "Every page in the book by tag: who it is for, what kind of page it is, and its topic." },
+]
+"Contributing" = [
+  { "docs/developer-guide/contributing.md" = "Build, lint, test and verify CAPTF itself: repository layout, prerequisites, conventions and running the manager against a real cluster." },
+  { "docs/developer-guide/testing.md" = "What make test runs, the unit and e2e tiers, coverage floors, golden files, the test environment, and how to run one package or one test." },
+  { "docs/developer-guide/releasing.md" = "Cut a CAPTF release: what it consists of, the checklist, and installing the assets from a local repository." },
+  { "docs/developer-guide/docs-workflow.md" = "Change the CAPTF docs or website: set up a preview, edit or add a page, run the checks and open a pull request." },
+  { "docs/developer-guide/documentation.md" = "How the CAPTF docs are organized and written: where pages go, reference pages, page shape, voice, Markdown patterns and the checks to run." },
+  { "docs/developer-guide/website.md" = "Change captf.io beyond the docs pages: the landing page, blog posts, navigation and tabs, header, footer and banner, generated files and the theme." },
+  { "docs/reference/make-targets.md" = "Look up the provider repository's make targets by workflow, what each does and when to run it, and the variables that change them." },
+  { "docs/reference/third-party-licenses.md" = "See which linked third-party modules are not Apache-2.0 licensed, with versions and licenses." },
+]
+"Blog" = [
+  { "blog/posts/2026-10-02-reference-cloud-modules.md" = "Reference module sets for AWS, Google Cloud, Azure, OCI and OpenStack: what each creates, and their pre-release status." },
+  { "blog/posts/2026-09-29-the-captf-book.md" = "The CAPTF documentation is published at captf.io/docs: concepts, guides, the module contract, runbooks and generated reference." },
+]
+# END llmstxt sections
+
+# Click an image to view it full size.
+[project.plugins.glightbox]
+
+# GitHub-style "> [!NOTE]" callouts render as admonitions.
+[project.plugins.callouts]
+
+# [Heading text][] links to any heading in the book by its anchor.
+[project.plugins.autorefs]
+
+[project.plugins.minify]
+minify_html = true
+
+# Markdown ----------------------------------------------------------------
+
+[project.markdown_extensions]
+abbr = {}
+admonition = {}
+attr_list = {}
+def_list = {}
+footnotes = {}
+md_in_html = {}
+smarty = {}
+tables = {}
+toc.permalink = true
+# GitHub-style anchors, as mdBook made them: "--runner-image" keeps its
+# leading hyphens, so the book's existing #fragments resolve.
+toc.slugify = { object = "pymdownx.slugs.slugify", kwds = { case = "lower" } }
+pymdownx.betterem = {}
+pymdownx.caret = {}
+pymdownx.mark = {}
+pymdownx.tilde = {}
+pymdownx.details = {}
+pymdownx.emoji.emoji_index = "zensical.extensions.emoji.twemoji"
+pymdownx.emoji.emoji_generator = "zensical.extensions.emoji.to_svg"
+pymdownx.highlight.anchor_linenums = true
+pymdownx.highlight.line_spans = "__span"
+pymdownx.highlight.pygments_lang_class = true
+pymdownx.inlinehilite = {}
+pymdownx.keys = {}
+# Every page gets the acronyms in includes/abbreviations.md as tooltips.
+pymdownx.snippets.base_path = ["docs/docs", "."]
+pymdownx.snippets.check_paths = true
+pymdownx.snippets.auto_append = ["includes/abbreviations.md"]
+pymdownx.superfences.custom_fences = [
+  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+]
+pymdownx.tabbed.alternate_style = true
+pymdownx.tasklist.custom_checkbox = true

@@ -1,0 +1,1597 @@
+/*
+ * CAPTF on Zensical (modern variant). Sections:
+ *   1. Brand colors      2. Scale and layout   3. Typography
+ *   4. Tables            5. Admonitions        6. Page metadata and banner
+ *   7. Landing pages     8. "See also" box     9. Small pieces
+ * tools/layout_audit.py measures the effect of the sizes below.
+ */
+
+/* 1. Brand colors ---------------------------------------------------------
+ * The landing page's palette (captf-io.github.io) on the theme's custom
+ * primary and accent colors.
+ */
+:root {
+    --captf-blue: #5B8CFF;
+    --captf-purple: #A974FF;
+    --captf-navy: #0A0D1C;
+    --captf-surface: #161B3A;
+}
+
+[data-md-color-primary="custom"] {
+    --md-primary-fg-color: var(--captf-navy);
+    --md-primary-fg-color--light: var(--captf-surface);
+    --md-primary-fg-color--dark: var(--captf-navy);
+    --md-primary-bg-color: #E7E9F5;
+    --md-primary-bg-color--light: #A3A9C7;
+}
+
+[data-md-color-accent="custom"] {
+    --md-accent-fg-color: var(--captf-purple);
+    --md-accent-fg-color--transparent: rgba(169, 116, 255, 0.1);
+    --md-accent-bg-color: #FFFFFF;
+}
+
+/* The site is dark only: one palette, the theme's slate scheme (set in
+ * zensical.toml, with no toggle), on the landing page's navy background
+ * and surfaces. [data-md-color-scheme] matches the specificity of the
+ * theme's own scheme variables. */
+[data-md-color-scheme] {
+    --md-default-bg-color: var(--captf-navy);
+    --md-default-bg-color--light: #0F1330;
+    --md-code-bg-color: #0F1330;
+    --md-typeset-a-color: var(--captf-blue);
+    --md-footer-bg-color: #070914;
+    --md-footer-bg-color--dark: #05060E;
+}
+
+/* 1b. Header: site bar and docs tabs ---------------------------------------
+ * Two tiers (overrides/partials/header.html, tabs.html): a navy site bar on
+ * every page with Home / Docs / Blog after the brand and search on the
+ * right; under it, on docs pages only, the docs tabs as a lighter band.
+ * The active site link and tab carry the brand blue-to-purple underline.
+ */
+.md-header {
+    background-color: var(--captf-navy);
+    color: #E7E9F5;
+    border-bottom: 0;
+}
+
+/* The brand name stays put. The theme stacks two absolutely positioned
+ * titles (site name, page title) and swaps them on scroll; with the site
+ * bar beside it the swap would collapse the box, and the breadcrumbs
+ * already say where you are. Keep the site name, in flow, always. */
+.md-header__title {
+    flex-grow: 0;
+    margin-right: 1rem;
+    margin-left: 0.4rem;
+    font-weight: 700;
+}
+
+.md-header__title .md-header__ellipsis {
+    position: static;
+}
+
+.md-header__title .md-header__topic:first-child {
+    position: static;
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+}
+
+.md-header__title .md-header__topic[data-md-component="header-topic"] {
+    display: none;
+}
+
+/* The brand name links home, like the logo. */
+.md-header .captf-brand-link {
+    color: inherit;
+    transition: color 125ms;
+}
+
+.md-header .captf-brand-link:hover,
+.md-header .captf-brand-link:focus-visible {
+    color: #FFFFFF;
+}
+
+.captf-sitenav {
+    display: flex;
+    flex-grow: 1;
+    align-items: stretch;
+    gap: 0.2rem;
+    height: 2.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.captf-sitenav li {
+    display: flex;
+}
+
+.captf-sitenav__link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0 0.6rem;
+    color: #A3A9C7;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: color 125ms;
+}
+
+.captf-sitenav__link:hover,
+.captf-sitenav__link:focus-visible {
+    color: #FFFFFF;
+}
+
+.captf-sitenav__link--active {
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.captf-sitenav__link--active::after {
+    position: absolute;
+    right: 0.6rem;
+    bottom: 0;
+    left: 0.6rem;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background: linear-gradient(90deg, var(--captf-blue), var(--captf-purple));
+    content: "";
+}
+
+/* No repository widget anywhere: the header's is left out of header.html,
+ * and the drawer's copy (top of the mobile menu) is hidden here. The
+ * footer's GitHub icon and the per-page edit and view buttons remain. */
+.md-nav__source {
+    display: none;
+}
+
+/* Header controls on navy: the menu and search buttons. */
+.md-header .md-header__button {
+    color: #E7E9F5;
+}
+
+/* The search button: the theme colours it for a white bar (near-black text
+ * on 5% grey); on navy, a translucent light box instead. */
+.md-header .md-search__button {
+    border: 1px solid rgba(231, 233, 245, 0.14);
+    background-color: rgba(255, 255, 255, 0.07);
+    color: #C9CDE6;
+}
+
+.md-header .md-search__button:hover,
+.md-header .md-search__button:focus-visible {
+    background-color: rgba(255, 255, 255, 0.13);
+    color: #FFFFFF;
+}
+
+/* The magnifier (::before, a masked box) and the "Ctrl+K" keycap (::after)
+ * are pseudo-elements; [data-md-color-scheme] matches the specificity of
+ * the theme's rules for them. */
+[data-md-color-scheme] .md-header .md-search__button::before {
+    background-color: currentcolor;
+}
+
+[data-md-color-scheme] .md-header .md-search__button::after {
+    border-color: rgba(231, 233, 245, 0.2);
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #C9CDE6;
+    box-shadow: none;
+}
+
+/* Outside docs/ the tab row is rendered empty (so instant navigation can
+ * swap it in); hide it there. */
+.md-tabs:not(:has(.md-tabs__item)) {
+    display: none;
+}
+
+/* The docs tabs: the header's second tier. A navy band a shade lighter
+ * than the site bar, edged at the top with a faint brand-gradient hairline.
+ * Each tab is a pill with its section's icon (tabs-item.html): hover lifts
+ * it onto a translucent fill, and the active one gets a blue-to-purple
+ * tint, a hairline ring, a soft glow and the gradient underline sitting on
+ * the band's bottom edge. The row ends with the contract chip (tabs.html). */
+.md-tabs {
+    position: relative;
+    background: linear-gradient(180deg, #10143A 0%, #0C1029 100%);
+    color: var(--md-default-fg-color);
+    border-bottom: 1px solid #1C2247;
+    box-shadow: none;
+}
+
+.md-tabs::before {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(91, 140, 255, 0.35) 30%, rgba(169, 116, 255, 0.35) 70%, transparent);
+    content: "";
+    pointer-events: none;
+}
+
+.md-tabs > .md-grid {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+[dir] .md-tabs__list {
+    flex: 1 1 auto;
+    gap: 0.1rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0.4rem 0;
+}
+
+.md-tabs__item {
+    height: auto;
+    padding: 0;
+}
+
+/* The theme marks the active tab with a 1px bottom border; the pill and
+ * its underline replace it. */
+.md-tabs__item--active,
+.md-tabs[hidden] .md-tabs__item--active {
+    border-bottom-color: transparent;
+}
+
+.md-tabs__link {
+    position: relative;
+    align-items: center;
+    gap: 0.36rem;
+    margin-top: 0;
+    padding: 0.38rem 0.55rem;
+    border-radius: 0.55rem;
+    color: #A3A9C7;
+    font-size: 0.66rem;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+    opacity: 1;
+    transition: background-color 150ms, color 150ms, box-shadow 150ms,
+        transform 400ms cubic-bezier(0.1, 0.7, 0.1, 1), opacity 250ms;
+}
+
+/* The theme staggers each tab's transition (for its slide-in); on hover
+ * that reads as lag on the later tabs. */
+.md-tabs .md-tabs__item .md-tabs__link {
+    transition-delay: 0s;
+}
+
+[dir] .md-tabs__link svg {
+    flex: 0 0 auto;
+    width: 0.85rem;
+    height: 0.85rem;
+    margin: 0;
+    color: #6F79A8;
+    fill: none;
+    stroke: currentcolor;
+    transition: color 150ms, transform 200ms;
+}
+
+.md-tabs__link:hover,
+.md-tabs__link:focus-visible {
+    background-color: rgba(255, 255, 255, 0.055);
+    color: #FFFFFF;
+}
+
+.md-tabs__link:hover svg,
+.md-tabs__link:focus-visible svg {
+    color: var(--captf-blue);
+    transform: scale(1.08);
+}
+
+.md-tabs__link:focus-visible {
+    outline: 2px solid var(--captf-blue);
+    outline-offset: 2px;
+}
+
+.md-tabs__item--active .md-tabs__link,
+.md-tabs__item--active .md-tabs__link:hover {
+    background: linear-gradient(135deg, rgba(91, 140, 255, 0.2), rgba(169, 116, 255, 0.13));
+    box-shadow: inset 0 0 0 1px rgba(150, 130, 255, 0.32), 0 0 18px -6px rgba(169, 116, 255, 0.55);
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.md-tabs__item--active .md-tabs__link svg {
+    color: #C4B5FD;
+}
+
+/* The underline: on the band's bottom border, under the active pill. */
+.md-tabs__item--active .md-tabs__link::after {
+    position: absolute;
+    right: 0.55rem;
+    bottom: calc(-0.4rem - 1px);
+    left: 0.55rem;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background: linear-gradient(90deg, var(--captf-blue), var(--captf-purple));
+    box-shadow: 0 0 10px rgba(169, 116, 255, 0.6);
+    content: "";
+}
+
+/* The contract chip: an icon and "v1alpha1", linking to the contract's
+ * changelog. Nine tabs with icons need about 1170px, which the grid has
+ * from 76.25em; the chip fits beside them only once the grid widens to
+ * 66rem, from 100em (section 2). */
+.captf-tabs-chip {
+    display: none;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.18rem 0.55rem 0.18rem 0.45rem;
+    border: 1px solid #2A3266;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(91, 140, 255, 0.14), rgba(169, 116, 255, 0.14));
+    color: #E7E9F5;
+    font-family: var(--md-code-font-family);
+    font-size: 0.56rem;
+    font-weight: 600;
+    line-height: 1.5;
+    transition: border-color 150ms, box-shadow 150ms;
+}
+
+@media screen and (min-width: 100em) {
+    .captf-tabs-chip {
+        display: inline-flex;
+    }
+}
+
+.captf-tabs-chip svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    color: #C4B5FD;
+    fill: none;
+    stroke: currentcolor;
+}
+
+.captf-tabs-chip:hover,
+.captf-tabs-chip:focus-visible {
+    border-color: rgba(169, 116, 255, 0.6);
+    box-shadow: 0 0 14px -4px rgba(169, 116, 255, 0.6);
+    color: #FFFFFF;
+}
+
+/* Narrower windows: the theme hides the whole tab row below 76.25em (where
+ * the nav sidebar becomes the drawer), but nine tabs fit far narrower than
+ * the 1170px they take with icons. So the row reforms in steps instead,
+ * each a smaller version of the one before (tabs-item.html renders an
+ * icon, the title and a short label; each step shows some of them):
+ *
+ *   76.25em and up   icon and title;
+ *   60em to 76.25em  title only, tighter pills (about 910px);
+ *   42em to 60em     short label only, smaller pills (about 640px);
+ *   below 42em       icon only, spread across the row, but the active tab
+ *                    keeps its short label (about 350px), and from 22.5em
+ *                    (360px) down, not even that.
+ *
+ * Wherever a step still doesn't fit, the row scrolls sideways: doctabs.js
+ * centres the active tab, turns the wheel sideways and marks hidden tabs
+ * past either edge, drawn below as a fade. The empty row outside docs/
+ * stays hidden: its :not(:has()) rule above outranks these. */
+@media screen {
+    .md-tabs {
+        display: block;
+    }
+}
+
+.md-tabs__short {
+    display: none;
+}
+
+@media screen and (max-width: 76.234375em) {
+    /* The grid has no side margin here; line the first pill's label up
+     * with the menu button above it. */
+    .md-tabs > .md-grid {
+        padding-right: 0.6rem;
+        padding-left: 0.6rem;
+    }
+
+    [dir] .md-tabs__link svg {
+        display: none;
+    }
+
+    .md-tabs__link {
+        padding-right: 0.45rem;
+        padding-left: 0.45rem;
+    }
+
+    .md-tabs__item--active .md-tabs__link::after {
+        right: 0.45rem;
+        left: 0.45rem;
+    }
+}
+
+@media screen and (max-width: 59.984375em) {
+    .md-tabs__label {
+        display: none;
+    }
+
+    .md-tabs__short {
+        display: inline;
+    }
+
+    .md-tabs__link {
+        padding: 0.32rem 0.4rem;
+        font-size: 0.62rem;
+    }
+
+    .md-tabs__item--active .md-tabs__link::after {
+        right: 0.4rem;
+        left: 0.4rem;
+    }
+}
+
+@media screen and (max-width: 41.984375em) {
+    [dir] .md-tabs__link svg {
+        display: block;
+        width: 0.9rem;
+        height: 0.9rem;
+    }
+
+    .md-tabs__item:not(.md-tabs__item--active) .md-tabs__short {
+        display: none;
+    }
+
+    /* Spread like a phone's tab bar; where the row overflows,
+     * space-between falls back to the start, so it still scrolls. */
+    [dir] .md-tabs__list {
+        justify-content: space-between;
+        gap: 0;
+    }
+
+    .md-tabs > .md-grid {
+        padding-right: 0.4rem;
+        padding-left: 0.4rem;
+    }
+
+    .md-tabs__link {
+        padding: 0.38rem 0.32rem;
+    }
+
+    .md-tabs__item--active .md-tabs__link {
+        padding-right: 0.5rem;
+        padding-left: 0.45rem;
+    }
+}
+
+/* Every stage's pills are the same height, so the header keeps one height
+ * as the row reforms. */
+.md-tabs .md-tabs__link {
+    box-sizing: border-box;
+    height: 1.65rem;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* The smallest phones (360px and under): the active tab drops its label
+ * too, so all nine icons fit. */
+@media screen and (max-width: 22.5em) {
+    .md-tabs__item--active .md-tabs__short {
+        display: none;
+    }
+
+    .md-tabs__item--active .md-tabs__link {
+        padding-right: 0.32rem;
+        padding-left: 0.32rem;
+    }
+}
+
+.md-tabs__list {
+    --captf-fade-start: 0px;
+    --captf-fade-end: 0px;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 var(--captf-fade-start), #000 calc(100% - var(--captf-fade-end)), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 var(--captf-fade-start), #000 calc(100% - var(--captf-fade-end)), transparent);
+}
+
+.captf-tabs--fade-start .md-tabs__list {
+    --captf-fade-start: 3rem;
+}
+
+.captf-tabs--fade-end .md-tabs__list {
+    --captf-fade-end: 3rem;
+}
+
+/* Below 45em the drawer carries the navigation; keep the bar uncluttered. */
+@media screen and (max-width: 44.9375em) {
+    .captf-sitenav {
+        display: none;
+    }
+
+    .md-header__title {
+        flex-grow: 1;
+    }
+}
+
+/* 2. Scale and layout -----------------------------------------------------
+ * The theme grows the root font with the window (20px, then 22px from
+ * 1600px, 24px from 2000px), so on a large monitor every word gets bigger
+ * while the content column barely widens. Hold the root at 20px and give
+ * large windows a wider grid instead: more room for tables, same type.
+ */
+@media screen and (min-width: 100em) {
+    html {
+        font-size: 125%;
+    }
+
+    .md-grid {
+        max-width: 66rem;
+    }
+}
+
+@media screen and (min-width: 125em) {
+    html {
+        font-size: 125%;
+    }
+
+    .md-grid {
+        max-width: 72rem;
+    }
+}
+
+/* With header.autohide the header (and the tabs inside it) slides up out of
+ * view while scrolling down: the theme sets `hidden` on it and translates
+ * it by its height. The sidebars stay pinned at `top` = header height, so
+ * they would sit under a strip of dead space; follow the header instead.
+ * The theme's script writes that offset as an inline `top` style, and sizes
+ * each sidebar's scroll area (inline `height`) for it, so both overrides
+ * need !important and apply only while the header is hidden. A sidebar is
+ * 1.1rem padded top and bottom, so its scroll area is the window less
+ * 2.2rem. The sidebar box itself is made window-high too: the theme leaves
+ * it a few lines tall with the scroll area hanging out of it, and sticky
+ * positioning only keeps the box, not the overhang, out of the footer.
+ * Window-high, the box is pushed up at the end of the page and stops at the
+ * footer. Only where each sidebar is docked: the nav from 76.25em (a
+ * drawer below that), the table of contents from 60em. */
+.md-sidebar {
+    transition: top 250ms cubic-bezier(0.1, 0.7, 0.1, 1);
+}
+
+@media screen and (min-width: 76.25em) {
+    body:has(.md-header[hidden]) .md-sidebar--primary {
+        top: 0 !important;
+        height: 100vh;
+    }
+
+    body:has(.md-header[hidden]) .md-sidebar--primary .md-sidebar__scrollwrap {
+        height: calc(100vh - 2.2rem) !important;
+    }
+}
+
+@media screen and (min-width: 60em) {
+    body:has(.md-header[hidden]) .md-sidebar--secondary {
+        top: 0 !important;
+        height: 100vh;
+    }
+
+    body:has(.md-header[hidden]) .md-sidebar--secondary .md-sidebar__scrollwrap {
+        height: calc(100vh - 2.2rem) !important;
+    }
+}
+
+/* 3. Typography -----------------------------------------------------------
+ * The modern variant sets body copy at 1.8 line height; 1.65 keeps it airy
+ * without the gaps.
+ */
+.md-typeset {
+    line-height: 1.65;
+}
+
+/* 4. Tables ---------------------------------------------------------------
+ * The reference and troubleshooting pages carry wide tables full of long
+ * identifiers. The theme pads cells generously and lets words break
+ * anywhere ("SecretFo|und"), which squeezes text columns into tall stacks.
+ * Tighter cells, a smaller size, and breaks only where tables.js adds them.
+ */
+.md-typeset table:not([class]) {
+    font-size: 0.68rem;
+    line-height: 1.5;
+}
+
+.md-typeset table:not([class]) :is(th, td) {
+    padding: 0.55em 0.8em;
+    vertical-align: top;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+}
+
+.md-typeset table:not([class]) th {
+    vertical-align: bottom;
+}
+
+.md-typeset table:not([class]) code {
+    padding: 0 0.25em;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+/* Five or more columns: keep each column readable, and let the table
+ * scroll sideways (inside its own box) when the page is too narrow. Pages
+ * built around such tables also hide the right-hand TOC (`hide: [toc]`,
+ * see STYLE.md), which widens the column from about 690px to 930px. */
+.md-typeset table:not([class]):has(tr > :nth-child(5)) :is(th, td) {
+    min-width: 7rem;
+}
+
+/* On a phone every table scrolls rather than shrinking to a word a line.
+ * The :has() repeats the rule above's specificity so this one wins. */
+@media screen and (max-width: 44.9375em) {
+    .md-typeset table:not([class]):has(tr > *) :is(th, td) {
+        min-width: 10rem;
+    }
+
+    .md-typeset table:not([class]):has(tr > *) :is(th, td):first-child {
+        min-width: 6rem;
+    }
+}
+
+/* 5. Admonitions ----------------------------------------------------------
+ * The theme sets admonition text well below body size (12.8px against
+ * 15px); match the tables instead.
+ */
+.md-typeset :is(.admonition, details) {
+    font-size: 0.68rem;
+    line-height: 1.6;
+}
+
+/* 6. Page metadata and banner ---------------------------------------------
+ * Dates and authors under each page are metadata: smaller and muted, not
+ * body-sized. The pre-release banner was 10px; make it readable.
+ */
+.md-source-file {
+    font-size: 0.64rem;
+    color: var(--md-default-fg-color--light);
+}
+
+.captf-source__label {
+    margin-right: 0.15em;
+    color: var(--md-default-fg-color--lighter);
+}
+
+.md-banner {
+    font-size: 0.65rem;
+}
+
+/* 7. Landing pages --------------------------------------------------------
+ * A hero block, and grid cards that lift on hover.
+ */
+/* The home page's section headings, the targets of the drawer's anchors:
+ * land below the header (2.4rem) with the small label over each heading
+ * in view, not under it. */
+.captf-landing h2[id] {
+    scroll-margin-top: 4.8rem;
+}
+
+.md-typeset .captf-hero {
+    margin: 0 0 2rem;
+    padding: 2.4rem 2rem;
+    border-radius: 0.6rem;
+    background:
+        radial-gradient(circle at 85% 20%, rgba(169, 116, 255, 0.35), transparent 45%),
+        radial-gradient(circle at 10% 90%, rgba(91, 140, 255, 0.35), transparent 50%),
+        var(--captf-navy);
+    color: #E7E9F5;
+}
+
+.md-typeset .captf-hero h1 {
+    margin: 0 0 0.6rem;
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.md-typeset .captf-hero p {
+    max-width: 38rem;
+    color: #A3A9C7;
+    font-size: 0.85rem;
+}
+
+.md-typeset .captf-hero .md-button {
+    margin: 0.6rem 0.4rem 0 0;
+    color: #FFFFFF;
+    border: 1px solid rgba(231, 233, 245, 0.35);
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.md-typeset .captf-hero .md-button:hover {
+    background-color: rgba(255, 255, 255, 0.14);
+}
+
+/* The home page hides both sidebars, so its prose would run the full grid
+ * width on a large screen; keep a readable measure. The page actions
+ * (edit, view, copy) would sit on top of the hero, so hide them there. */
+.md-content:has(.captf-hero) .md-content__inner > :is(p, ul, ol) {
+    max-width: 46rem;
+}
+
+.md-content:has(.captf-hero) .md-content__button {
+    display: none;
+}
+
+.md-typeset .captf-hero .md-button--primary {
+    background-color: var(--captf-blue);
+    border-color: var(--captf-blue);
+}
+
+.md-typeset .grid.cards > ul > li,
+.md-typeset .grid > .card {
+    font-size: 0.7rem;
+    transition: border-color 125ms, box-shadow 125ms, transform 125ms;
+}
+
+.md-typeset .grid.cards > ul > li:hover,
+.md-typeset .grid > .card:hover {
+    border-color: var(--captf-purple);
+    transform: translateY(-2px);
+}
+
+.md-typeset .grid.cards .lg {
+    color: var(--captf-blue);
+}
+
+/* 8. "See also" box -------------------------------------------------------
+ * A "related" admonition for the See also block that closes most pages:
+ * `!!! related "See also"`. Brand blue, with a link icon.
+ */
+:root {
+    --md-admonition-icon--related: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10.59 13.41c.41.39.41 1.03 0 1.42-.39.39-1.03.39-1.42 0a5.003 5.003 0 0 1 0-7.07l3.54-3.54a5.003 5.003 0 0 1 7.07 0 5.003 5.003 0 0 1 0 7.07l-1.49 1.49c.01-.82-.12-1.64-.4-2.42l.47-.48a2.982 2.982 0 0 0 0-4.24 2.982 2.982 0 0 0-4.24 0l-3.53 3.53a2.982 2.982 0 0 0 0 4.24m2.82-4.24c.39-.39 1.03-.39 1.42 0a5.003 5.003 0 0 1 0 7.07l-3.54 3.54a5.003 5.003 0 0 1-7.07 0 5.003 5.003 0 0 1 0-7.07l1.49-1.49c-.01.82.12 1.64.4 2.43l-.47.47a2.982 2.982 0 0 0 0 4.24 2.982 2.982 0 0 0 4.24 0l3.53-3.53a2.982 2.982 0 0 0 0-4.24.973.973 0 0 1 0-1.42"/></svg>');
+}
+
+.md-typeset .admonition.related,
+.md-typeset details.related {
+    border-color: var(--captf-blue);
+}
+
+
+.md-typeset .related > .admonition-title::before,
+.md-typeset .related > summary::before {
+    background-color: var(--captf-blue);
+    -webkit-mask-image: var(--md-admonition-icon--related);
+    mask-image: var(--md-admonition-icon--related);
+}
+
+/* 10. Footer ---------------------------------------------------------------
+ * Mirrors captf.io's footer (overrides/partials/footer.html): a navy band
+ * in both schemes with a gradient rule, a brand column and link columns,
+ * and a bottom line. Above it, previous/next pages as two outlined cards.
+ */
+.md-footer {
+    background-color: var(--md-default-bg-color);
+    color: var(--md-default-fg-color);
+}
+
+.md-footer__inner {
+    display: flex;
+    gap: 0.8rem;
+    padding: 1.6rem 0.8rem 2rem;
+}
+
+/* The theme bottom-aligns each link's contents with a top margin, inside a
+ * box that clips overflow, pushes "Next" right with margin-left: auto, and
+ * hides the "Previous" title on phones. As cards, lay them out directly:
+ * centered, no stray margins, both titles at every width. */
+.md-footer__link {
+    flex: 1 1 0;
+    align-items: center;
+    min-height: 3.4rem;
+    margin: 0;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--md-default-fg-color--lightest);
+    border-radius: 0.5rem;
+    transition: border-color 125ms, background-color 125ms;
+}
+
+.md-footer__link:hover {
+    border-color: var(--captf-purple);
+    background-color: var(--md-accent-fg-color--transparent);
+    opacity: 1;
+}
+
+/* [dir] matches the theme's `[dir=ltr] .md-footer__link--next` specificity. */
+[dir] .md-footer__link--next {
+    justify-content: flex-end;
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.md-footer__button {
+    margin: 0;
+}
+
+.md-footer__title {
+    margin-bottom: 0;
+    padding: 0 0.6rem;
+    font-size: 0.8rem;
+}
+
+@media screen and (max-width: 44.984375em) {
+    .md-footer__link--prev .md-footer__title {
+        display: block;
+    }
+}
+
+.md-footer__direction {
+    color: var(--md-default-fg-color--light);
+}
+
+.captf-footer {
+    /* A shade darker than the navy page, so it still reads as the footer. */
+    background: #05060E;
+    color: #A3A9C7;
+    font-size: 0.7rem;
+    line-height: 1.6;
+}
+
+.captf-footer__inner {
+    padding: 0 0.8rem;
+}
+
+.captf-footer__rule {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--captf-blue), var(--captf-purple), transparent);
+    opacity: 0.6;
+}
+
+.captf-footer__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) repeat(4, minmax(0, 1fr));
+    gap: 2rem;
+    padding: 2.2rem 0 1.6rem;
+}
+
+.captf-footer a {
+    color: #C9CDE6;
+    text-decoration: none;
+}
+
+.captf-footer a:hover {
+    color: #FFFFFF;
+}
+
+.captf-footer__logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #FFFFFF;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.captf-footer .captf-footer__logo {
+    color: #FFFFFF;
+}
+
+.captf-footer__tagline {
+    margin: 0.8rem 0 0.4rem;
+    color: #E7E9F5;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.captf-footer__grad {
+    background: linear-gradient(90deg, var(--captf-blue), var(--captf-purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.captf-footer__about {
+    max-width: 22rem;
+    margin: 0 0 1rem;
+}
+
+.captf-footer__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.2rem 0.65rem;
+    border: 1px solid #262E5C;
+    border-radius: 1rem;
+    background: #161B3A;
+    font-size: 0.62rem;
+}
+
+.captf-footer__live {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: #4ADE80;
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6);
+    animation: captf-live 2.4s ease-out infinite;
+}
+
+@keyframes captf-live {
+    0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.55); }
+    70%, 100% { box-shadow: 0 0 0 0.4rem rgba(74, 222, 128, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .captf-footer__live {
+        animation: none;
+    }
+}
+
+.captf-footer__col h2 {
+    margin: 0.2rem 0 0.7rem;
+    color: #E7E9F5;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.captf-footer__col ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.captf-footer__col li {
+    margin: 0 0 0.45rem;
+}
+
+.captf-footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    padding: 1rem 0 1.4rem;
+    border-top: 1px solid #1C2247;
+    font-size: 0.64rem;
+}
+
+.captf-footer__bottom p {
+    margin: 0;
+}
+
+.captf-footer__end {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+}
+
+.captf-footer__social {
+    display: flex;
+    gap: 0.7rem;
+}
+
+.captf-footer__social a {
+    display: inline-flex;
+    width: 1rem;
+    height: 1rem;
+}
+
+.captf-footer__social svg {
+    width: 100%;
+    height: 100%;
+    fill: currentcolor;
+}
+
+@media screen and (max-width: 59.9375em) {
+    .captf-footer__grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1.4rem;
+    }
+
+    .captf-footer__brand {
+        grid-column: 1 / -1;
+    }
+}
+
+@media screen and (max-width: 29.9375em) {
+    .md-footer__inner {
+        flex-direction: column;
+    }
+
+    .captf-footer__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* 11. Blog share links ----------------------------------------------------
+ * A row of share links under each post (overrides/partials/comments.html).
+ */
+.captf-share {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 1.6rem 0 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.captf-share__label {
+    margin-right: 0.3rem;
+    color: var(--md-default-fg-color--light);
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.captf-share__link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.8rem;
+    height: 1.8rem;
+    padding: 0;
+    border: 1px solid var(--md-default-fg-color--lightest);
+    border-radius: 50%;
+    background: none;
+    color: var(--md-default-fg-color--light);
+    cursor: pointer;
+    transition: color 125ms, border-color 125ms;
+}
+
+.captf-share__link:hover,
+.captf-share__link:focus-visible {
+    border-color: var(--captf-purple);
+    color: var(--captf-purple);
+}
+
+.captf-share__link svg {
+    width: 0.85rem;
+    height: 0.85rem;
+    fill: currentcolor;
+}
+
+.captf-share__link[data-copied]::after {
+    position: absolute;
+    top: calc(100% + 0.3rem);
+    left: 50%;
+    padding: 0.15rem 0.45rem;
+    border-radius: 0.2rem;
+    background: var(--md-default-fg-color);
+    color: var(--md-default-bg-color);
+    font-size: 0.6rem;
+    white-space: nowrap;
+    content: "Link copied";
+    transform: translateX(-50%);
+}
+
+/* 12. Sidebar navigation ----------------------------------------------------
+ * Every page has an icon and a subtitle (`icon:`, `subtitle:` front matter;
+ * see tools/nav_meta.json), so each entry is a row: icon, then title over a
+ * muted subtitle. Titles wrap instead of being cut off. The active page
+ * gets a brand-tinted pill with a purple edge. Group headings without an
+ * index page are small-caps labels; sections with one stay links, with
+ * their pages indented along a guide line. The icons are Lucide (stroked),
+ * so they take no fill.
+ */
+.md-sidebar--primary .md-nav__link {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    margin: 0.05rem 0;
+    padding: 0.32rem 0.5rem;
+    border-radius: 0.4rem;
+    color: #C9CDE6;
+    font-size: 0.68rem;
+    line-height: 1.35;
+    transition: background-color 125ms, color 125ms;
+}
+
+.md-sidebar--primary .md-nav__link .md-ellipsis {
+    overflow: visible;
+    white-space: normal;
+    /* Kind names such as TerraformMachinePoolTemplate are one long word:
+     * let them break rather than run under the sidebar's edge. */
+    overflow-wrap: anywhere;
+}
+
+.md-sidebar--primary .md-nav__link > svg,
+.md-sidebar--primary .md-nav__link > .md-ellipsis > svg {
+    flex: 0 0 auto;
+    width: 0.85rem;
+    height: 0.85rem;
+    margin-top: 0.08rem;
+    color: #7F89B5;
+    fill: none;
+    stroke: currentcolor;
+    transition: color 125ms;
+}
+
+.md-sidebar--primary a.md-nav__link:hover,
+.md-sidebar--primary a.md-nav__link:focus-visible {
+    background-color: rgba(255, 255, 255, 0.045);
+    color: #FFFFFF;
+}
+
+.md-sidebar--primary a.md-nav__link:hover > svg {
+    color: var(--captf-blue);
+}
+
+.md-sidebar--primary .md-nav__link--active,
+.md-sidebar--primary .md-nav__link--active:hover {
+    background: linear-gradient(90deg, rgba(91, 140, 255, 0.16), rgba(169, 116, 255, 0.07));
+    box-shadow: inset 2px 0 0 var(--captf-purple);
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+.md-sidebar--primary .md-nav__link--active > svg {
+    color: var(--captf-purple);
+}
+
+/* The subtitle under each title. */
+.md-sidebar--primary .md-nav__link small {
+    display: block;
+    margin-top: 0.12rem;
+    color: #7F89B5;
+    font-size: 0.58rem;
+    font-weight: 400;
+    line-height: 1.3;
+}
+
+.md-sidebar--primary .md-nav__link--active small {
+    color: #A3A9C7;
+}
+
+/* A section with an index page renders as a container (the theme gives it
+ * .md-nav__link too) holding the page's link and, where it has more pages,
+ * a toggle. The container itself is not a row: no padding of its own, so
+ * its link lines up with the plain rows around it, and the toggle is a
+ * bare chevron, never part of the active pill. */
+.md-sidebar--primary .md-nav__container {
+    align-items: flex-start;
+    gap: 0;
+    padding: 0;
+}
+
+.md-sidebar--primary .md-nav__container > a.md-nav__link {
+    flex: 1 1 auto;
+    margin: 0;
+}
+
+.md-sidebar--primary .md-nav__container > label.md-nav__link,
+.md-sidebar--primary .md-nav__container > label.md-nav__link:hover,
+.md-sidebar--primary .md-nav__container > label.md-nav__link:focus,
+.md-sidebar--primary .md-nav__container > label.md-nav__link--active {
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0.32rem 0.4rem;
+    background: none;
+    box-shadow: none;
+}
+
+/* The chevron: at the row's end, level with the title's first line. */
+.md-sidebar--primary .md-nav__link > .md-nav__icon {
+    flex: 0 0 auto;
+    margin-top: 0.05rem;
+    margin-left: auto;
+}
+
+/* On the sidebar (76.25em and up) the tab's sections are always open, so
+ * they read as headings: one without an index page is a small-caps label;
+ * one with an index page keeps its link, as the group's heading. Their
+ * pages are indented along a guide line; the top level (the tab's own
+ * section) stays flush. In the drawer every section is an accordion
+ * instead (12b). */
+@media screen and (min-width: 76.25em) {
+    .md-sidebar--primary .md-nav__item--section > label.md-nav__link {
+        margin-top: 0.9rem;
+        padding-bottom: 0.2rem;
+        color: #7F89B5;
+        font-size: 0.56rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+    }
+
+    .md-sidebar--primary .md-nav__item--section > label.md-nav__link .md-nav__icon {
+        display: none;
+    }
+
+    .md-sidebar--primary .md-nav__item--section > .md-nav__container {
+        margin-top: 0.6rem;
+    }
+
+    .md-sidebar--primary .md-nav__item--section > .md-nav__container > a.md-nav__link {
+        color: #E7E9F5;
+        font-weight: 700;
+    }
+
+    .md-sidebar--primary .md-nav__item--section .md-nav__item--section > .md-nav {
+        margin-left: 0.9rem;
+        padding-left: 0.35rem;
+        border-left: 1px solid #1C2247;
+    }
+}
+
+/* 12b. The drawer ---------------------------------------------------------
+ * Below 76.25em the primary navigation is the drawer behind the header's
+ * menu button, on every page (the home page renders it for this alone:
+ * .captf-drawer-only). Wider than the theme's 12.1rem (up to 16rem, always
+ * leaving 3.2rem of the page showing) so titles wrap less, and full height
+ * against the window's edge rather than a floating card. From the top:
+ * the brand on one line; the site switch, Home / Docs / Blog (nav.html);
+ * then, for the part of the site the reader is in (nav.html), a row per
+ * top-level section with its icon and subtitle (nav-item.html), or on the
+ * home page a row per landing section, divided by hairlines. Every section, at any depth, is
+ * an accordion with a chevron, its pages indented along a guide line. The
+ * page behind does not scroll while the drawer is open, and Escape closes
+ * it (sitenav.js). */
+.captf-drawer-sites,
+.captf-drawer-close,
+.captf-drawer-heading {
+    display: none;
+}
+
+@media screen and (min-width: 76.25em) {
+    .captf-drawer-only {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 76.234375em) {
+    :root {
+        --captf-drawer-width: min(16rem, calc(100vw - 3.2rem));
+    }
+
+    /* Flush with the window's top, left and bottom edges, full height:
+     * the theme floats it as a card inset 0.4rem all round. Only the
+     * corners facing the page are rounded. */
+    [dir] .md-sidebar--primary {
+        top: 0;
+        left: calc(-1 * var(--captf-drawer-width));
+        width: var(--captf-drawer-width);
+        height: 100%;
+        border-radius: 0 0.8rem 0.8rem 0;
+    }
+
+    [data-md-toggle=drawer]:checked ~ .md-container .md-sidebar--primary {
+        transform: translateX(var(--captf-drawer-width));
+    }
+
+    /* Locking the page drops a classic scrollbar, which would shift the
+     * page sideways under the overlay; keep its gutter instead. */
+    html {
+        scrollbar-gutter: stable;
+    }
+
+    html:has(#__drawer:checked) {
+        overflow: hidden;
+    }
+
+    /* The list scrolls without a scrollbar of its own (touch, wheel and
+     * keys still scroll it); the window behind is locked, so there is
+     * only ever one thing scrolling. */
+    .md-sidebar--primary .md-sidebar__scrollwrap {
+        scrollbar-width: none;
+    }
+
+    .md-sidebar--primary .md-sidebar__scrollwrap::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* The brand row stays put at the top while the list scrolls under it,
+     * with room on the right for the close button. */
+    .md-sidebar--primary .md-nav--primary > .md-nav__title {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        overflow: hidden;
+        padding: 0.6rem 2.6rem 0.6rem 0.8rem;
+        background-color: #0F1330;
+        color: #FFFFFF;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* The close button: fixed to the drawer (its transform makes the
+     * drawer the containing block), level with the brand. */
+    .captf-drawer-close {
+        position: fixed;
+        top: 0.5rem;
+        right: 0.5rem;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.5rem;
+        color: #A3A9C7;
+        cursor: pointer;
+        transition: background-color 125ms, color 125ms;
+    }
+
+    .captf-drawer-close:hover,
+    .captf-drawer-close:focus-visible {
+        background-color: rgba(255, 255, 255, 0.07);
+        color: #FFFFFF;
+    }
+
+    .captf-drawer-close svg {
+        width: 1.1rem;
+        height: 1.1rem;
+        fill: none;
+        stroke: currentcolor;
+    }
+
+    /* The heading over a list that is not the nav: the home page's
+     * sections, the blog's recent posts. */
+    .captf-drawer-heading {
+        display: block;
+        margin: 0.8rem 0.8rem 0.3rem;
+        color: #7F89B5;
+        font-size: 0.56rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+    }
+
+    /* The site switch: a segmented control. */
+    .captf-drawer-sites {
+        display: flex;
+        gap: 0.2rem;
+        margin: 0.1rem 0.6rem 0.7rem;
+        padding: 0.2rem;
+        border: 1px solid #1C2247;
+        border-radius: 0.6rem;
+        background-color: rgba(255, 255, 255, 0.03);
+        list-style: none;
+    }
+
+    .captf-drawer-sites > li {
+        flex: 1 1 0;
+        margin: 0;
+    }
+
+    .captf-drawer-sites .captf-drawer-sites__link {
+        justify-content: center;
+        gap: 0.3rem;
+        height: 1.65rem;
+        padding: 0 0.4rem;
+        border-radius: 0.45rem;
+        color: #A3A9C7;
+        font-size: 0.62rem;
+        font-weight: 600;
+    }
+
+    .captf-drawer-sites__link svg {
+        width: 0.8rem;
+        height: 0.8rem;
+        fill: none;
+        stroke: currentcolor;
+    }
+
+    .captf-drawer-sites .captf-sitenav__link--active {
+        background: linear-gradient(135deg, rgba(91, 140, 255, 0.22), rgba(169, 116, 255, 0.15));
+        box-shadow: inset 0 0 0 1px rgba(150, 130, 255, 0.32);
+        color: #FFFFFF;
+    }
+
+    .captf-drawer-sites .captf-sitenav__link--active::after {
+        content: none;
+    }
+
+    /* The recent posts: plain rows, the title over the date. */
+    .captf-drawer-posts > .md-nav__item {
+        padding: 0.05rem 0;
+    }
+
+    /* Top-level rows: the sections, divided by hairlines. */
+    .md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item {
+        padding: 0.15rem 0;
+    }
+
+    .md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item + .md-nav__item {
+        border-top: 1px solid #161B3D;
+    }
+
+    .md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item > .md-nav__link,
+    .md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item > .md-nav__container > a.md-nav__link {
+        color: #E7E9F5;
+        font-weight: 600;
+    }
+
+    .md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item > .md-nav__link > svg,
+    .md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item > .md-nav__container > a > svg {
+        color: #8C96C8;
+    }
+
+    .md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item--active > .md-nav__link > svg,
+    .md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item--active > .md-nav__container > a > svg {
+        color: #C4B5FD;
+    }
+
+    /* A group below the top level without an index page: the same
+     * small-caps heading as on the sidebar, keeping its chevron here since
+     * it folds. Groups with an index page are rows like any page. */
+    .md-sidebar--primary .md-nav--primary .md-nav .md-nav__item--nested > label.md-nav__link {
+        align-items: center;
+        margin-top: 0.45rem;
+        color: #7F89B5;
+        font-size: 0.56rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+    }
+
+    /* Below the top level: indented along a guide line. */
+    .md-sidebar--primary .md-nav__item--nested > .md-nav {
+        margin-left: 0.9rem;
+        padding-left: 0.3rem;
+        border-left: 1px solid #1C2247;
+    }
+}
+
+/* Phones (below 45em): the drawer is the whole window, edge to edge, and
+ * closes from its own button (12b), since nothing is left showing beside
+ * it to tap. */
+@media screen and (max-width: 44.9375em) {
+    :root {
+        --captf-drawer-width: 100vw;
+    }
+
+    [dir] .md-sidebar--primary {
+        border-radius: 0;
+    }
+
+    /* Nothing of the page shows beside the drawer, so a sideways shift
+     * behind it is invisible: no need to keep a scrollbar's gutter, which
+     * would paint over the drawer's right edge. */
+    html {
+        scrollbar-gutter: auto;
+    }
+}
+
+/* 13. Table of contents ("On this page") ---------------------------------- */
+.md-sidebar--secondary .md-nav__title {
+    color: #7F89B5;
+    font-size: 0.56rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.md-nav--secondary .md-nav__list {
+    border-left: 1px solid #1C2247;
+}
+
+.md-nav--secondary .md-nav__list .md-nav__list {
+    border-left: 0;
+}
+
+.md-nav--secondary .md-nav__link {
+    margin: 0;
+    padding: 0.2rem 0 0.2rem 0.7rem;
+    color: #A3A9C7;
+    font-size: 0.64rem;
+    line-height: 1.4;
+    transition: color 125ms, box-shadow 125ms;
+}
+
+.md-nav--secondary .md-nav__list .md-nav__list .md-nav__link {
+    padding-left: 1.3rem;
+}
+
+.md-nav--secondary .md-nav__link:hover {
+    color: #FFFFFF;
+}
+
+.md-nav--secondary .md-nav__link--active {
+    box-shadow: inset 2px 0 0 var(--captf-purple);
+    color: #FFFFFF;
+}
+
+/* 9. Small pieces --------------------------------------------------------- */
+
+/* Nav subtitles (`subtitle:` front matter) are a quiet second line, not
+ * bold like the section title they sit under. */
+.md-nav__link small {
+    font-weight: 400;
+    color: var(--md-default-fg-color--light);
+}
+
+/* Nav status badges (new, deprecated, encrypted). The theme's .md-status
+ * class would attach its JavaScript tooltip, which outlives a page change
+ * (see overrides/partials/nav-item.html), so the badge is .captf-status:
+ * the theme's icon styling, redone here, plus a CSS tooltip anchored to the
+ * badge. The icon is ::after, the tooltip ::before. The theme has no
+ * encrypted icon; this one is Lucide's lock, like its others. */
+:root {
+    --captf-status--encrypted: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>');
+}
+
+.captf-status {
+    position: relative;
+}
+
+.captf-status::after {
+    display: inline-block;
+    width: 1.125em;
+    height: 1.125em;
+    vertical-align: text-bottom;
+    content: "";
+    background-color: var(--md-default-fg-color--light);
+    -webkit-mask-image: var(--md-status);
+    mask-image: var(--md-status);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+}
+
+.captf-status:hover::after {
+    background-color: currentcolor;
+}
+
+.captf-status--new::after {
+    -webkit-mask-image: var(--md-status--new);
+    mask-image: var(--md-status--new);
+}
+
+.captf-status--deprecated::after {
+    -webkit-mask-image: var(--md-status--deprecated);
+    mask-image: var(--md-status--deprecated);
+}
+
+.captf-status--encrypted::after {
+    -webkit-mask-image: var(--captf-status--encrypted);
+    mask-image: var(--captf-status--encrypted);
+}
+
+.captf-status[data-captf-tip]::before {
+    position: absolute;
+    top: calc(100% + 0.3rem);
+    right: 0;
+    z-index: 4;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.2rem;
+    background-color: var(--md-default-fg-color);
+    color: var(--md-default-bg-color);
+    font-size: 0.6rem;
+    font-weight: 400;
+    line-height: 1.4;
+    white-space: nowrap;
+    content: attr(data-captf-tip);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 125ms, visibility 125ms;
+}
+
+.captf-status[data-captf-tip]:hover::before,
+.md-nav__link:focus-visible .captf-status[data-captf-tip]::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* The glossary is a definition list: terms bold, definitions set apart. */
+.md-typeset dl dt {
+    margin-top: 1.2em;
+    font-weight: 700;
+}
+
+.md-typeset dl dd {
+    margin-top: 0.3em;
+}
+
+/* Checklists (production readiness) carry long bold-led items. */
+.md-typeset .task-list-item {
+    margin-bottom: 0.5em;
+}
+
+/* Abbreviations with a tooltip: a quiet dotted underline... */
+.md-typeset abbr {
+    text-decoration: underline dotted;
+    text-underline-offset: 0.2em;
+}
+
+/* ...but not in headings, card titles or the hero, where it is noise. */
+.md-typeset :is(h1, h2, h3, h4, .captf-hero, .grid.cards strong) abbr {
+    text-decoration: none;
+    border-bottom: none;
+}

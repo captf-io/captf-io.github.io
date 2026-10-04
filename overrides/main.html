@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{#-
+  Head metadata for sharing, search engines, feed readers and LLM tools,
+  added to what the theme emits. Zensical's social plugin already writes
+  og:type/title/description/image/url and the twitter: tags (each page's
+  card), so this adds only what it lacks:
+
+  - og:site_name, og:locale, image alt text, and article: times, section,
+    tags and author on every page but the home page;
+  - JSON-LD: Organization and WebSite (with the ?q= site search) on the
+    home page, BlogPosting on blog posts, TechArticle on docs pages, WebPage
+    elsewhere, and a BreadcrumbList from the page's nav ancestors;
+  - alternates: the RSS and JSON feeds, llms.txt, and the page's Markdown
+    copy (written by the llmstxt plugin);
+  - install metadata: web manifest, touch icon, theme colours.
+
+  The template context (Zensical 0.0.67) has no page.file or
+  page.is_homepage and fails on attributes of undefined values, so every
+  lookup is guarded with `is defined`. The home page is the one with an
+  empty url. Post dates come from the blog plugin (page.config.date);
+  docs dates from the git_*_iso front matter that tools/import_git_meta.py
+  writes. A post's JSON-LD image is its social card (posts are never
+  section indexes, so the card path follows from the URL); other pages use
+  the brand image.
+-#}
+{% block extrahead %}
+  {{ super() }}
+  {%- set site = config.site_url -%}
+  {%- set brand_image = site ~ "assets/landing/og.jpg" -%}
+  {%- set org = {"@type": "Organization", "name": "The CAPTF Maintainers", "url": "https://github.com/captf-io"} -%}
+  {%- set publisher = {"@type": "Organization", "name": config.site_name, "url": site, "logo": {"@type": "ImageObject", "url": site ~ "assets/brand/mark.svg"}} -%}
+  {%- if page is defined and page -%}
+    {%- set meta = page.meta if page.meta is defined and page.meta else {} -%}
+    {%- set is_home = not page.url -%}
+    {%- set is_post = page.authors is defined and page.authors and page.config is defined and page.config and page.config.date is defined and page.config.date -%}
+    {%- set title = config.site_name if is_home else page.title ~ " - " ~ config.site_name -%}
+    {%- set description = meta.description if meta.description is defined and meta.description else config.site_description -%}
+    {%- set tags = meta.tags if meta.tags is defined and meta.tags else [] -%}
+    {%- if is_post -%}
+      {%- set published = (page.config.date.created | string)[:10] -%}
+      {%- set modified = ((page.config.date.updated if page.config.date.updated is defined and page.config.date.updated else page.config.date.created) | string)[:10] -%}
+      {%- set image = site ~ "assets/images/social/" ~ (page.url | trim("/")) ~ ".png" -%}
+    {%- else -%}
+      {%- set published = meta.git_creation_date_iso if meta.git_creation_date_iso is defined else none -%}
+      {%- set modified = meta.git_revision_date_iso if meta.git_revision_date_iso is defined else none -%}
+      {%- set image = brand_image -%}
+    {%- endif -%}
+    {%- set ancestors = page.ancestors if page.ancestors is defined and page.ancestors else [] -%}
+    {%- set section = (ancestors | last).title if ancestors else none -%}
+
+    <meta property="og:site_name" content="{{ config.site_name }}">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:image:alt" content="{{ title }}">
+    <meta name="twitter:image:alt" content="{{ title }}">
+    {% if not is_home %}
+      {% if published %}<meta property="article:published_time" content="{{ published }}">{% endif %}
+      {% if modified %}<meta property="article:modified_time" content="{{ modified }}">{% endif %}
+      {% if section %}<meta property="article:section" content="{{ section }}">{% endif %}
+      {% for tag in tags %}<meta property="article:tag" content="{{ tag }}">{% endfor %}
+      <meta property="article:author" content="The CAPTF Maintainers">
+    {% endif %}
+
+    {#- Structured data. -#}
+    {% if is_home %}
+      <script type="application/ld+json">{{ {
+        "@context": "https://schema.org",
+        "@graph": [
+          {"@type": "Organization", "@id": site ~ "#organization", "name": config.site_name,
+           "alternateName": ["CAPTF", "CAPI Terraform", "Cluster API Provider Terraform"], "url": site,
+           "logo": site ~ "assets/brand/mark.svg", "image": brand_image, "description": description,
+           "sameAs": ["https://github.com/captf-io"]},
+          {"@type": "WebSite", "@id": site ~ "#website", "name": config.site_name, "url": site,
+           "description": description, "inLanguage": "en", "publisher": {"@id": site ~ "#organization"},
+           "potentialAction": {"@type": "SearchAction",
+             "target": {"@type": "EntryPoint", "urlTemplate": site ~ "?q={search_term_string}"},
+             "query-input": "required name=search_term_string"}}
+        ]
+      } | tojson }}</script>
+    {% else %}
+      {%- set kind = "BlogPosting" if is_post else ("TechArticle" if "docs/" in page.url else "WebPage") -%}
+      <script type="application/ld+json">{{ {
+        "@context": "https://schema.org",
+        "@type": kind,
+        "headline": page.title,
+        "description": description,
+        "url": page.canonical_url,
+        "mainEntityOfPage": page.canonical_url,
+        "image": image,
+        "datePublished": published,
+        "dateModified": modified,
+        "author": org,
+        "publisher": publisher,
+        "inLanguage": "en",
+        "keywords": tags,
+        "articleSection": section,
+        "isPartOf": {"@type": "WebSite", "name": config.site_name, "url": site}
+      } | tojson }}</script>
+      <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+        {{- {"@type": "ListItem", "position": 1, "name": config.site_name, "item": site} | tojson -}}
+        {%- for ancestor in ancestors | reverse -%}
+          {%- set link = ancestor.url if ancestor.url is defined and ancestor.url else none -%}
+          {%- if not link and ancestor.children is defined and ancestor.children -%}
+            {%- set first = ancestor.children | first -%}
+            {%- set link = first.url if first.url is defined and first.url else none -%}
+          {%- endif -%}
+          ,{{ {"@type": "ListItem", "position": loop.index + 1, "name": ancestor.title, "item": (site ~ link) if link else none} | tojson }}
+        {%- endfor -%}
+        ,{{ {"@type": "ListItem", "position": (ancestors | length) + 2, "name": page.title, "item": page.canonical_url} | tojson }}
+      ]}</script>
+    {% endif %}
+
+    {#- Alternates: feeds, llms.txt, this page as Markdown. -#}
+    {% if "rss" in config.plugins %}
+      <link rel="alternate" type="application/rss+xml" title="{{ config.site_name }} blog (RSS)" href="{{ 'feed_rss_created.xml' | url }}">
+      <link rel="alternate" type="application/feed+json" title="{{ config.site_name }} blog (JSON Feed)" href="{{ 'feed_json_created.json' | url }}">
+    {% endif %}
+    {% if "llmstxt" in config.plugins %}
+      <link rel="alternate" type="text/plain" title="llms.txt" href="{{ 'llms.txt' | url }}">
+      {% if page.markdown_url is defined and page.markdown_url %}
+        <link rel="alternate" type="text/markdown" title="{{ page.title }} (Markdown)" href="{{ page.markdown_url | url }}">
+      {% endif %}
+    {% endif %}
+  {%- endif %}
+
+  {#- Install metadata. -#}
+  <link rel="manifest" href="{{ 'site.webmanifest' | url }}">
+  <link rel="apple-touch-icon" href="{{ 'assets/landing/apple-touch-icon.png' | url }}">
+  <meta name="theme-color" content="#0A0D1C">
+{% endblock %}
+
+{#- The title bar: "<page> - <site_name>", as the theme does, except on the
+    home page, whose own title would repeat the site name: there, the site
+    name alone. (The theme's page.is_homepage is not set in Zensical; the
+    home page is the one with an empty url.) -#}
+{% block htmltitle %}
+  {%- set is_home = page is defined and page and not page.url -%}
+  {% if is_home %}
+    <title>{{ config.site_name }}</title>
+  {% elif page.meta and page.meta.title %}
+    <title>{{ page.meta.title }} - {{ config.site_name }}</title>
+  {% elif page.title %}
+    <title>{{ page.title | striptags }} - {{ config.site_name }}</title>
+  {% else %}
+    <title>{{ config.site_name }}</title>
+  {% endif %}
+{% endblock %}
+
+{#- A site-wide banner: CAPTF is pre-release. Dismissable under Zensical's
+    announce.dismiss feature. -#}
+{% block announce %}
+  <strong>Pre-release.</strong> Every CAPTF kind and the module contract are
+  <code>v1alpha1</code> and may still change.
+  <a href="{{ 'docs/operator-guide/limitations/' | url }}">Read the known limitations</a>.
+{% endblock %}

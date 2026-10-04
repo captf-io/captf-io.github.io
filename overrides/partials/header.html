@@ -1,0 +1,80 @@
+{#-
+  The theme's header partial (Zensical 0.0.67) with a site bar: after the
+  brand, links to Home, Docs and Blog, the active one picked from the page
+  URL (empty for the home page, docs/... or blog/...). The brand name links
+  home, like the logo beside it. The docs tabs below it render only on docs
+  pages (overrides/partials/tabs.html). Re-copy from the theme when
+  upgrading Zensical. Links carry aria-current, not title:
+  a title would get the theme's JavaScript tooltip. The site is dark only,
+  so the theme's colour toggle and its script are left out, and so is the
+  repository widget (repo_url still feeds the edit and view buttons).
+-#}
+{% set class = "md-header" %}
+{% if "navigation.tabs.sticky" in features %}
+  {% set class = class ~ " md-header--shadow md-header--lifted" %}
+{% elif "navigation.tabs" not in features %}
+  {% set class = class ~ " md-header--shadow" %}
+{% endif %}
+{%- set url = page.url if page is defined and page and page.url is defined and page.url else "" -%}
+{%- set site_links = [
+  {"name": "Home", "href": ".", "active": url == "" and page is defined and page},
+  {"name": "Docs", "href": "docs/", "active": url[:5] == "docs/"},
+  {"name": "Blog", "href": "blog/", "active": url[:5] == "blog/"},
+] -%}
+<header class="{{ class }}" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="{{ lang.t('header') }}">
+    <a href="{{ config.extra.homepage | d(nav.homepage.url, true) | url }}" class="md-header__button md-logo" aria-label="{{ config.site_name }}" data-md-component="logo">
+      {% include "partials/logo.html" %}
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="{{ lang.t('nav') }}">
+      {% set icon = config.theme.icon.menu or "material/menu" %}
+      {% include ".icons/" ~ icon ~ ".svg" %}
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          {#- '.' | url, as for the site links: an absolute URL. The home
+              page's own url is empty, which as an href means "this page",
+              and the header outlives instant page changes. -#}
+          <a href="{{ '.' | url }}" class="md-ellipsis captf-brand-link">
+            {{ config.extra.brand or config.site_name }}
+          </a>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            {% if page.meta and page.meta.title %}
+              {{ page.meta.title }}
+            {% else %}
+              {{ page.title }}
+            {% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+    <ul class="captf-sitenav" aria-label="Site">
+      {% for link in site_links %}
+        <li>
+          <a href="{{ link.href | url }}" class="captf-sitenav__link{% if link.active %} captf-sitenav__link--active{% endif %}"{% if link.active %} aria-current="page"{% endif %}>{{ link.name }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+    {% if config.extra.alternate %}
+      {% include "partials/alternate.html" %}
+    {% endif %}
+    {% if "search" in config.plugins %}
+      {% set search = config.plugins["search"] | attr("config") %}
+      {% if search.enabled %}
+        <label class="md-header__button md-icon" for="__search" aria-label="{{ lang.t('search') }}">
+          {% set icon = config.theme.icon.search or "material/magnify" %}
+          {% include ".icons/" ~ icon ~ ".svg" %}
+        </label>
+        {% include "partials/search.html" %}
+      {% endif %}
+    {% endif %}
+  </nav>
+  {% if "navigation.tabs.sticky" in features %}
+    {% if "navigation.tabs" in features %}
+      {% include "partials/tabs.html" %}
+    {% endif %}
+  {% endif %}
+</header>

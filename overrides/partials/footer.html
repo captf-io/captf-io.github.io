@@ -1,0 +1,112 @@
+{#-
+  The CAPTF footer, mirroring captf.io's: previous/next page cards, then a
+  navy band with a brand column, link columns and a bottom line. Content
+  comes from [project.extra.footer] in zensical.toml. Based on the theme's
+  footer partial (Zensical 0.0.67); the previous/next markup is the
+  theme's. Social links carry aria-label, not title: a title would get the
+  theme's JavaScript tooltip, which can outlive an instant page change.
+-#}
+{% macro href(target) -%}
+  {%- if "://" in target -%}{{ target }}{%- else -%}{{ target | url }}{%- endif -%}
+{%- endmacro %}
+{% macro external(target) -%}
+  {%- if "://" in target %} target="_blank" rel="noopener"{% endif -%}
+{%- endmacro %}
+{% set footer = config.extra.footer %}
+<footer class="md-footer">
+  {% if "navigation.footer" in features %}
+    {% if page.previous_page or page.next_page %}
+      {% if page.meta and page.meta.hide %}
+        {% set hidden = "hidden" if "footer" in page.meta.hide %}
+      {% endif %}
+      <nav class="md-footer__inner md-grid" aria-label="{{ lang.t('footer') }}" {{ hidden }}>
+        {% if page.previous_page %}
+          {% set direction = lang.t("footer.previous") %}
+          <a href="{{ page.previous_page.url | url }}" class="md-footer__link md-footer__link--prev" aria-label="{{ direction }}: {{ page.previous_page.title | e }}">
+            <div class="md-footer__button md-icon">
+              {% set icon = config.theme.icon.previous or "material/arrow-left" %}
+              {% include ".icons/" ~ icon ~ ".svg" %}
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">{{ direction }}</span>
+              <div class="md-ellipsis">{{ page.previous_page.title }}</div>
+            </div>
+          </a>
+        {% endif %}
+        {% if page.next_page %}
+          {% set direction = lang.t("footer.next") %}
+          <a href="{{ page.next_page.url | url }}" class="md-footer__link md-footer__link--next" aria-label="{{ direction }}: {{ page.next_page.title | e }}">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">{{ direction }}</span>
+              <div class="md-ellipsis">{{ page.next_page.title }}</div>
+            </div>
+            <div class="md-footer__button md-icon">
+              {% set icon = config.theme.icon.next or "material/arrow-right" %}
+              {% include ".icons/" ~ icon ~ ".svg" %}
+            </div>
+          </a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% endif %}
+  <div class="md-footer-meta captf-footer">
+    <div class="md-grid captf-footer__inner">
+      <div class="captf-footer__rule" aria-hidden="true"></div>
+      <div class="captf-footer__grid">
+        <div class="captf-footer__brand">
+          <a class="captf-footer__logo" href="{{ '.' | url }}">
+            <img src="{{ config.theme.logo | url }}" alt="" width="32" height="32">
+            <span>{{ config.extra.brand or config.site_name }}</span>
+          </a>
+          {% if footer and footer.tagline_lead %}
+            <p class="captf-footer__tagline">
+              {{ footer.tagline_lead }}
+              <span class="captf-footer__grad">{{ footer.tagline_highlight }}</span>
+            </p>
+          {% endif %}
+          {% if footer and footer.about %}
+            <p class="captf-footer__about">{{ footer.about }}</p>
+          {% endif %}
+          {% if footer and footer.status %}
+            <a class="captf-footer__status" href="{{ href(footer.status.href) }}">
+              <span class="captf-footer__live" aria-hidden="true"></span>
+              {{ footer.status.label }}
+            </a>
+          {% endif %}
+        </div>
+        {% if footer and footer.columns %}
+          {% for column in footer.columns %}
+            <nav class="captf-footer__col" aria-labelledby="captf-footer-{{ loop.index }}">
+              <h2 id="captf-footer-{{ loop.index }}">{{ column.title }}</h2>
+              <ul>
+                {% for link in column.links %}
+                  <li><a href="{{ href(link.href) }}"{{ external(link.href) }}>{{ link.name }}</a></li>
+                {% endfor %}
+              </ul>
+            </nav>
+          {% endfor %}
+        {% endif %}
+      </div>
+      <div class="captf-footer__bottom">
+        <p>
+          {{ config.copyright }}
+          {% if footer and footer.built_for %}
+            Built for <a href="{{ footer.built_for.href }}" target="_blank" rel="noopener">{{ footer.built_for.name }}</a>.
+          {% endif %}
+        </p>
+        <div class="captf-footer__end">
+          {% if config.extra.social %}
+            <div class="captf-footer__social">
+              {% for social in config.extra.social %}
+                <a href="{{ social.link }}" target="_blank" rel="noopener" aria-label="{{ social.name | e }}">
+                  {% include ".icons/" ~ social.icon ~ ".svg" %}
+                </a>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <a class="captf-footer__top" href="#">Back to top <span aria-hidden="true">↑</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>

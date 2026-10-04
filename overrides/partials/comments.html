@@ -1,0 +1,32 @@
+{#-
+  The theme leaves this partial empty as a hook after a page's content,
+  tags and dates (Zensical 0.0.67). On blog posts it renders share links:
+  each network's own share URL, plus email and copy-link. Links carry
+  aria-label, not title: a title would get the theme's JavaScript tooltip,
+  which can outlive an instant page change.
+-#}
+{%- set is_post = page.authors is defined and page.authors and page.config is defined and page.config and page.config.date is defined and page.config.date -%}
+{% if is_post %}
+  {%- set share_url = page.canonical_url | urlencode -%}
+  {%- set share_title = page.title | urlencode -%}
+  {%- set networks = [
+    {"name": "Bluesky", "icon": "fontawesome/brands/bluesky", "href": "https://bsky.app/intent/compose?text=" ~ share_title ~ "%20" ~ share_url},
+    {"name": "X", "icon": "fontawesome/brands/x-twitter", "href": "https://x.com/intent/post?text=" ~ share_title ~ "&url=" ~ share_url},
+    {"name": "LinkedIn", "icon": "fontawesome/brands/linkedin", "href": "https://www.linkedin.com/sharing/share-offsite/?url=" ~ share_url},
+    {"name": "Hacker News", "icon": "fontawesome/brands/hacker-news", "href": "https://news.ycombinator.com/submitlink?u=" ~ share_url ~ "&t=" ~ share_title},
+    {"name": "Reddit", "icon": "fontawesome/brands/reddit", "href": "https://www.reddit.com/submit?url=" ~ share_url ~ "&title=" ~ share_title},
+    {"name": "Email", "icon": "material/email-outline", "href": "mailto:?subject=" ~ share_title ~ "&body=" ~ share_url},
+  ] -%}
+  <aside class="captf-share" aria-label="Share this post">
+    <span class="captf-share__label">Share</span>
+    {% for network in networks %}
+      <a class="captf-share__link" href="{{ network.href }}" target="_blank" rel="noopener" aria-label="Share on {{ network.name }}">
+        {% include ".icons/" ~ network.icon ~ ".svg" %}
+      </a>
+    {% endfor %}
+    <button type="button" class="captf-share__link" aria-label="Copy link to this post" data-url="{{ page.canonical_url }}"
+      onclick="navigator.clipboard.writeText(this.dataset.url).then(() => { this.dataset.copied = ''; setTimeout(() => delete this.dataset.copied, 1600) })">
+      {% include ".icons/material/link-variant.svg" %}
+    </button>
+  </aside>
+{% endif %}

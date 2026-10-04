@@ -1,0 +1,6 @@
+authors:
+  maintainers:
+    name: The CAPTF Maintainers
+    description: Cluster API Provider Terraform
+    avatar: /assets/brand/mark.svg
+    url: https://github.com/captf-io

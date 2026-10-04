@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://captf.io/sitemap.xml
+
+# The whole site as Markdown, for LLM tools: https://captf.io/llms.txt
+# and https://captf.io/llms-full.txt. Every page also has a Markdown copy
+# alongside it (index.md in the page's directory).

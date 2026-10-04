@@ -1,0 +1,6 @@
+.venv/
+.cache/
+site/
+site-check/
+local.mk
+__pycache__/
