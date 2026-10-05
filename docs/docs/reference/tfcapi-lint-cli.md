@@ -72,6 +72,11 @@ Lints a module directory against the contract. It reads the `.tf`,
 local modules it calls, and runs the [module checks](#module-checks) for
 the role.
 
+A module call is followed only when its `source` is a local path: `.`,
+`..`, or a path starting with `./` or `../`. A registry, git, HTTP or other
+remote module is never fetched or linted, so a `backend` or `cloud` block,
+or a provider credential literal, inside one goes unseen.
+
 | Flag | Type | Default | Description |
 | --- | --- | --- | --- |
 | `--role` | `string` | | The module role: `cluster`, `machine` or `machinepool`. Required. |
@@ -107,7 +112,7 @@ and `podman`.
 | `--json` | `bool` | `false` | Print a JSON report instead of text. |
 | `--strict` | `bool` | `false` | Count warnings as errors for the exit code. |
 | `--allow-warning` | `stringSlice` | | Downgrade this check ID's warnings to info. Repeatable. Errors cannot be allowed. |
-| `--platform` | `string` | `linux/amd64` | The platform to check in a multi-platform image. |
+| `--platform` | `string` | `linux/amd64` | The platform to check in a multi-platform image. The default applies only to an index; a single-platform image is checked as it is unless you set `--platform` explicitly. |
 | `--all-platforms` | `bool` | `false` | Check every platform the image publishes. |
 | `--insecure` | `bool` | `false` | Allow a plain-HTTP registry. |
 
@@ -124,9 +129,20 @@ tfcapi-lint image --role machine --strict oci:./image
 
 - `<image>` is the local image name, for example `localhost/acme/machine:dev`.
 
-If you set `--platform` and the image is for a different platform, the
-result is an `image/platform` error. An image with no manifest for the
-requested platform gets the same error.
+If you set `--platform` explicitly and a single-platform image is for a
+different platform, the result is an `image/platform` error. Without an
+explicit `--platform`, a single-platform image is checked whatever its
+platform. A multi-platform index with no manifest for the requested
+platform (`linux/amd64` by default) gets the same error.
+
+### Size cap
+
+The linter caps how much of an image it reads. It keeps at most 512 MiB
+of content: the module's files, the provider mirror's JSON indexes, and
+512 bytes for every tar entry's header. It also scans, without keeping, the
+rest of the filesystem (the runtime binary, provider archives and so on) up
+to 32 times that, which is 16 GiB. An image over either cap is rejected
+and the run exits `2`. There is no flag to raise the caps.
 
 ### Output
 
@@ -169,7 +185,7 @@ tfcapi-lint version --json
 | --- | --- | --- |
 | `0` | `ExitOK` | No errors, and with `--strict`, no warnings. Info findings never fail a run. |
 | `1` | `ExitFindings` | At least one error, or a warning under `--strict`. |
-| `2` | `ExitUnparsable` | The module could not be read or parsed, or the image could not be pulled or extracted. |
+| `2` | `ExitUnparsable` | The module could not be read or parsed, or the image could not be pulled or extracted, including an image over the [size cap](#size-cap). |
 | `3` | `ExitUsage` | A bad command line: a missing `--role`, an unknown role or contract version, a wrong number of arguments, or an invalid image reference. |
 
 In CI, treat any non-zero code as a failed step. Use `--strict` to fail on
@@ -205,7 +221,7 @@ and the role pages for the full lists.
 | `input/type` | error | A contract input's type does not accept what the generated root passes. A missing type, or a type the linter cannot read, is a warning. | Declare a type that accepts the contract's type. |
 | `input/default` | warning | An input the controller always sets to a non-null value has a default, which would hide a controller mistake. Nullable inputs may default to `null`. | Remove the `default`. |
 | `input/sensitive` | warning | `bootstrap_data` is declared without `sensitive = true`, though it carries the bootstrap payload. | Add `sensitive = true`. |
-| `input/reserved` | error | A variable uses the reserved `captf_` prefix but is not a contract input. | Rename the variable. |
+| `input/reserved` | error | A variable uses the reserved `captf_` prefix but is not a contract input. The one exception is `captf_cluster_outputs`, which is allowed only when it has a default. | Rename the variable, or give `captf_cluster_outputs` a default. |
 | `input/tags-declared` | error | The module does not declare `captf_tags`, the common input every module must accept. | Declare `captf_tags`. |
 | `input/tags-unused` | warning | `captf_tags` is declared but never used, directly or through a local module that uses it. | Apply `var.captf_tags` to every resource that can carry tags. Allow the warning if the provider cannot tag anything. |
 | `input/user-variable-default` | warning | A variable outside the contract has no default, so an object that does not set it in `spec.variables` or `variablesFrom` fails to apply. | Give it a `default`. |
@@ -230,10 +246,18 @@ configure them.
 | --- | --- | --- | --- |
 | `module/backend` | error | The root or a nested module declares a `terraform { backend }` block. | Remove it. The generated root owns the backend. |
 | `module/cloud` | error | The root or a nested module declares a `terraform { cloud }` block. | Remove it, for the same reason. |
-| `module/provider-config` | warning | A provider block sets a credential argument, such as `access_key`, `token` or `password`, to a string literal. A reference such as `var.token` is fine. | Take credentials from the identity, not from the module source. |
+| `module/provider-config` | warning | A provider block sets a credential argument to a non-empty string literal, at the top level or inside a nested block or object. Names are matched case-insensitively against a fixed list (below). A reference such as `var.token`, and an empty string, are fine. | Take credentials from the identity, not from the module source. |
 | `module/source-escape` | error | A local module call resolves outside the root module directory, directly or through a symlink, or does not resolve. A module file that is a symlink out of the root is also reported. Such code is never linted. | Keep every local module inside the root directory. |
 | `module/tofu-shadow` | warning | A `.tofu` file shadows a `.tf` file, and OpenTofu loads different declarations than Terraform does. | Make the two files agree, or ship only one. |
 | `module/version` | info | The module declares no `required_version`. | Declare the runtime versions you tested with. |
+
+The `module/provider-config` list is `access_key`, `secret_key`,
+`secret_access_key`, `session_token`, `token`, `access_token`,
+`auth_token`, `bearer_token`, `api_token`, `api_key`, `apikey`, `password`,
+`passphrase`, `client_secret`, `client_certificate`,
+`client_certificate_password`, `client_key`, `private_key`,
+`private_key_password`, `ssh_private_key` and `secret`. An argument with
+any other name is not checked.
 
 ### Image checks
 
@@ -250,7 +274,7 @@ the paths and labels they enforce.
 | `image/module-readable` | warning | With a numeric non-root user, a path under the module or provider mirror is not readable or traversable. The finding lists up to five paths. | Fix the file modes or ownership. |
 | `image/runtime-present` | error | `/captf/runtime` is missing, is not a regular file, or is not executable by the image user. | Install the runtime there, executable. |
 | `image/runtime-version` | warning | The runtime's file or link name looks like a different runtime than `io.captf.runtime` says. | Correct the label or the runtime. |
-| `image/reserved-paths` | error | Files exist under `/captf/work`, `/captf/bin`, `/captf/config` or `/var/run/captf/credentials`, which the Job mounts over. | Remove them. |
+| `image/reserved-paths` | error | Files exist under `/captf/work`, `/captf/bin`, `/captf/config` or `/var/run/captf/credentials`, which the Job mounts over. The check covers only these four paths; the Job also mounts `/captf/plan-key` (when the object has a plan key) and `/tmp`, which it does not check. | Remove them. |
 | `image/entrypoint` | info | `ENTRYPOINT` or `CMD` is set. The runner replaces both. | None needed. |
 | `image/platform` | error | The image is not for the requested platform, or the index has no manifest for it. | Build for the platform, or pass `--platform`. |
 

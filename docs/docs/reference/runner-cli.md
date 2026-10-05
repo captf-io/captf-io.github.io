@@ -190,8 +190,34 @@ runner version
 | Code | Name | Meaning |
 | --- | --- | --- |
 | `0` | `ExitOK` | Every step succeeded, or an apply's plan had no changes to apply. |
-| `1` | `ExitFailure` | A step failed, was interrupted, stopped before a destructive plan (blocked), or found that its approved plan had changed. Also returned when preflight or preparation fails, or when the result cannot be written. When the failing step has its own exit code of `1` or more, the runner returns that code. |
-| `2` | `ExitUsage` | Bad input: an unknown `--op`, a bad flag, unexpected arguments or invalid logging flags. |
+| `1` | `ExitFailure` | A step failed, was interrupted, stopped before a destructive plan (blocked), or found that its approved plan had changed. Also returned when preflight or preparation fails, or when the result cannot be written. The runner never passes a step's own exit code through: that code is recorded in the result's `steps[].exit`, and a Terraform exit code `2` never becomes the process code. |
+| `2` | `ExitUsage` | Bad input (the only source of `2`): an unknown `--op`, a bad flag, unexpected arguments or invalid logging flags. |
+
+## Result document
+
+`runner run` writes one JSON document, at most 4096 bytes. The manager
+parses it, so the field names are fixed. `version` is `1`.
+
+| Field | Contents |
+| --- | --- |
+| `version` | The result document version. |
+| `op` | The operation that ran. |
+| `image` | `ref`, the `--image` value as given (the resolved digest comes from the Pod status), and `providersMirror`, whether the image ships a provider mirror. |
+| `runtime` | `command`, the runtime invocation, and `version`, the runtime version. |
+| `steps` | One entry per command that ran: `name`, `exit` (the command's own exit code; a step killed by a signal or never started is recorded as `1`) and `seconds`. |
+| `drift` | For a drift check: `detected`, the `add`, `change` and `destroy` counts, and `resources`, a list of addresses. `null` for other operations. |
+| `error` | `null` on success, otherwise `kind`, `step` (the failing step, or `null`) and `tail`. |
+| `changes` | Optional. The `add`, `change`, `destroy` and, when present, `import` counts from the runtime's final summary line of an apply or destroy. Absent when the step printed none. |
+| `plan` | Optional. The plan summary of a plan Job, or of an apply whose plan changed. |
+
+`error.tail` is a curated summary, not raw output, and is capped at 512
+bytes. For `validate` it comes from the step's JSON diagnostics; for every
+other step, from the `Error:` lines of its stderr. When there are none, it
+names the step and its exit code. The full output is in the Pod log.
+
+When the document is over 4096 bytes, the runner drops fields in a fixed
+order. [Runtime Environment](../module-author/runtime-environment.md#output-size-limits)
+lists that order.
 
 ## Result error kinds
 

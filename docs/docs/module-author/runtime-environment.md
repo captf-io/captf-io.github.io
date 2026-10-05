@@ -49,9 +49,9 @@ contract inputs, user variables and where each value comes from — is on
 
     It execs `/captf/runtime` directly. A module's `local-exec`
     provisioner needs a shell in the image, or its own `interpreter`, to
-    run at all: the reference images on
-    [Image Contract](image-contract.md#building-an-image) ship one, but a
-    `distroless/static` final stage does not.
+    run at all. The CAPTF base images (`opentofu-base` and `terraform-base`)
+    are Ubuntu 26.04 and ship a shell, so a module image built `FROM` one
+    has it. A `distroless/static` final stage does not.
 
 The image's root filesystem is
 read-only by default (`readOnlyRootFilesystem: true`); the only writable
@@ -154,8 +154,8 @@ already.
 
 | Operation | Commands, in order |
 | --- | --- |
-| Apply (machine and machine-pool roles) | `init` → `validate -json` → `apply -auto-approve -var-file=<tfvars>` |
-| Apply (cluster role: always guarded, and re-planned against the approved hash under `applyPolicy: Manual`) | `init` → `validate -json` → `plan -detailed-exitcode -var-file=<tfvars> -out=<file>` → `show -json <file>` (only if plan exited 2) → `apply <file>` |
+| Apply (machine role, and machine-pool role unless its render changes the cluster's `exports`) | `init` → `validate -json` → `apply -auto-approve -var-file=<tfvars>` |
+| Apply (cluster role, always guarded; machine-pool role when its render changes the cluster's `exports`; and re-planned against the approved hash under `applyPolicy: Manual`) | `init` → `validate -json` → `plan -detailed-exitcode -var-file=<tfvars> -out=<file>` → `show -json <file>` (only if plan exited 2) → `apply <file>`; can end in `error.kind: blocked` |
 | Destroy | `init` → `destroy -auto-approve -var-file=<tfvars>` |
 | Refresh | `init` → `apply -refresh-only -auto-approve -var-file=<tfvars>` |
 | Drift check | `init` → `apply -refresh-only -auto-approve -var-file=<tfvars>` → `plan -detailed-exitcode -refresh=false -var-file=<tfvars> -out=<file>` → `show -json <file>` (only if plan exited 2) |
@@ -207,8 +207,11 @@ every other step, from the `Error:` diagnostic header lines in its stderr
 (ANSI escape codes stripped first, since a provider or a `local-exec`
 child is not bound by `-no-color`). When neither yields a line, it falls
 back to `step <name> exited <code>; see the Job's logs`. The summary is
-capped at 512 bytes; the process exit code is the failing step's own code,
-or `1` when the runner itself could not start or was killed. The full
+capped at 512 bytes; the runner's process exit code is always `1` for a failed run (`2` is
+reserved for a usage error), never the step's own code. The step's code is in the
+result's `steps[].exit`, where a command that could not start or was killed
+by a signal is recorded as `1`. A Terraform exit code `2` therefore never
+becomes the process code. The full
 stderr always reaches the Job's own pod log, uncapped, whether or not it
 contributed to the summary.
 

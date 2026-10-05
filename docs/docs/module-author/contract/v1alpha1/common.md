@@ -247,6 +247,14 @@ acts on — reflects infrastructure health, not controller housekeeping.
 | `terminated` | any | `False/InstanceTerminated` | machine: remediation candidate; object stays provisioned and `spec.providerID` is kept |
 | `unknown` | any | `Unknown/HealthUnknown` | `Ready=Unknown`; no remediation |
 
+The `InfrastructureHealthy` condition message is `health.message` and
+`health.reasons` joined as `<message>; reasons: a, b`. Either part is left
+out when it is unset or empty; with neither, the message is the condition's
+reason. A `health` output that is `null` gives `Unknown/HealthUnknown`, and
+so does a state the controller does not recognize. `healthy` decides the
+condition only when `state` is `running`; for every other state it is
+ignored.
+
 Once provisioned, the Machine controller treats an empty InfraMachine
 `spec.providerID` as "waiting" and logs it; it is not a hard error, but
 clearing it would stall the Machine

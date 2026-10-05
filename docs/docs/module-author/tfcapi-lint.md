@@ -125,6 +125,15 @@ every flag, and
 [tfcapi-lint CLI: checks](../reference/tfcapi-lint-cli.md#checks) for
 every check ID, its severity and the roles it applies to.
 
+## What the linter does not see
+
+The linter follows only local nested module calls: a `source` of `.`,
+`..`, or a path starting with `./` or `../`. It never fetches a registry,
+git, HTTP or other remote module, so it does not lint one. A `backend` or
+`cloud` block, or a credential literal in a provider block, inside a remote
+module is not reported. A strict run does not change this. Vendor such a
+module into the module directory, as a local path, if you want it checked.
+
 ## Exit codes
 
 `tfcapi-lint` uses its exit code to signal a CI step's pass or fail; see
