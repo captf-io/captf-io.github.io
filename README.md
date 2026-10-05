@@ -1,10 +1,13 @@
-<!-- captf:header -->
 <h1 align="center">
   <a href="https://captf.io/"><img
-    src="https://raw.githubusercontent.com/captf-io/.github/refs/heads/main/readme/banners/captf-io.github.io.svg"
-    width="100%"
-    alt="captf-io.github.io: The captf.io website, docs book and blog"></a>
+    src="https://captf.io/assets/readme/mark.svg"
+    width="72" height="72" alt="CAPTF"></a>
+  <br>
+  captf-io.github.io
 </h1>
+
+<p align="center">The captf.io website, docs book and blog</p>
+
 <p align="center">
   <a href="https://github.com/captf-io/captf-io.github.io/actions/workflows/pages.yml"><img
     src="https://img.shields.io/github/actions/workflow/status/captf-io/captf-io.github.io/pages.yml?branch=main&amp;label=build&amp;labelColor=161B3A&amp;style=flat-square"
@@ -15,18 +18,15 @@
   <a href="https://captf.io/docs/"><img
     src="https://img.shields.io/static/v1?label=docs&amp;message=captf.io&amp;color=5B8CFF&amp;labelColor=161B3A&amp;style=flat-square"
     alt="docs captf.io"></a>
-  <a href="LICENSE.md"><img
+  <a href="https://github.com/captf-io/captf-io.github.io/blob/main/LICENSE.md"><img
     src="https://img.shields.io/static/v1?label=license&amp;message=Apache-2.0&amp;color=FFD84D&amp;labelColor=161B3A&amp;style=flat-square"
     alt="license Apache-2.0"></a>
 </p>
-<!-- /captf:header -->
 
-<!-- captf:status -->
 > [!NOTE]
 > **Pre-release.** CAPTF is `v1alpha1`: its API and its
 > [module contract](https://captf.io/docs/module-author/contract/index.html)
-> may still change before the first release.
-<!-- /captf:status -->
+> may still change between releases.
 
 The website of [Cluster API Provider Terraform (CAPTF)](https://github.com/captf-io):
 the landing page at <https://captf.io/>, the documentation at
@@ -68,16 +68,15 @@ The `Pages` workflow (`.github/workflows/pages.yml`) checks that `make gen`
 leaves the tree unchanged and runs `make build` on every pull request and
 push. A push to `main` also publishes the built site to GitHub Pages.
 
-<!-- captf:footer -->
 <br>
 <p align="center">
   <img
-    src="https://raw.githubusercontent.com/captf-io/.github/refs/heads/main/readme/assets/divider.svg"
+    src="https://captf.io/assets/readme/divider.svg"
     width="100%" height="4" alt="">
 </p>
 <p align="center">
   <a href="https://captf.io/"><img
-    src="https://raw.githubusercontent.com/captf-io/.github/refs/heads/main/readme/assets/mark.svg"
+    src="https://captf.io/assets/readme/mark.svg"
     width="40" height="40" alt="CAPTF"></a>
   <br>
   <a href="https://captf.io/docs/"
@@ -91,6 +90,6 @@ push. A push to `main` also publishes the built site to GitHub Pages.
   <br>
   <sub>Built for
     <a href="https://cluster-api.sigs.k8s.io/">Cluster API</a>.
-    <a href="LICENSE.md">Apache 2.0</a>.</sub>
+    <a href="https://github.com/captf-io/captf-io.github.io/blob/main/LICENSE.md"
+    >Apache 2.0</a>.</sub>
 </p>
-<!-- /captf:footer -->
