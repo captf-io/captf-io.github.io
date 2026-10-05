@@ -62,14 +62,14 @@ User variables, set in the `TerraformMachineTemplate`'s
 | Variable | Type | Default | Description |
 | --- | --- | --- | --- |
 | `additional_security_group_ids` | `list(string)` | `[]` | Extra Neutron security group UUIDs for the port |
-| `additional_tags` | `map(string)` | `{}` | Extra tags, with the cluster role's rules |
+| `additional_tags` | `map(string)` | `{}` | Extra tags, with the cluster role's rules: at most 44 entries; keys 1 to 255 characters of letters, digits, `-`, `_`, `:`, `.` and space, not starting with `captf.io:`; each `<key>=<value>` fits in 255 characters |
 | `config_drive` | `bool` | `false` | Attach a config drive with the user data and metadata; it does not turn the metadata service off |
 | `external_cluster_exports` | `any` | `null` | The exports of an externally managed `TerraformCluster`, schema `captf.io/openstack-cluster/v1` |
 | `flavor_name` | `string` | `null` | **Required.** Nova flavor |
 | `image_id` | `string` | `null` | Glance image UUID. Set exactly one of `image_id` and `image_name`; boot from volume needs `image_id` |
 | `image_name` | `string` | `null` | Glance image name, resolved to an ID by the provider through Glance at create; must match exactly one image. `{version}` (`v1.31.4`) and `{semver}` (`1.31.4`) stand for `kubernetes_version` |
 | `key_pair` | `string` | `null` | Nova key pair for SSH |
-| `root_volume_size_gib` | `number` | `null` | Boot from a new Cinder volume of this size, deleted with the server; `null` boots from the flavor's disk |
+| `root_volume_size_gib` | `number` | `null` | Boot from a new Cinder volume of this size, deleted with the server; a whole number of GiB, at least 1; `null` boots from the flavor's disk |
 | `root_volume_type` | `string` | `null` | Cinder volume type of the root volume |
 
 ## Outputs

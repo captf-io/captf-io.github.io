@@ -52,12 +52,12 @@ User variables, set with `spec.variables` on the `TerraformMachinePool`
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `additional_network_tags` | `list(string)` | `[]` | Extra network tags for the pool's instances, on top of the cluster's node and role tags. |
-| `additional_tags` | `map(string)` | `{}` | Extra GCP labels for the pool's instances, their boot disks and the instance template. Keys and values must already be valid GCP labels; the `captf-io_` keys are reserved for `captf_tags`, which win. |
-| `autoscaling_initialization_seconds` | `number` | `300` | Seconds a new instance needs to boot and join before the autoscaler reads its CPU; 300 covers image boot, cloud-init and kubeadm join. |
-| `autoscaling_target_cpu_percent` | `number` | `60` | Average CPU utilization, in percent, the autoscaler keeps the pool at while the `MachinePool`'s autoscaler annotations enable autoscaling. 60 leaves headroom for a node to fail. |
+| `additional_network_tags` | `list(string)` | `[]` | Extra network tags for the pool's instances, on top of the cluster's node and role tags. Each at most 63 characters: lowercase letters, digits and `-`. |
+| `additional_tags` | `map(string)` | `{}` | Extra GCP labels for the pool's instances, their boot disks and the instance template. Keys and values must already be valid GCP labels; the `captf-io_` keys are reserved for `captf_tags`, which win. At most 58 labels; keys match `^[a-z][a-z0-9_-]{0,62}$`, values `^[a-z0-9_-]{0,63}$`. |
+| `autoscaling_initialization_seconds` | `number` | `300` | Seconds a new instance needs to boot and join before the autoscaler reads its CPU; 300 covers image boot, cloud-init and kubeadm join. A whole number, 0 or more. |
+| `autoscaling_target_cpu_percent` | `number` | `60` | Average CPU utilization, in percent, the autoscaler keeps the pool at while the `MachinePool`'s autoscaler annotations enable autoscaling. 60 leaves headroom for a node to fail. Greater than 0 and at most 100. |
 | `boot_disk_kms_key_id` | `string` | `null` | Cloud KMS key (`projects/.../cryptoKeys/...`) that encrypts the boot disks. Null uses Google-managed encryption; the Compute Engine service agent needs encrypt and decrypt on the key. |
-| `boot_disk_size_gib` | `number` | `50` | Boot disk size in GiB: room for the image, container images and logs. |
+| `boot_disk_size_gib` | `number` | `50` | Boot disk size in GiB: room for the image, container images and logs. A whole number, at least 10. |
 | `boot_disk_type` | `string` | `"pd-balanced"` | Boot disk type. `pd-balanced` suits the default N2 machine type; C3, N4 and newer series need `hyperdisk-balanced`. |
 | `can_ip_forward` | `bool` | `false` | Let the instances send and receive packets for other addresses, as CNIs that route pod CIDRs through GCP routes need. |
 | `external_cluster_exports` | `any` | `null` | Exports (schema `captf.io/gcp-cluster/v1`) to use when the `TerraformCluster` is externally managed and `captf_cluster_outputs` is `{}`. Ignored otherwise. |

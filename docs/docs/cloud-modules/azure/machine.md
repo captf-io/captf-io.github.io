@@ -49,7 +49,7 @@ User variables, set with `spec.template.spec.variables` on the
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `accelerated_networking` | `bool` | `true` | Accelerated networking on the NIC; turn it off for a `vm_size` without it |
-| `additional_tags` | `map(string)` | `{}` | Extra Azure tags on the VM and NIC. Keys starting with `captf.io_` or `captf.io/` (any case) are rejected; at most 44 |
+| `additional_tags` | `map(string)` | `{}` | Extra Azure tags on the VM and NIC. Keys starting with `captf.io_` or `captf.io/` (any case) are rejected; at most 44. Keys 1 to 512 characters without `< > % & \ ? /`, values at most 256. |
 | `boot_diagnostics` | `bool` | `true` | Keep the serial console log in Azure-managed storage. It shows boot output, which may include kubeadm's join command |
 | `encryption_at_host` | `bool` | `false` | Encrypt temporary disks and caches on the host too; needs the `EncryptionAtHost` feature on the subscription. Managed disks are encrypted at rest either way |
 | `external_cluster_exports` | `any` | `null` | Exports (schema `captf.io/azure-cluster/v1`) for an externally managed `TerraformCluster` |

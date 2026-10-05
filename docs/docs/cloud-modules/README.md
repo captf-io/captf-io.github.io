@@ -133,8 +133,10 @@ egress path, and the modules make nodes in them.
 
 Every role is published as `ghcr.io/captf-io/<cloud>-<role>`, for example
 `ghcr.io/captf-io/aws-machine`, for `linux/amd64` and `linux/arm64`, in two
-flavours: one on the Terraform base image and one on the OpenTofu base
-image. Each image carries a mirror of the providers its role needs, so a Job
+flavours: one built FROM
+[`terraform-base`](https://github.com/captf-io/terraform-base) and one FROM
+[`opentofu-base`](https://github.com/captf-io/opentofu-base). The tags name
+the runtime (`<version>-terraform`, `<version>-opentofu`). Each image carries a mirror of the providers its role needs, so a Job
 never downloads a provider at run time.
 
 | Tag | Meaning |
@@ -186,7 +188,7 @@ set with `spec.variables` or `spec.variablesFrom`; see
 Each repository is built to be forked. Its `CONVENTIONS.md` is the rule
 book the five repositories share; `make verify` checks most of it: the file
 layout, tags on every resource, `terraform validate` and `tofu validate`
-(including the oldest supported runtimes), the unit tests, tflint,
+(including the oldest validated runtimes, Terraform 1.5.7 and OpenTofu 1.6.3), the unit tests, tflint,
 [`tfcapi-lint`](../module-author/tfcapi-lint.md), shellcheck and a trivy
 scan. To make a fork your own, change the registry and image names in the
 `Makefile` and the workflow, run `make lock`, then `make verify`.

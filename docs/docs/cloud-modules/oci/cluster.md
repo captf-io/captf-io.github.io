@@ -59,7 +59,7 @@ User variables, from
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `additional_tags` | `map(string)` | `{}` | Extra free-form tags for every taggable resource; at most 4. |
+| `additional_tags` | `map(string)` | `{}` | Extra free-form tags for every taggable resource. At most 4 entries; keys 1 to 100 printable ASCII characters without periods or spaces and not starting with `captf_io/` (case-insensitive), values at most 256. |
 | `api_allowed_cidrs` | `list(string)` | `[]` | CIDRs that may reach the API endpoint besides the VCN's own; required with a public load balancer. |
 | `api_load_balancer_private_ip` | `string` | `null` | Private IPv4 address of the load balancer, from its subnet; `null` lets OCI pick. |
 | `api_load_balancer_public` | `bool` | `false` | Give the load balancer a public IP; requires `api_allowed_cidrs`. |
@@ -70,7 +70,7 @@ User variables, from
 | `distribution` | `string` | `"kubeadm"` | `kubeadm` or `rke2`: RKE2 adds the supervisor listener on 9345 and puts the kube-apiserver backends on 6443. |
 | `failure_domain_mode` | `string` | `"auto"` | `availability_domain`, `fault_domain` (of one availability domain), or `auto`. |
 | `home_region` | `string` | `null` | The tenancy's home region for IAM writes; `null` looks it up. |
-| `ignore_defined_tags` | `list(string)` | `[]` | Tag-default keys (`<namespace>.<key>`) to leave alone, besides `Oracle-Tags.CreatedBy` and `Oracle-Tags.CreatedOn`. |
+| `ignore_defined_tags` | `list(string)` | `[]` | Tag-default keys (`<namespace>.<key>`) to leave alone, besides `Oracle-Tags.CreatedBy` and `Oracle-Tags.CreatedOn`. At most 98 entries (the provider allows 100, and those two take the rest). |
 | `network_compartment_id` | `string` | `null` | Compartment of the VCN and its subnets; `null` uses `compartment_id`. |
 | `node_identity` | `object({enabled = optional(bool, true), defined_tag = optional(object({namespace = string, key = string})), allow_compartment_wide = optional(bool, false)})` | `{}` | Instance-principal identity for the control-plane nodes. `defined_tag` scopes the dynamic group to this cluster's control-plane instances; it is required unless `enabled = false` or `allow_compartment_wide = true`. |
 | `node_policy_compartment_id` | `string` | `null` | Where the node policy is attached; `null` uses `compartment_id`. Set an ancestor of both when the VCN is in another compartment. |
@@ -129,6 +129,9 @@ cluster reports `running`.
 - **The cloud controller manager needs no `manage security-lists`** only
   with `securityListManagementMode: None`; open Service NodePorts with
   `nodeport_allowed_cidrs`.
+- **A deleted node NSG** leaves the cluster's exports incomplete until the
+  next cluster apply recreates it. Machines and pools re-rendered in the
+  meantime fail their exports checks.
 - **IAM changes propagate within minutes**, so the first nodes may retry
   their first OCI calls.
 - **The dynamic group goes in the Default identity domain**, through the

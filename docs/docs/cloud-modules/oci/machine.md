@@ -48,14 +48,14 @@ User variables, from
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `additional_nsg_ids` | `list(string)` | `[]` | Extra network security groups for the VNIC, after the cluster's; at most 4. |
-| `additional_tags` | `map(string)` | `{}` | Extra free-form tags for the instance and its VNIC; at most 4. |
+| `additional_nsg_ids` | `list(string)` | `[]` | Extra network security groups for the VNIC, after the cluster's; at most 4 (a VNIC holds 5 and the cluster's group is always one). |
+| `additional_tags` | `map(string)` | `{}` | Extra free-form tags for the instance and its VNIC. At most 4 entries; keys 1 to 100 printable ASCII characters without periods or spaces and not starting with `captf_io/` (case-insensitive), values at most 256. |
 | `boot_volume_kms_key_id` | `string` | `null` | Vault key for the boot volume; `null` uses Oracle-managed keys. |
 | `boot_volume_size_gib` | `number` | `100` | Boot volume size, 50 to 32768. |
 | `external_cluster_exports` | `any` | `null` | The cluster's exports when the `TerraformCluster` is externally managed. |
-| `ignore_defined_tags` | `list(string)` | `[]` | Tag-default keys (`<namespace>.<key>`) to leave alone. |
+| `ignore_defined_tags` | `list(string)` | `[]` | Tag-default keys (`<namespace>.<key>`) to leave alone. At most 98 entries (the provider allows 100; two are the `Oracle-Tags` entries). |
 | `image_id` | `string` | `null` | Required. Node image OCID in the cluster's region. |
-| `memory_gib` | `number` | `16` | Memory of a flexible shape; ignored for fixed shapes. |
+| `memory_gib` | `number` | `16` | Memory of a flexible shape; ignored for fixed shapes; at least 1. |
 | `ocpus` | `number` | `2` | OCPUs of a flexible shape (one OCPU is two vCPUs on x86); ignored for fixed shapes. |
 | `preemptible` | `bool` | `false` | Preemptible capacity; workers only. |
 | `public_ip` | `bool` | `false` | A public IP on the VNIC; needs a public subnet. |

@@ -56,8 +56,8 @@ The images need no Terraform provider: `terraform_data` is built into
 Terraform and OpenTofu. They are built on the
 [Terraform and OpenTofu base images](../../module-author/image-contract.md),
 for `linux/amd64` and `linux/arm64`, with the same tags as every set (see
-[Images and tags](../README.md#images-and-tags)). The modules need
-Terraform 1.5 or later; every OpenTofu release works.
+[Images and tags](../README.md#images-and-tags)). The modules declare
+`required_version = ">= 1.5"`, which every OpenTofu release satisfies.
 
 ## Prerequisites
 

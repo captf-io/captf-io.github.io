@@ -64,10 +64,10 @@ User variables, set with `spec.template.spec.variables` on the
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `additional_network_tags` | `list(string)` | `[]` | Extra network tags for the instance, on top of the cluster's node and role tags. |
-| `additional_tags` | `map(string)` | `{}` | Extra GCP labels for the instance and its boot disk. Keys and values must already be valid GCP labels; the `captf-io_` keys are reserved for `captf_tags`, which win. |
+| `additional_network_tags` | `list(string)` | `[]` | Extra network tags for the instance, on top of the cluster's node and role tags. Each at most 63 characters: lowercase letters, digits and `-`. |
+| `additional_tags` | `map(string)` | `{}` | Extra GCP labels for the instance and its boot disk. Keys and values must already be valid GCP labels; the `captf-io_` keys are reserved for `captf_tags`, which win. At most 58 labels; keys match `^[a-z][a-z0-9_-]{0,62}$`, values `^[a-z0-9_-]{0,63}$`. |
 | `boot_disk_kms_key_id` | `string` | `null` | Cloud KMS key (`projects/.../cryptoKeys/...`) that encrypts the boot disk. Null uses Google-managed encryption; the Compute Engine service agent needs encrypt and decrypt on the key. |
-| `boot_disk_size_gib` | `number` | `50` | Boot disk size in GiB: room for the image, container images and logs. |
+| `boot_disk_size_gib` | `number` | `50` | Boot disk size in GiB: room for the image, container images and logs. A whole number, at least 10. |
 | `boot_disk_type` | `string` | `"pd-balanced"` | Boot disk type. `pd-balanced` suits the default N2 machine type; C3, N4 and newer series need `hyperdisk-balanced`. |
 | `bootstrap_delivery` | `string` | `"secret-manager"` | How a control-plane machine's `cloud-config` data reaches it: `secret-manager` stages it in a per-machine secret behind a small user-data script, which needs `curl`, `sed`, `base64` and `gzip` in the image; `inline` puts it in instance metadata. Workers and Ignition are always inline. |
 | `can_ip_forward` | `bool` | `false` | Let the instance send and receive packets for other addresses, as CNIs that route pod CIDRs through GCP routes need. |

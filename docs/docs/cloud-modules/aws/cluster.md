@@ -62,7 +62,7 @@ User variables, from
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `additional_tags` | `map(string)` | `{}` | Extra tags for every taggable resource; at most 40, no `aws:`, `captf.io/` or `kubernetes.io/cluster/` keys. |
+| `additional_tags` | `map(string)` | `{}` | Extra tags for every taggable resource; at most 40; keys 1 to 128 characters, values at most 256; letters, numbers, spaces and `_ . : / = + - @` only; no `aws:`, `captf.io/` or `kubernetes.io/cluster/` keys. |
 | `api_allowed_cidrs` | `list(string)` | `[]` | IPv4 networks allowed to reach the endpoint besides the nodes. Empty: the VPC's primary CIDR for an internal endpoint. Required for a public one, and must then include the nodes' NAT gateway Elastic IPs. |
 | `api_load_balancer_public` | `bool` | `false` | Make the load balancer internet-facing. |
 | `api_load_balancer_subnets` | `map(string)` | `{}` | Zone to subnet ID for the load balancer; empty means `subnets`. Must cover every zone of `subnets`; required (public subnets) for a public endpoint. |

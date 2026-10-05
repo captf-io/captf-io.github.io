@@ -57,10 +57,10 @@ User variables, set in `TerraformCluster.spec.variables`
 
 | Variable | Type | Default | Description |
 | --- | --- | --- | --- |
-| `additional_tags` | `map(string)` | `{}` | Extra tags on every resource. At most 44; keys follow the Nova metadata key rule and must not start with `captf.io:`; `<key>=<value>` fits in 255 characters |
+| `additional_tags` | `map(string)` | `{}` | Extra tags on every resource. At most 44; keys follow the Nova metadata key rule and must not start with `captf.io:`; keys are 1 to 255 characters; each `<key>=<value>` fits in 255 characters |
 | `api_allowed_cidrs` | `list(string)` | `[]` | Clients the API listeners accept, of the subnet's address family. Empty: any client that can route to the VIP. Required with `api_load_balancer_public`; refused with the `ovn` provider. The node subnet is always added |
 | `api_load_balancer_public` | `bool` | `false` | Put a floating IP on the VIP and use it as the endpoint |
-| `availability_zones` | `list(string)` | `[]` | Nova zones to report as failure domains. Empty: every available zone |
+| `availability_zones` | `list(string)` | `[]` | Nova zones to report as failure domains. At most 100 names, each 1 to 256 characters. Empty: every available zone |
 | `control_plane_server_group_policy` | `string` | `"soft-anti-affinity"` | `soft-anti-affinity`, `anti-affinity`, or `null` for no server group |
 | `distribution` | `string` | `"kubeadm"` | `kubeadm` or `rke2`, which adds the supervisor listener on 9345 |
 | `floating_ip_pool` | `string` | `null` | External network for the floating IP. Required with `api_load_balancer_public` |
@@ -124,6 +124,13 @@ load balancer to observe.
 - **Rule changes replace rules.** Every security group rule attribute
   forces a new rule, so a changed CIDR plans a delete and a create, which
   the destructive-plan guard holds for approval.
+- **A deleted subnet.** Plans other than a destroy fail a precondition
+  until `subnet_id` names an existing subnet; a destroy still runs.
+- **Octavia providers.** The module is designed for the amphora provider.
+  The OVN provider rejects `api_allowed_cidrs`, so `api_load_balancer_public`
+  is amphora-only, and it keeps client addresses, so only clients on the
+  node subnet or in the node group pass the control-plane security group.
+  See [API endpoint](README.md#api-endpoint).
 
 ## Exceptions
 

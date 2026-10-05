@@ -58,7 +58,7 @@ User variables, set with `spec.variables` on the `TerraformCluster`
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `additional_tags` | `map(string)` | `{}` | Extra Azure tags on every taggable resource. Keys starting with `captf.io_` or `captf.io/` (any case) are rejected; at most 44 |
+| `additional_tags` | `map(string)` | `{}` | Extra Azure tags on every taggable resource. Keys starting with `captf.io_` or `captf.io/` (any case) are rejected; at most 44. Keys 1 to 512 characters without `< > % & \ ? /`, values at most 256. |
 | `admin_ssh_public_key` | `string` | `null` | Required. OpenSSH public key (`ssh-rsa` or `ssh-ed25519`) of every node's admin user: Azure Linux VMs need a key or a password, and the module invents neither. SSH stays closed unless `ssh_allowed_cidrs` opens it |
 | `api_allowed_cidrs` | `list(string)` | `[]` | IPv4 CIDRs, besides the virtual network, allowed to reach the API server ports. Required with `api_load_balancer_public`: include the management cluster's egress and the nodes' NAT gateway addresses |
 | `api_load_balancer_private_ip` | `string` | `null` | Static private IPv4 address of the internal frontend, in the control-plane subnet. `null` takes a dynamic address, stable for the load balancer's life |

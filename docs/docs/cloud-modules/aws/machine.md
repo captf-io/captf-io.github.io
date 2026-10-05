@@ -43,15 +43,15 @@ User variables, from
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `additional_security_group_ids` | `list(string)` | `[]` | Extra security groups for the instance. |
-| `additional_tags` | `map(string)` | `{}` | Extra tags for every taggable resource; at most 40, no `aws:`, `captf.io/` or `kubernetes.io/cluster/` keys. |
+| `additional_tags` | `map(string)` | `{}` | Extra tags for every taggable resource; at most 40; keys 1 to 128 characters, values at most 256; letters, numbers, spaces and `_ . : / = + - @` only; no `aws:`, `captf.io/` or `kubernetes.io/cluster/` keys. |
 | `bootstrap_delivery` | `string` | `"s3"` | `s3` stages the bootstrap data behind a small stub; `inline` sends it as user data, 16 KiB at most. |
 | `external_cluster_exports` | `any` | `null` | The exports of an externally managed `TerraformCluster`, used when `captf_cluster_outputs` is empty. |
-| `instance_metadata_hop_limit` | `number` | `1` | IMDSv2 hop limit; 2 lets pods without host networking reach the metadata service. |
-| `instance_type` | `string` | `"m6i.large"` | EC2 instance type; matches the image's capacity labels. |
+| `instance_metadata_hop_limit` | `number` | `1` | IMDSv2 hop limit, a whole number from 1 to 64; 2 lets pods without host networking reach the metadata service. |
+| `instance_type` | `string` | `"m6i.large"` | EC2 instance type; matches the image's capacity labels (2 CPUs, 8 GiB, amd64). |
 | `machine_image` | `object({ id = optional(string), owner = optional(string, "819546954734"), name_format = optional(string, "capa-ami-ubuntu-24.04-?{semver}-*"), architecture = optional(string, "x86_64") })` | `{}` | `id` pins the AMI; without it, the newest AMI from `owner` named `name_format`, with `{semver}` or `{version}` filled in. |
 | `public_ip` | `bool` | `false` | Give the instance a public IPv4 address. |
 | `root_volume_kms_key_id` | `string` | `null` | KMS key ARN for the root volume; null uses the account's default EBS key. |
-| `root_volume_size_gib` | `number` | `40` | Root volume size. |
+| `root_volume_size_gib` | `number` | `40` | Root volume size in GiB; a whole number from 8 to 16384. |
 | `root_volume_type` | `string` | `"gp3"` | `gp3` or `gp2`. |
 | `spot` | `bool` | `false` | Run a one-time Spot Instance; refused for control-plane machines. |
 | `ssh_key_name` | `string` | `null` | EC2 key pair; the cluster's `ssh_allowed_cidrs` decides who reaches SSH. |

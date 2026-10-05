@@ -47,17 +47,17 @@ User variables, from
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `additional_nsg_ids` | `list(string)` | `[]` | Extra network security groups for the VNICs, after the cluster's worker NSG; at most 4. |
-| `additional_tags` | `map(string)` | `{}` | Extra free-form tags for every pool resource; at most 4. |
+| `additional_tags` | `map(string)` | `{}` | Extra free-form tags for every pool resource. At most 4 entries; keys 1 to 100 printable ASCII characters without periods or spaces and not starting with `captf_io/` (case-insensitive), values at most 256. |
 | `autoscaled` | `bool` | `false` | Must equal `autoscaling.enabled`: the deliberate second switch for a mode change, which replaces the pool. |
-| `autoscaling_cool_down_seconds` | `number` | `300` | Minimum time between two scaling actions; 300 is OCI's minimum. |
-| `autoscaling_scale_in_cpu_percent` | `number` | `30` | Remove an instance below this CPU utilization. |
-| `autoscaling_scale_out_cpu_percent` | `number` | `70` | Add an instance above this CPU utilization. |
+| `autoscaling_cool_down_seconds` | `number` | `300` | Minimum time between two scaling actions; 300 is OCI's minimum; a whole number, at least 300. |
+| `autoscaling_scale_in_cpu_percent` | `number` | `30` | Remove an instance below this CPU utilization; 1 to 99, and below the scale-out threshold. |
+| `autoscaling_scale_out_cpu_percent` | `number` | `70` | Add an instance above this CPU utilization; 2 to 100. |
 | `boot_volume_kms_key_id` | `string` | `null` | Vault key for the boot volumes; `null` uses Oracle-managed keys. |
 | `boot_volume_size_gib` | `number` | `100` | Boot volume size, 50 to 32768. |
 | `external_cluster_exports` | `any` | `null` | The cluster's exports when the `TerraformCluster` is externally managed. |
-| `ignore_defined_tags` | `list(string)` | `[]` | Tag-default keys (`<namespace>.<key>`) to leave alone. |
+| `ignore_defined_tags` | `list(string)` | `[]` | Tag-default keys (`<namespace>.<key>`) to leave alone. At most 98 entries (the provider allows 100; two are the `Oracle-Tags` entries). |
 | `image_id` | `string` | `null` | Required. Node image OCID in the cluster's region; a new image reaches new instances only. |
-| `memory_gib` | `number` | `16` | Memory of a flexible shape; ignored for fixed shapes. |
+| `memory_gib` | `number` | `16` | Memory of a flexible shape; ignored for fixed shapes; at least 1. |
 | `ocpus` | `number` | `2` | OCPUs of a flexible shape; ignored for fixed shapes. |
 | `preemptible` | `bool` | `false` | Preemptible capacity. |
 | `public_ip` | `bool` | `false` | A public IP on every instance; needs a public subnet. |

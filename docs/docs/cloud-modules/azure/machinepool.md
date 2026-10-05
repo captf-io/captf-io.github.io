@@ -45,9 +45,9 @@ User variables, set with `spec.variables` on the `TerraformMachinePool`
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `accelerated_networking` | `bool` | `true` | Accelerated networking on the instances' NICs |
-| `additional_tags` | `map(string)` | `{}` | Extra Azure tags on the scale set and autoscale setting. Keys starting with `captf.io_` or `captf.io/` (any case) are rejected; at most 44 |
-| `autoscaling_scale_in_cpu_percent` | `number` | `25` | With autoscaling, scale in by one instance below this average CPU over 10 minutes; must be below the scale-out threshold |
-| `autoscaling_scale_out_cpu_percent` | `number` | `75` | With autoscaling, scale out by one instance above this average CPU over 10 minutes |
+| `additional_tags` | `map(string)` | `{}` | Extra Azure tags on the scale set and autoscale setting. Keys starting with `captf.io_` or `captf.io/` (any case) are rejected; at most 44. Keys 1 to 512 characters without `< > % & \ ? /`, values at most 256. |
+| `autoscaling_scale_in_cpu_percent` | `number` | `25` | With autoscaling, scale in by one instance below this average CPU over 10 minutes; a whole number from 1 to 100, and must be below the scale-out threshold |
+| `autoscaling_scale_out_cpu_percent` | `number` | `75` | With autoscaling, scale out by one instance above this average CPU over 10 minutes; a whole number from 1 to 100 |
 | `boot_diagnostics` | `bool` | `true` | Keep the serial console logs in Azure-managed storage |
 | `encryption_at_host` | `bool` | `false` | Encrypt temporary disks and caches on the host too; needs the `EncryptionAtHost` feature |
 | `external_cluster_exports` | `any` | `null` | Exports (schema `captf.io/azure-cluster/v1`) for an externally managed `TerraformCluster` |

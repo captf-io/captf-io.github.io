@@ -47,16 +47,16 @@ User variables, from
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `additional_security_group_ids` | `list(string)` | `[]` | Extra security groups for the instances. |
-| `additional_tags` | `map(string)` | `{}` | Extra tags for every taggable resource; at most 40, no `aws:`, `captf.io/` or `kubernetes.io/cluster/` keys. |
-| `autoscaling_target_cpu_percent` | `number` | `60` | Average CPU the scaling policy holds the group at while autoscaling is enabled. |
+| `additional_tags` | `map(string)` | `{}` | Extra tags for every taggable resource; at most 40; keys 1 to 128 characters, values at most 256; letters, numbers, spaces and `_ . : / = + - @` only; no `aws:`, `captf.io/` or `kubernetes.io/cluster/` keys. |
+| `autoscaling_target_cpu_percent` | `number` | `60` | Average CPU the scaling policy holds the group at while autoscaling is enabled; greater than 0 and at most 100. |
 | `external_cluster_exports` | `any` | `null` | The exports of an externally managed `TerraformCluster`, used when `captf_cluster_outputs` is empty. |
-| `instance_metadata_hop_limit` | `number` | `1` | IMDSv2 hop limit; 2 lets pods without host networking reach the metadata service. |
+| `instance_metadata_hop_limit` | `number` | `1` | IMDSv2 hop limit, a whole number from 1 to 64; 2 lets pods without host networking reach the metadata service. |
 | `instance_type` | `string` | `"m6i.large"` | EC2 instance type; applies to instances launched afterwards. |
 | `machine_image` | `object({ id = optional(string), owner = optional(string, "819546954734"), name_format = optional(string, "capa-ami-ubuntu-24.04-?{semver}-*"), architecture = optional(string, "x86_64"), root_device_name = optional(string, "/dev/sda1") })` | `{}` | `id` pins the AMI, and changing it rolls the instances; without it, the newest AMI from `owner` named `name_format`. `root_device_name` is the image's root device: `/dev/sda1` for Ubuntu, `/dev/xvda` for Amazon Linux and Flatcar. |
 | `public_ip` | `bool` | `false` | Give the instances public IPv4 addresses. |
-| `rollout_instance_warmup_seconds` | `number` | `300` | Seconds a roll waits after each new instance is in service. |
+| `rollout_instance_warmup_seconds` | `number` | `300` | Seconds a roll waits after each new instance is in service; a whole number, 0 or more. |
 | `root_volume_kms_key_id` | `string` | `null` | KMS key ARN for the root volumes; a customer managed key must grant `AWSServiceRoleForAutoScaling`. |
-| `root_volume_size_gib` | `number` | `40` | Root volume size. |
+| `root_volume_size_gib` | `number` | `40` | Root volume size in GiB; a whole number from 8 to 16384. |
 | `root_volume_type` | `string` | `"gp3"` | `gp3` or `gp2`. |
 | `spot` | `bool` | `false` | Launch Spot Instances, with capacity rebalancing. |
 | `ssh_key_name` | `string` | `null` | EC2 key pair; the cluster's `ssh_allowed_cidrs` decides who reaches SSH. |
