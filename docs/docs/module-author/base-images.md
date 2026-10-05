@@ -118,12 +118,13 @@ tfcapi-lint image <registry>/<repo>:<tag> --role cluster --strict
 
 ## One Dockerfile for every role
 
-A repository that ships several roles can use one Dockerfile with the stages
+A repository that ships several images can use one Dockerfile with the stages
 `mirror`, `module`, then one final stage per role named `cluster`, `machine`
-and `machinepool`. `--build-arg ROLE=<role>` picks the module directory, and
-`--target` must be the same role. The [`aws-modules`
-Dockerfile](https://github.com/captf-io/aws-modules/blob/main/Dockerfile.opentofu)
-is the reference; its `mirror` stage copies `${ROLE}/` and a per-role lock
+and `machinepool`. `--build-arg IMAGE=<image>` picks the module files, and
+`--build-arg ROLE=<role>` with a `--target` of the same role picks the final
+stage. The [`module-images`
+Dockerfile](https://github.com/captf-io/module-images/blob/main/Dockerfile.opentofu)
+is the reference: its `mirror` stage copies the module and the image's lock
 file, and its final stages are:
 
 ```dockerfile
@@ -132,21 +133,18 @@ FROM module AS cluster
 FROM module AS machinepool
 
 FROM module AS machine
-ARG MACHINE_CAPACITY
-ARG MACHINE_ARCH
-LABEL io.captf.capacity="${MACHINE_CAPACITY}" \
-      io.captf.node-info="{\"architecture\":\"${MACHINE_ARCH}\",\"operatingSystem\":\"linux\"}"
 ```
 
-The machine labels come from build arguments with a fixed architecture,
-`MACHINE_ARCH`, never `TARGETARCH`, so every platform of a multi-arch build
-gets identical labels. Build it with:
+The machine capacity labels, `io.captf.capacity` and `io.captf.node-info`,
+are not in the Dockerfile. They describe a machine module's default instance
+shape, so they belong to the image, not the role: `images.json` holds them,
+and `make build` and the publish job add them with `--label`. The
+architecture is fixed there, never `TARGETARCH`, so every platform of a
+multi-arch build gets identical labels. An image without a default shape (the
+OpenStack machine image) carries neither label. Build one image with:
 
 ```sh
-podman build -f Dockerfile.opentofu --build-arg ROLE=machine \
-  --build-arg MACHINE_CAPACITY='{"cpu":"2","memory":"8Gi"}' \
-  --build-arg MACHINE_ARCH=amd64 \
-  --target machine -t aws-machine:opentofu .
+make test IMAGES=aws-machine RUNTIMES=opentofu
 ```
 
 ## Tags and pinning
@@ -166,8 +164,7 @@ the digest fixes the content. To look up a digest:
 skopeo inspect --format '{{.Digest}}' docker://ghcr.io/captf-io/opentofu-base:1.12.6
 ```
 
-Dependabot's `docker` ecosystem bumps a pin of this form. The module
-repositories use this stanza:
+Dependabot's `docker` ecosystem bumps a pin of this form. `module-images` uses this stanza for the base pins:
 
 ```yaml
 version: 2

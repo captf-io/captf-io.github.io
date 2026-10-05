@@ -1,5 +1,5 @@
 ---
-description: "How the CAPTF reference modules are laid out, one module per repository, and how the module images are built from separate image repositories."
+description: "How the CAPTF reference modules are laid out, one module per repository, and how the module images are built from them in `module-images`."
 authors:
   - "The CAPTF Authors"
 icon: lucide/folder-tree
@@ -20,10 +20,12 @@ repositories share one layout and one rulebook, and the three
 [`terraform-noop-*`](https://github.com/captf-io/terraform-noop-cluster)
 repositories are the smallest working version of it.
 
-The module images (`ghcr.io/captf-io/<cloud>-<role>`) are built from separate
-repositories, [`aws-modules`](https://github.com/captf-io/aws-modules) and its
-siblings, which hold the Dockerfiles, the lock files and the image smoke test.
-This page describes the module repositories first and the image repositories
+The module images (`ghcr.io/captf-io/<cloud>-<role>`) are built from a
+separate repository,
+[`module-images`](https://github.com/captf-io/module-images), which holds no
+module code: it holds the Dockerfiles, the lock files and the image smoke
+test, and fetches each released module from the Registry. This page describes
+the module repositories first and `module-images`
 [after them](#the-image-repositories).
 
 The image contract is in [Image Contract](image-contract.md); this page covers
@@ -50,8 +52,8 @@ To publish the fork under your own name, change:
 - The README, `DESIGN.md` and `examples/`, which describe the original.
 
 Then run `make verify`. A role you do not need is a repository you do not
-fork. To ship images as well, fork the matching `<cloud>-modules`
-repository too (see [the image repositories](#the-image-repositories)).
+fork. To ship images as well, fork
+`module-images` too (see [the image repositories](#the-image-repositories)).
 
 **Start from `terraform-noop-*`.** Each repository has one role, a handful of
 files and nothing else: every resource is a `terraform_data`, there are no
@@ -61,7 +63,8 @@ license headers. Choose this when you are writing a module for one site or one
 platform, or when you want to grow the checks yourself. You can adopt the
 reference gates later by copying `hack/`, `CONVENTIONS.md` and the Makefile
 targets from a cloud repository. To build images, start from
-[`noop-modules`](https://github.com/captf-io/noop-modules).
+[`module-images`](https://github.com/captf-io/module-images): the `noop-*`
+images are its smallest.
 
 !!! note
 
@@ -199,15 +202,14 @@ CAPTF never reads a module's lock file at run time: the controller generates
 the root module, and the image's provider mirror plus the exact pin decide
 what runs.
 
-The lock files and the mirror belong to the image build, in the `<cloud>-modules`
-repositories. There the lock files live outside the role directories, at
-`locks/<runtime>/<role>.terraform.lock.hcl`, and the role directory is what
-ships in the image, which should not carry them. `make lock` regenerates all
+The lock files and the mirror belong to the image build, in
+`module-images`. There the lock files live outside the modules, at
+`locks/<runtime>/<image>.terraform.lock.hcl`, and only the module's top-level
+`*.tf` files and `templates/` ship in the image. `make lock` regenerates all
 of them, for the platforms `linux_amd64`, `linux_arm64` and `darwin_arm64`.
-Every `init` in that Makefile and in the Dockerfiles runs on a staged copy of
-the role with its lock file, with `-lockfile=readonly`, so a stale lock fails
-the build rather than updating silently. A provider upgrade is a bump of the
-pin in the module, then `make lock` in the image repository.
+A stale lock fails the build rather than updating silently. A provider
+upgrade is a bump of the pin in the module and a release, then
+`make lock IMAGES=<image>` in `module-images`.
 
 The image's `mirror` stage copies the role and its lock file and runs
 `providers mirror` for `linux_amd64` and `linux_arm64`, which produces the
@@ -233,7 +235,7 @@ the exception: they need Terraform 1.7 or OpenTofu 1.8 (mock providers) and
 run only on the base images' runtimes.
 
 **No shared lock file.** Nothing is committed, so the two runtimes cannot
-disagree about one (see above). The image repositories keep one lock file per
+disagree about one (see above). `module-images` keeps one lock file per image and
 runtime.
 
 **What keeps a module portable.** `hack/check-layout.sh` rejects these in the
@@ -361,45 +363,45 @@ moving tag. The README does the same.
 
 ## The image repositories
 
-The images are built from the `<cloud>-modules` repositories and from
-[`noop-modules`](https://github.com/captf-io/noop-modules), one set for each
-provider. Each holds the three roles side by side and turns them into images;
-the module code of each image is its role directory. The layout, from `aws-modules`:
+All the images are built from one repository,
+[`module-images`](https://github.com/captf-io/module-images). It holds no
+module code. The module of each image is a release of a
+`terraform-<provider>-<role>` repository, fetched from the Terraform Registry
+at build time. The layout:
 
 ```text
-<cloud>-modules/
-  README.md  CONVENTIONS.md  DESIGN.md  LICENSE.md
-  Makefile                  build, test, lock and the checks; `make help`
+module-images/
+  README.md  LICENSE.md
+  Makefile                  fetch, build, test, lock and the checks; `make help`
   Dockerfile.terraform      module images on the terraform-base image
   Dockerfile.opentofu       module images on the opentofu-base image
-  .dockerignore .gitignore .tflint.hcl .trivyignore.yaml .licenserc.yaml
-  .github/workflows/build.yml  .github/dependabot.yml
-  hack/                     check-layout.sh, check-tags.sh, tags.json,
-                            check-shell.sh, tf-run.sh, testdata/
-  locks/terraform/<role>.terraform.lock.hcl
-  locks/opentofu/<role>.terraform.lock.hcl
-  examples/                 README.md, identity Secret, manifests
+  images.json               per image: role, capacity labels, allowed warnings
+  sources/versions.tf       the module release of each image (Registry blocks)
+  locks/terraform/<image>.terraform.lock.hcl
+  locks/opentofu/<image>.terraform.lock.hcl
   test/smoke.sh             image smoke test
-  cluster/ machine/ machinepool/      one directory per role
-    *.tf  templates/*.tftpl  tests/*.tftest.hcl  README.md
+  hack/                     images.sh, fetch.sh, lock.sh, build.sh
 ```
 
-`.dockerignore` lists what an image does receive: only the role directories
-and `locks/`. Tests, READMEs, `.terraform/` and lock files are left out of
-`/captf/module`. The `Makefile`, `Dockerfile.*` and
-`.github/workflows/build.yml` differ between clouds only in per-cloud values
-(`CLOUD`, `MACHINE_CAPACITY` and `MACHINE_ARCH`, the image names, and the
-OpenStack role matrix).
+`sources/versions.tf` pins each image's module as a Registry module block:
 
-To publish a fork's images under your own registry and name, change `CLOUD`
-and `REGISTRY` in the `Makefile`, the image names in
-`.github/workflows/build.yml`, and `MACHINE_CAPACITY` and `MACHINE_ARCH`
-(the capacity and architecture labels of the machine image, empty if the
-machine module has no default shape), then rerun `make lock` and run
-`make verify` and `make test`. See [Releasing a
-Module](releasing.md#publishing-from-a-fork). `noop-modules` is the smallest
-image repository: every role, both Dockerfiles, a smoke test, no providers,
-no locks and no verify gates.
+```hcl title="sources/versions.tf (trimmed)"
+module "aws-machine" {
+  source  = "captf-io/machine/aws"
+  version = "0.1.0"
+}
+```
+
+The build fetches that release, keeps only the top-level `*.tf` files and
+`templates/`, and writes them to `/captf/module`. Tests, READMEs, `.terraform/`
+and lock files are left out. The Dockerfiles share the stages
+`mirror → module → <role>` across all images.
+
+To publish a fork's images under your own registry and name, change
+`REGISTRY` in the `Makefile`, the image names in `images.json` and the
+workflow, and point `sources/versions.tf` at your modules, then rerun
+`make lock` and run `make verify` and `make test`. See [Releasing a
+Module](releasing.md#publishing-from-a-fork).
 
 !!! related "See also"
 

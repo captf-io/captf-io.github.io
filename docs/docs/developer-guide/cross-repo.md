@@ -1,5 +1,5 @@
 ---
-description: "Work across the captf-io repositories: a shared workspace, the order of a contract change, files that must stay identical, license headers and base image bumps."
+description: "Work across the captf-io repositories: a shared workspace, the order of a contract change, module images, license headers and base image bumps."
 authors:
   - "The CAPTF Authors"
 icon: lucide/git-merge
@@ -8,8 +8,8 @@ subtitle: "Changes that span repositories"
 
 # Working Across Repositories
 
-CAPTF lives in several repositories: the provider, two base images, six module
-repositories, the 17 `terraform-<provider>-<role>` repositories, the website
+CAPTF lives in several repositories: the provider, two base images, the
+`module-images` repository, the 17 `terraform-<provider>-<role>` repositories, the website
 and the organization's `.github` repository. Most
 changes touch one of them. This page is for a change that spans more than one,
 such as a contract change, a new convention for the module repositories or a
@@ -30,17 +30,16 @@ done
 
 Two things depend on the siblings being there:
 
-- The module repositories build [tfcapi-lint](../module-author/tfcapi-lint.md)
-  from the provider checkout. Their Makefile reads `PROVIDER_DIR`, which
-  defaults to `../../cluster-api-provider-terraform`. From a module repository in a
-  flat workspace that resolves above the workspace, not to the sibling. When
-  the directory has no `cmd/tfcapi-lint` and `TFCAPI_LINT` is not set, the
-  `tfcapi-lint` target and the image lint in `make test` print `SKIP` and
-  succeed. Pass the sibling path:
+- `module-images` builds [tfcapi-lint](../module-author/tfcapi-lint.md)
+  from the provider checkout. Its Makefile reads `PROVIDER_DIR`, which
+  defaults to `../cluster-api-provider-terraform`, the sibling in a flat
+  workspace. If the directory has no `cmd/tfcapi-lint` and `TFCAPI_LINT` is
+  not set, the image lint in `make test` prints `SKIP` and succeeds. Pass the
+  path explicitly when your layout differs:
 
     ```sh
-    cd aws-modules
-    make verify PROVIDER_DIR=../cluster-api-provider-terraform
+    cd module-images
+    make test PROVIDER_DIR=../cluster-api-provider-terraform
     ```
 
     Alternatively, set `TFCAPI_LINT` to a binary you built or
@@ -65,79 +64,51 @@ in this order:
    label changed) in
    [`captf-io.github.io`](https://github.com/captf-io/captf-io.github.io). See
    [Contributing to the Docs](docs-workflow.md).
-3. **Every module repository.** Bring `aws-modules`, `azure-modules`,
-   `gcp-modules`, `oci-modules`, `openstack-modules` and `noop-modules` in line
-   with the new contract.
-4. **Every `terraform-<provider>-<role>` repository.** These 17 repositories
-   hold the same module code for the Terraform Registry. Until the
-   `*-modules` repositories build from them, both a `terraform-*` repository
-   and the matching role directory of its `*-modules` repository carry the
-   code, so apply the change to both.
+3. **Every `terraform-<provider>-<role>` repository.** These 17 repositories
+   hold the only copy of the module code. Bring each in line with the new
+   contract and tag a release; the Terraform Registry publishes it.
+4. **`module-images`.** Dependabot bumps the module versions in
+   `sources/versions.tf` after each release. If a release changes providers,
+   run `make lock IMAGES=<image>` and commit the locks to the Dependabot
+   branch. See [Releasing a Module](../module-author/releasing.md).
 
-The order follows who depends on whom. The module repositories are linted by
+The order follows who depends on whom. The modules are linted by
 the provider's tfcapi-lint, so they can only pass a new check once the
 provider has it. The docs describe what the provider enforces and are what
 module authors read, so they follow the code and precede the modules that
 apply the change. The contract is `v1alpha1`, so a change is cheap now, but it
 still breaks every module written against it.
 
-## Files that must stay identical
+## Module images and module repositories
 
-The five cloud module repositories (`aws-modules`, `azure-modules`,
-`gcp-modules`, `oci-modules`, `openstack-modules`) share a skeleton. These
-files are byte-identical across all five:
+The six image repositories that once held a copy of the modules (`aws-modules`,
+`azure-modules`, `gcp-modules`, `oci-modules`, `openstack-modules` and
+`noop-modules`) are replaced by one repository,
+[`module-images`](https://github.com/captf-io/module-images), and are
+archived. It holds no module code, so there is no skeleton to keep identical
+across repositories. What it holds:
 
-| File | Holds |
+| Path | Holds |
 | --- | --- |
-| `CONVENTIONS.md` | The rulebook for module code. It says so itself: a change is a change in all five repositories. |
-| `.dockerignore` | The build context filter. |
-| `hack/check-layout.sh` | The check of the file layout and language subset in `CONVENTIONS.md`. |
-| `hack/tf-run.sh` | The script that runs `fmt`, `lock` and `validate` for a runtime, role and floor. |
-| `test/smoke.sh` | The image smoke test. |
+| `sources/versions.tf` | One Registry `module` block for each image, pinning the module release the image contains. |
+| `images.json` | The per-image build values: role, machine capacity labels and the allowed tfcapi-lint warnings. |
+| `locks/<runtime>/<image>.terraform.lock.hcl` | The provider lock files for each runtime and image. |
 
-Per-cloud values aside, these also match: the `Makefile`, `Dockerfile.opentofu`,
-`Dockerfile.terraform` and `.github/workflows/build.yml`. They differ in the
-cloud name, the default machine capacity and architecture, the image names, the
-allowed tfcapi-lint warnings and, for OpenStack, the role list (it has no
-`machinepool`). Compare them with a diff rather than by eye.
-
-No tool enforces this. Apply a skeleton change to all five repositories, then
-check it with `diff` against `aws-modules`, run from the workspace:
+A change to one module is made in its `terraform-<provider>-<role>`
+repository, with `make verify` before you push. To try an unreleased module
+change in an image, build from local checkouts, with the `terraform-*`
+repositories as siblings of `module-images`:
 
 ```sh
-for r in azure gcp oci openstack; do
-  for f in CONVENTIONS.md .dockerignore hack/check-layout.sh \
-           hack/tf-run.sh test/smoke.sh; do
-    cmp aws-modules/$f $r-modules/$f
-  done
-done
-
-md5sum */CONVENTIONS.md */hack/tf-run.sh | sort
+cd module-images
+make test IMAGES=aws-machine LOCAL_MODULES=..
 ```
 
-`cmp` prints nothing for identical files. For `Makefile`, `Dockerfile.*` and
-`build.yml`, run `diff aws-modules/<file> <cloud>-modules/<file>` and confirm
-the output is only the per-cloud lines. Run `make verify
-PROVIDER_DIR=../cluster-api-provider-terraform` in each repository before you
-push. See [Module Repository
-Layout](../module-author/repository-layout.md) for what the skeleton holds
-and [Testing a Module](../module-author/testing.md) for the checks.
-
-### `noop-modules`
-
-[`noop-modules`](https://github.com/captf-io/noop-modules) shares the
-Dockerfile and workflow skeleton, but not the files above. It has no
-`CONVENTIONS.md`, no `hack/` directory and no `locks/`, and its own
-`.dockerignore` and `test/smoke.sh` differ from the cloud copies. Apply a change
-to it when the change is to the image build, the tags or the CI jobs; skip
-changes that belong to `CONVENTIONS.md`, the layout check or the lock files.
-Its Makefile has only `help`, `build` and `test`, so it does not run
-`make verify`.
-
-The `terraform-*` repositories are not part of the skeleton above: each holds
-one role at its root, and the gate is `make verify`. Keep a module in step
-with the same role in the matching `*-modules` repository (`google` is `gcp`
-there), and run `make verify` in each before you push.
+The checks that gate `module-images` are `make verify` (the `images.json`,
+version and lock files agree; license headers; shellcheck; trivy) and
+`make test` (fetch, build and smoke-test every image on both runtimes). Narrow
+a run with `CLOUDS=aws`, `RUNTIMES=opentofu` or `IMAGES=noop-machine`. See
+[Testing a Module](../module-author/testing.md) for the checks.
 
 ## Community files and READMEs
 
@@ -179,34 +150,30 @@ make fix-headers     # add the header to every file missing it
 ```
 
 Each repository's `.licenserc.yaml` says which files need the header and which
-do not, such as Markdown, JSON, lock files and `CODEOWNERS`. The file is
-identical in the module and base repositories, including `noop-modules`, and
-differs in the provider, the website and `.github`, which have different file
-types. `check-headers` runs in `make verify` in the cloud module repositories
-and as the `license-headers` job in each repository's CI workflow; a failing
+do not, such as Markdown, JSON, lock files and `CODEOWNERS`. The file differs
+in the provider, the website and `.github`, which have different file types.
+`check-headers` runs in `make verify` where a repository has one, and as the `license-headers` job in each repository's CI workflow; a failing
 job blocks publishing.
 
 Run `make fix-headers` after adding a new source file, then review the diff.
 
 ## Base image bumps
 
-Module repositories pin their base image by tag and digest, for example
+`module-images` pins each base image by tag and digest, for example
 `opentofu-base:1.12.6@sha256:<digest>`. See [Base
 Images](../module-author/base-images.md#tags-and-pinning). The base images are
-rebuilt weekly, and each module repository's `.github/dependabot.yml` has a
-`docker` stanza that bumps the pin and opens a pull request with the commit
-prefix `deps`. When a base image changes, each of the six module repositories
-(the five clouds and `noop-modules`) gets its own pull request. Merge them all,
-so that no module repository keeps shipping an old base. The five cloud
-repositories carry an identical `dependabot.yml`; the `*-base` repositories
-carry another.
+rebuilt weekly, and the `.github/dependabot.yml` of `module-images` has a
+`docker` stanza that bumps the pin and opens one pull request with the commit
+prefix `deps`. Merging it rebuilds every image on the new base and publishes
+new digests under the same `vX.Y.Z-<runtime>` tags. The same file has a
+`terraform` stanza that bumps the module versions in `sources/versions.tf`
+daily.
 
 ## Commits and pull requests
 
 Open one pull request per repository. Name the other pull requests in each
 description and land them in the order of [a contract
-change](#order-of-a-contract-change): provider, docs, then the module
-repositories. Mark later pull requests as blocked on the earlier ones until
+change](#order-of-a-contract-change): provider, docs, then the `terraform-*` module repositories, then `module-images`. Mark later pull requests as blocked on the earlier ones until
 those merge.
 
 Commit style, the checks to run before you push and the licensing terms are in

@@ -75,7 +75,7 @@ The workflows that the build badges report:
 | Repositories | `CI_WORKFLOW` |
 | --- | --- |
 | `cluster-api-provider-terraform` | `ci.yaml` |
-| `opentofu-base`, `terraform-base` and the `*-modules` repositories | `build.yml` |
+| `opentofu-base`, `terraform-base` and `module-images` | `build.yml` |
 | The `terraform-<provider>-<role>` module repositories | `ci.yml` |
 | `captf-io.github.io` | `pages.yml` |
 | `.github` | `checks.yml` |

@@ -21,7 +21,7 @@ manager image `ghcr.io/captf-io/cluster-api-provider-terraform:vX.Y.Z`, and a
 GitHub release with the clusterctl assets and the `tfcapi-lint` binaries.
 The same image is the runner image. The no-op demo module images are not part
 of a CAPTF release: they are built and tagged from
-[captf-io/noop-modules](https://github.com/captf-io/noop-modules).
+[captf-io/module-images](https://github.com/captf-io/module-images).
 
 **Pushing the tag is the release.** The
 [`publish.yaml`](https://github.com/captf-io/cluster-api-provider-terraform/blob/main/.github/workflows/publish.yaml)
@@ -57,8 +57,11 @@ The 17 `terraform-<provider>-<role>` repositories release on their own. A
 release is a signed `vX.Y.Z` tag on `main`, pushed after `make verify` and CI
 are green. The Terraform Registry publishes `captf-io/<role>/<provider>` at
 that version within a minute. No image is built from these repositories, and
-versions follow the CAPTF release. The module images are still released from
-the `*-modules` repositories.
+versions follow the CAPTF release. The module images are built by
+[`module-images`](https://github.com/captf-io/module-images): a Dependabot
+bump of `sources/versions.tf` there, once it is merged, publishes
+`<image>:vX.Y.Z-<runtime>`. See [Releasing a
+Module](../module-author/releasing.md).
 
 ## Images from `main`
 

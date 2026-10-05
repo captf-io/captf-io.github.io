@@ -15,11 +15,10 @@ reference repositories use and what each one catches. The code checks live in
 the one-module-per-repository `terraform-<provider>-<role>` repositories, with
 [`terraform-aws-cluster`](https://github.com/captf-io/terraform-aws-cluster) as the example; the
 same targets exist in the other cloud repositories. The image smoke test lives
-in the `<cloud>-modules` repositories that build the images, with
-[`aws-modules`](https://github.com/captf-io/aws-modules) as the example. The
+in [`module-images`](https://github.com/captf-io/module-images), which builds
+the images from released modules. The
 [`terraform-noop-*`](https://github.com/captf-io/terraform-noop-cluster) repositories run format,
-`validate` and an apply and destroy of `test/root`, and
-[`noop-modules`](https://github.com/captf-io/noop-modules) has only `build` and `test`.
+`validate` and an apply and destroy of `test/root`.
 
 ## Overview
 
@@ -28,13 +27,14 @@ in the `<cloud>-modules` repositories that build the images, with
 | [Static checks](#static-checks) | Unformatted code, syntax errors, invalid references, constructs that the oldest supported runtime cannot parse. | `fmt-check`, `validate` |
 | [Unit tests](#unit-tests-with-mocked-providers) | Wrong outputs, wrong health, missing validation, wrong resource arguments. No cloud account needed. | `unit-test` |
 | [Lint](#lint) | Style and provider-rule violations, and contract violations in the module source. | `tflint`, `tfcapi-lint` |
-| [Image tests](#image-tests) | A wrong user or label, a provider missing from the mirror, a module that cannot `init` offline, an image that breaks the contract. | `build`, `test` (in `<cloud>-modules`) |
+| [Image tests](#image-tests) | A wrong user or label, a provider missing from the mirror, a module that cannot `init` offline, an image that breaks the contract. | `build`, `test` (in `module-images`) |
 | [End-to-end](#end-to-end) | Behavior of the controllers and the module together on a real cluster. | Provider repository: `e2e-foundation`, `e2e-noop` |
 
 In a `terraform-*` repository, `make verify` runs every layer above the image
 tests, plus license, layout, shell and configuration scans; it is the only
-thing CI runs there. In a `<cloud>-modules` repository, `make test` builds the
-images and smoke-tests them. Run `make help` in a repository for the full
+thing CI runs there. In `module-images`, `make test` fetches the modules, builds the
+images and smoke-tests them, and `make verify` checks that `images.json`,
+`sources/versions.tf` and the locks agree. Run `make help` in a repository for the full
 list. The host needs
 `make`, `podman` (or `docker` with `ENGINE=docker`), `jq` and Go; the
 Terraform, OpenTofu, tflint and trivy tools run in containers pinned by
@@ -214,13 +214,21 @@ For a standalone install, see [Install](tfcapi-lint.md#install).
 
 ## Image tests
 
-The image tests run in the `<cloud>-modules` repositories, which build the
-images; the `terraform-*` repositories have no `build` or `test` target.
-`make build` builds `ghcr.io/captf-io/<cloud>-<role>:<version>-<runtime>` for
-every role and runtime on the host platform (`VERSION` defaults to `dev`).
-`make test` builds, then runs
-[`test/smoke.sh`](https://github.com/captf-io/aws-modules/blob/main/test/smoke.sh)
-on every image:
+The image tests run in `module-images`, which builds the images; the
+`terraform-*` repositories have no `build` or `test` target. `make build`
+fetches the module release that `sources/versions.tf` pins for each image and
+builds `ghcr.io/captf-io/<image>:<module tag>-<runtime>` for every image and
+runtime on the host platform. `make test` builds, then runs
+[`test/smoke.sh`](https://github.com/captf-io/module-images/blob/main/test/smoke.sh)
+on every image. Narrow a run with `CLOUDS=aws`, `RUNTIMES=opentofu` or
+`IMAGES=noop-machine`, and build from local checkouts of the module
+repositories, for a change that is not released, with `LOCAL_MODULES=..`:
+
+```sh
+make test IMAGES=aws-machine LOCAL_MODULES=..
+```
+
+Each image is checked with:
 
 ```sh
 test/smoke.sh <image> <cluster|machine|machinepool> <terraform|opentofu>
@@ -270,9 +278,10 @@ on it, with the role's allowed warnings. `make test` sets it when it
 resolves a binary as described in [Lint](#lint). See [Lint an
 image](tfcapi-lint.md#lint-an-image).
 
-The `noop-modules` smoke test differs in one way: it has no cloud to avoid,
-so it mounts a rendered `main.tf.json` at `/captf/config` and goes on to run
-`init`, `apply`, `output` and `destroy` offline.
+The `noop-*` images get one more step: they have no cloud to avoid, so the
+script mounts a rendered `main.tf.json` (the image's `smokeRoot` in
+`images.json`) at `/captf/config` and goes on to run `init`, `apply`, `output`
+and `destroy` offline.
 
 ## End-to-end
 
@@ -328,20 +337,20 @@ side. The noop repositories run `make verify` too, with its smaller set:
 headers, format, `validate` and the apply and destroy of `test/root`. Nothing
 there builds or smoke-tests an image.
 
-The image repositories test and publish the images in
-[`.github/workflows/build.yml`](https://github.com/captf-io/aws-modules/blob/main/.github/workflows/build.yml),
-on pull requests, pushes to `main` and `v*.*.*` tags:
+`module-images` tests and publishes the images in
+[`.github/workflows/build.yml`](https://github.com/captf-io/module-images/blob/main/.github/workflows/build.yml),
+on pull requests and pushes to `main`; only a push to `main` publishes:
 
 | Job | Runs on | What it runs |
 | --- | --- | --- |
-| `verify` | `ubuntu-24.04` | `make verify` on the role directories |
-| `test` | `ubuntu-24.04` and `ubuntu-24.04-arm`, for each runtime | `make test RUNTIMES=<runtime>`: build and smoke-test every role natively on amd64 and arm64, including the image lint |
-| `publish` | `ubuntu-24.04` | On push only, after the jobs above pass: builds each role and runtime for `linux/amd64` and `linux/arm64` with QEMU and buildx, and pushes to GHCR with an SBOM and provenance |
+| `verify` | `ubuntu-24.04` | `make verify`: `images.json`, versions and locks agree, license headers, shellcheck, trivy |
+| `test` | `ubuntu-24.04` and `ubuntu-24.04-arm`, for each cloud | `make test CLOUDS=<cloud>`: build and smoke-test every image of the cloud on both runtimes, natively on amd64 and arm64, including the image lint |
+| `publish` | `ubuntu-24.04` | On a push to `main` only, after the jobs above pass: builds each image and runtime for `linux/amd64` and `linux/arm64` with QEMU and buildx, and pushes to GHCR with an SBOM and provenance |
 
-The `test` job runs a matrix of two runners and two runtimes, so each image
+The `test` job runs a matrix of the clouds and two runners, so each image
 is smoke-tested on both architectures it ships for. CI lints against the
 provider's `main`, so run `make tfcapi-lint` in the module repository, and
-`make test` in the image repository, locally with `PROVIDER_DIR` set before
+`make test` in `module-images`, locally before
 you push, to catch contract violations first (see [Lint](#lint)). See
 [Releasing a Module](releasing.md) for publishing and tags, and [tfcapi-lint
 in CI](tfcapi-lint.md#in-ci) for running the linter in your own pipeline.
