@@ -5,7 +5,7 @@ git_revision_date_localized: "October 1, 2026"
 git_creation_date_iso: "2026-09-29"
 git_revision_date_iso: "2026-10-01"
 authors:
-  - "Steven Crothers"
+  - "The CAPTF Authors"
 icon: lucide/download
 subtitle: "Install the manager"
 ---

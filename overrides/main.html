@@ -28,7 +28,7 @@
   {{ super() }}
   {%- set site = config.site_url -%}
   {%- set brand_image = site ~ "assets/landing/og.jpg" -%}
-  {%- set org = {"@type": "Organization", "name": "The CAPTF Maintainers", "url": "https://github.com/captf-io"} -%}
+  {%- set org = {"@type": "Organization", "name": "The CAPTF Authors", "url": "https://github.com/captf-io"} -%}
   {%- set publisher = {"@type": "Organization", "name": config.site_name, "url": site, "logo": {"@type": "ImageObject", "url": site ~ "assets/brand/mark.svg"}} -%}
   {%- if page is defined and page -%}
     {%- set meta = page.meta if page.meta is defined and page.meta else {} -%}
@@ -58,7 +58,7 @@
       {% if modified %}<meta property="article:modified_time" content="{{ modified }}">{% endif %}
       {% if section %}<meta property="article:section" content="{{ section }}">{% endif %}
       {% for tag in tags %}<meta property="article:tag" content="{{ tag }}">{% endfor %}
-      <meta property="article:author" content="The CAPTF Maintainers">
+      <meta property="article:author" content="The CAPTF Authors">
     {% endif %}
 
     {#- Structured data. -#}

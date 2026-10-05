@@ -10,7 +10,7 @@ repo_url = "https://github.com/captf-io/captf-io.github.io"
 repo_name = "captf-io/captf-io.github.io"
 # Pages are Markdown under docs/; edit and view links open the page there.
 edit_uri = "edit/main/docs/"
-copyright = "Copyright &copy; The CAPTF Maintainers. Apache-2.0."
+copyright = "Copyright &copy; The CAPTF Authors. Apache-2.0."
 site_dir = "site"
 extra_css = ["assets/stylesheets/extra.css"]
 # Break points in long identifiers in table cells (see the file).

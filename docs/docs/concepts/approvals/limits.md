@@ -5,7 +5,7 @@ git_revision_date_localized: "October 2, 2026"
 git_creation_date_iso: "2026-10-01"
 git_revision_date_iso: "2026-10-02"
 authors:
-  - "Steven Crothers"
+  - "The CAPTF Authors"
 icon: lucide/octagon-alert
 subtitle: "What an approval cannot promise"
 ---
