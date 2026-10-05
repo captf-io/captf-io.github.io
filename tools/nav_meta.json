@@ -203,6 +203,10 @@
     "icon": "lucide/workflow",
     "subtitle": "Pipeline, exports, user variables"
   },
+  "module-author/existing-state.md": {
+    "icon": "lucide/git-branch-plus",
+    "subtitle": "Reuse state, data and outputs"
+  },
   "module-author/contract/v1alpha1/README.md": {
     "icon": "lucide/file-json",
     "subtitle": "The module contract at a glance"

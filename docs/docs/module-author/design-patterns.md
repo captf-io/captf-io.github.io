@@ -83,6 +83,10 @@ The consequence is the rule: **treat exports as a stable interface.**
   machines](../concepts/approvals/limits.md#cluster-outputs-reach-pools-and-machines)
   and [Machine pools](../concepts/approvals/destructive-guard.md#machine-pools).
 
+`exports` is also what a later Terraform run can read from the cluster's
+state; see [Build on CAPTF's state in later
+runs](existing-state.md#build-on-captfs-state-in-later-runs).
+
 ## Health and `provider_id`
 
 A machine reports itself through two outputs, and the controller is

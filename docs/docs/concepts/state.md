@@ -45,6 +45,10 @@ The state lock is a `coordination.k8s.io/v1` Lease named
 `lock-tfstate-default-<suffix>` in the same namespace. See
 [Locks](#locks) below.
 
+To read a cluster's `exports` from another Terraform root, see [Build on
+CAPTF's state in later
+runs](../module-author/existing-state.md#build-on-captfs-state-in-later-runs).
+
 ## Chunking and size caps
 
 A Kubernetes Secret holds at most 1 MiB, and a large Terraform state can

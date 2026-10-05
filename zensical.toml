@@ -113,6 +113,7 @@ nav = [
   { "Module Authors" = [
     { "Your First Module" = "docs/getting-started/first-module.md" },
     { "How Inputs Reach a Module" = "docs/concepts/inputs.md" },
+    { "Building on Existing State" = "docs/module-author/existing-state.md" },
     { "Module Contract (v1alpha1)" = [
       "docs/module-author/contract/v1alpha1/README.md",
       { "Common" = "docs/module-author/contract/v1alpha1/common.md" },
@@ -572,6 +573,7 @@ https://captf.io/llms-full.txt is the whole site in one file. News: https://capt
 "Module Authors" = [
   { "docs/getting-started/first-module.md" = "Write, lint, package and reference a small machine-role module from scratch, ending with a lint-clean module image." },
   { "docs/concepts/inputs.md" = "Where every Terraform input of a CAPTF Job comes from: the pipeline, per-role inputs, exports, user variables, the inputs hash and safe inspection." },
+  { "docs/module-author/existing-state.md" = "Build clusters on infrastructure and Terraform state you already have: read data sources, pass values to machines through exports, and run later add-on roots." },
   { "docs/module-author/contract/v1alpha1/README.md" = "Overview of the v1alpha1 module contract: child-module rules, naming, null semantics, type conventions, injection mechanics and role summary." },
   { "docs/module-author/contract/v1alpha1/common.md" = "Inputs injected into every role, the user-variable rules, and the health output every module must declare." },
   { "docs/module-author/contract/v1alpha1/cluster.md" = "The cluster role of the v1alpha1 module contract: inputs, outputs, provisioned rule, lifecycle, control-plane requirements and a skeleton." },

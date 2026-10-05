@@ -170,6 +170,10 @@ The no-op set needs only the identity. Every cloud set needs all of these:
   cloud credentials the provider reads; each cloud page shows the keys. See
   [Identities and Credentials](../user-guide/identities.md).
 
+The modules read the network you bring with data sources; [Building on
+Existing State](../module-author/existing-state.md#read-infrastructure-that-already-exists)
+shows the pattern and how to build on it.
+
 ## Using the modules
 
 1. Read the cloud page for the prerequisites and the identity Secret.

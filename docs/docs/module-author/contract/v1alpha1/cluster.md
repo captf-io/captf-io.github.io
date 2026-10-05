@@ -96,7 +96,9 @@ render `false` and destroy every gated resource.
 Modules that need a live workload API server (in-cluster add-ons,
 cloud-controller secrets, DNS records pointing at registered nodes) gate
 those resources on it, for example
-`count = var.control_plane_initialized ? 1 : 0`.
+`count = var.control_plane_initialized ? 1 : 0`. [Building on Existing
+State](../../existing-state.md#add-ons-from-inside-the-cluster-module)
+weighs this against a separate add-on root.
 
 ### `cluster_network` (input)
 
