@@ -8,7 +8,7 @@ subtitle: "Every repo and what it ships"
 
 # Repositories and Images
 
-CAPTF lives in eleven repositories in the
+CAPTF lives in twenty-eight repositories in the
 [captf-io](https://github.com/captf-io) GitHub organization. This page lists
 what each one holds, what it publishes, which container images exist and how
 they are tagged, and how the pieces fit together.
@@ -56,14 +56,50 @@ The module image half of the contract is in [Image Contract](../module-author/im
 | [`cluster-api-provider-terraform`](https://github.com/captf-io/cluster-api-provider-terraform) | Provider | The `manager` (controllers and webhooks), the `runner` (the in-Job driver) and the `tfcapi-lint` linter, with the API types, CRDs, kustomize bases and clusterctl templates. | The manager and runner image, and the clusterctl components, templates and `tfcapi-lint` binaries as release assets. |
 | [`opentofu-base`](https://github.com/captf-io/opentofu-base) | Base image | The Dockerfile for the OpenTofu runtime layer of the [image contract](../module-author/image-contract.md). | `ghcr.io/captf-io/opentofu-base`. |
 | [`terraform-base`](https://github.com/captf-io/terraform-base) | Base image | The same layer for the Terraform runtime. | `ghcr.io/captf-io/terraform-base`. |
-| [`aws-modules`](https://github.com/captf-io/aws-modules) | Modules | Reference `cluster`, `machine` and `machinepool` modules for AWS. | `ghcr.io/captf-io/aws-<role>`. |
-| [`azure-modules`](https://github.com/captf-io/azure-modules) | Modules | Reference `cluster`, `machine` and `machinepool` modules for Azure. | `ghcr.io/captf-io/azure-<role>`. |
-| [`gcp-modules`](https://github.com/captf-io/gcp-modules) | Modules | Reference `cluster`, `machine` and `machinepool` modules for Google Cloud. | `ghcr.io/captf-io/gcp-<role>`. |
-| [`oci-modules`](https://github.com/captf-io/oci-modules) | Modules | Reference `cluster`, `machine` and `machinepool` modules for Oracle Cloud. | `ghcr.io/captf-io/oci-<role>`. |
-| [`openstack-modules`](https://github.com/captf-io/openstack-modules) | Modules | Reference `cluster` and `machine` modules for OpenStack. There is no `machinepool`. | `ghcr.io/captf-io/openstack-<role>`. |
-| [`noop-modules`](https://github.com/captf-io/noop-modules) | Modules | No-op `cluster`, `machine` and `machinepool` modules that create nothing, for trying CAPTF and for end-to-end tests. | `ghcr.io/captf-io/noop-<role>`. |
+| [`aws-modules`](https://github.com/captf-io/aws-modules) | Modules | Builds, smoke-tests and releases the reference module images for AWS. It currently holds its own copy of the `cluster`, `machine` and `machinepool` modules. | `ghcr.io/captf-io/aws-<role>`. |
+| [`azure-modules`](https://github.com/captf-io/azure-modules) | Modules | Builds, smoke-tests and releases the reference module images for Azure. It currently holds its own copy of the `cluster`, `machine` and `machinepool` modules. | `ghcr.io/captf-io/azure-<role>`. |
+| [`gcp-modules`](https://github.com/captf-io/gcp-modules) | Modules | Builds, smoke-tests and releases the reference module images for Google Cloud. It currently holds its own copy of the `cluster`, `machine` and `machinepool` modules. | `ghcr.io/captf-io/gcp-<role>`. |
+| [`oci-modules`](https://github.com/captf-io/oci-modules) | Modules | Builds, smoke-tests and releases the reference module images for Oracle Cloud. It currently holds its own copy of the `cluster`, `machine` and `machinepool` modules. | `ghcr.io/captf-io/oci-<role>`. |
+| [`openstack-modules`](https://github.com/captf-io/openstack-modules) | Modules | Builds, smoke-tests and releases the reference module images for OpenStack. It currently holds its own copy of the `cluster` and `machine` modules. There is no `machinepool`. | `ghcr.io/captf-io/openstack-<role>`. |
+| [`noop-modules`](https://github.com/captf-io/noop-modules) | Modules | Builds and releases the no-op module images, which create nothing, for trying CAPTF and for end-to-end tests. It currently holds its own copy of the three modules. | `ghcr.io/captf-io/noop-<role>`. |
 | [`captf-io.github.io`](https://github.com/captf-io/captf-io.github.io) | Website | The captf.io site: landing page, this docs book and the blog. | The site, deployed to GitHub Pages from `main` by `pages.yml`. |
 | [`.github`](https://github.com/captf-io/.github) | Organization | The organization profile and the community health files. | Nothing is built. Its workflow only checks license headers. |
+
+### Terraform module repositories
+
+Each role of each cloud module set is also its own repository, with the
+module at the repository root. These repositories hold the module code and
+its checks only: no image is built from them. Each is published on the
+[Terraform Registry](https://registry.terraform.io/namespaces/captf-io) as
+`captf-io/<role>/<provider>`, where `<provider>` is `aws`, `azure`, `google`,
+`oci`, `openstack` or `noop`. Repositories are named
+`terraform-<provider>-<role>` in the
+[captf-io](https://github.com/captf-io) organization. The `*-modules`
+repositories above hold their own copy of the code for now.
+
+| Repository | Role | Registry address | Gate |
+| --- | --- | --- | --- |
+| [`terraform-aws-cluster`](https://github.com/captf-io/terraform-aws-cluster) | `cluster` | `captf-io/cluster/aws` | `make verify` |
+| [`terraform-aws-machine`](https://github.com/captf-io/terraform-aws-machine) | `machine` | `captf-io/machine/aws` | `make verify` |
+| [`terraform-aws-machinepool`](https://github.com/captf-io/terraform-aws-machinepool) | `machinepool` | `captf-io/machinepool/aws` | `make verify` |
+| [`terraform-azure-cluster`](https://github.com/captf-io/terraform-azure-cluster) | `cluster` | `captf-io/cluster/azure` | `make verify` |
+| [`terraform-azure-machine`](https://github.com/captf-io/terraform-azure-machine) | `machine` | `captf-io/machine/azure` | `make verify` |
+| [`terraform-azure-machinepool`](https://github.com/captf-io/terraform-azure-machinepool) | `machinepool` | `captf-io/machinepool/azure` | `make verify` |
+| [`terraform-google-cluster`](https://github.com/captf-io/terraform-google-cluster) | `cluster` | `captf-io/cluster/google` | `make verify` |
+| [`terraform-google-machine`](https://github.com/captf-io/terraform-google-machine) | `machine` | `captf-io/machine/google` | `make verify` |
+| [`terraform-google-machinepool`](https://github.com/captf-io/terraform-google-machinepool) | `machinepool` | `captf-io/machinepool/google` | `make verify` |
+| [`terraform-oci-cluster`](https://github.com/captf-io/terraform-oci-cluster) | `cluster` | `captf-io/cluster/oci` | `make verify` |
+| [`terraform-oci-machine`](https://github.com/captf-io/terraform-oci-machine) | `machine` | `captf-io/machine/oci` | `make verify` |
+| [`terraform-oci-machinepool`](https://github.com/captf-io/terraform-oci-machinepool) | `machinepool` | `captf-io/machinepool/oci` | `make verify` |
+| [`terraform-openstack-cluster`](https://github.com/captf-io/terraform-openstack-cluster) | `cluster` | `captf-io/cluster/openstack` | `make verify` |
+| [`terraform-openstack-machine`](https://github.com/captf-io/terraform-openstack-machine) | `machine` | `captf-io/machine/openstack` | `make verify` |
+| [`terraform-noop-cluster`](https://github.com/captf-io/terraform-noop-cluster) | `cluster` | `captf-io/cluster/noop` | `make verify`: format, validate, apply and destroy of `test/root`, license headers. |
+| [`terraform-noop-machine`](https://github.com/captf-io/terraform-noop-machine) | `machine` | `captf-io/machine/noop` | `make verify`: format, validate, apply and destroy of `test/root`, license headers. |
+| [`terraform-noop-machinepool`](https://github.com/captf-io/terraform-noop-machinepool) | `machinepool` | `captf-io/machinepool/noop` | `make verify`: format, validate, apply and destroy of `test/root`, license headers. |
+
+A release is a signed `vX.Y.Z` tag on `main`, which the Terraform Registry
+publishes within a minute. Versions follow the CAPTF release; `0.1.0` is
+published for all 17. See [Releasing](../developer-guide/releasing.md).
 
 The module repositories are described together in [Cloud
 Modules](../cloud-modules/README.md); their layout is in [Module Repository
@@ -134,6 +170,7 @@ repositories attach no release assets: their output is the images above.
 | `cluster-api-provider-terraform` | Tags `vX.Y.Z` and `vX.Y.Z-rc.N`. `metadata.yaml` lists the clusterctl release series, append-only, currently `0.1` on contract `v1beta2`. | [Releasing](../developer-guide/releasing.md) |
 | `opentofu-base`, `terraform-base` | Not tagged in git. The image tags follow the runtime version (`1.12.6`, `1.12`), with a date-stamped build tag. | [Tags and pinning](../module-author/base-images.md#tags-and-pinning) |
 | `<cloud>-modules`, `noop-modules` | Tags `vX.Y.Z`. Image tags add the runtime: `vX.Y.Z-opentofu`, `vX.Y.Z-terraform`. | [Releasing a Module](../module-author/releasing.md) |
+| `terraform-<provider>-<role>` | Signed tags `vX.Y.Z`, published to the Terraform Registry. Versions follow the CAPTF release. | [Releasing](../developer-guide/releasing.md) |
 
 Which provider, Cluster API and runtime versions are tested together is in
 [Compatibility](../operator-guide/compatibility.md).

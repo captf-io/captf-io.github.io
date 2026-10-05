@@ -16,8 +16,17 @@ The Google Cloud modules create, in a VPC network you bring, a Cluster API
 cluster's API load balancer (an internal proxy Network Load Balancer by
 default), its firewall rules and its node service accounts; one Shielded VM
 per `Machine`; and one regional managed instance group per `MachinePool`.
-They live in [`captf-io/gcp-modules`](https://github.com/captf-io/gcp-modules)
-and pin the `hashicorp/google` provider at 8.5.0. Like every reference
+They live in one repository per role:
+[`terraform-google-cluster`](https://github.com/captf-io/terraform-google-cluster),
+[`terraform-google-machine`](https://github.com/captf-io/terraform-google-machine) and
+[`terraform-google-machinepool`](https://github.com/captf-io/terraform-google-machinepool),
+published on the Terraform Registry as
+[`captf-io/cluster/google`](https://registry.terraform.io/modules/captf-io/cluster/google),
+[`captf-io/machine/google`](https://registry.terraform.io/modules/captf-io/machine/google) and
+[`captf-io/machinepool/google`](https://registry.terraform.io/modules/captf-io/machinepool/google).
+The images are named `gcp-<role>` and built from
+[`captf-io/gcp-modules`](https://github.com/captf-io/gcp-modules).
+They pin the `hashicorp/google` provider at 8.5.0. Like every reference
 module set, they are pre-release: read the status note in
 [Cloud Modules](../README.md) first.
 
@@ -135,7 +144,7 @@ modules must be signed.
 Instead of `GOOGLE_CREDENTIALS`, a `credentials.json` key plus
 `GOOGLE_APPLICATION_CREDENTIALS=/var/run/captf/credentials/credentials.json`
 works too. From
-[examples/identity.yaml](https://github.com/captf-io/gcp-modules/blob/main/examples/identity.yaml):
+[examples/identity.yaml](https://github.com/captf-io/terraform-google-cluster/blob/main/examples/identity.yaml):
 
 ```yaml title="identity.yaml"
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
@@ -200,7 +209,7 @@ Secret reaches a Job.
 5. Once the API server answers, install cloud-provider-gcp, the persistent
    disk CSI driver and a CNI in the workload cluster.
 
-[examples/README.md](https://github.com/captf-io/gcp-modules/blob/main/examples/README.md)
+[examples/README.md](https://github.com/captf-io/terraform-google-cluster/blob/main/examples/README.md)
 lists every variable of the two example files.
 
 ## API endpoint
@@ -283,8 +292,11 @@ object.
       image must carry a version placeholder, because a template change that
       only touches metadata is applied as a refresh.
 
-[DESIGN.md](https://github.com/captf-io/gcp-modules/blob/main/DESIGN.md)
-has the evidence for each, and the alternatives rejected.
+Each role's `DESIGN.md` has the evidence for each, and the alternatives
+rejected:
+[cluster](https://github.com/captf-io/terraform-google-cluster/blob/main/DESIGN.md),
+[machine](https://github.com/captf-io/terraform-google-machine/blob/main/DESIGN.md) and
+[machinepool](https://github.com/captf-io/terraform-google-machinepool/blob/main/DESIGN.md).
 
 !!! warning "Not yet verified"
 

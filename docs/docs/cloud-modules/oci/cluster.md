@@ -19,6 +19,11 @@ the API network load balancer and the control-plane nodes' instance
 identity on the VCN you bring, and publishes the endpoint, the failure
 domains and the ids the machine and machinepool roles need.
 
+The module's source is
+[`captf-io/terraform-oci-cluster`](https://github.com/captf-io/terraform-oci-cluster),
+published on the Terraform Registry as
+[`captf-io/cluster/oci`](https://registry.terraform.io/modules/captf-io/cluster/oci).
+
 ## What it creates
 
 | Resource | Purpose | When |
@@ -55,7 +60,7 @@ Contract inputs used: `captf_cluster` (names), `captf_tags`,
 `captf_cluster_outputs` are declared and unused.
 
 User variables, from
-[variables.tf](https://github.com/captf-io/oci-modules/blob/main/cluster/variables.tf):
+[variables.tf](https://github.com/captf-io/terraform-oci-cluster/blob/main/variables.tf):
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |

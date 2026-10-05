@@ -9,6 +9,11 @@ subtitle: "A stand-in instance per Machine"
 The no-op machine module stands in for one instance per `Machine`. Its
 image is `ghcr.io/captf-io/noop-machine`.
 
+The module's source is
+[`captf-io/terraform-noop-machine`](https://github.com/captf-io/terraform-noop-machine),
+published on the Terraform Registry as
+[`captf-io/machine/noop`](https://registry.terraform.io/modules/captf-io/machine/noop).
+
 ## What it creates
 
 One `terraform_data` resource, `instance`, holding the inputs below. It

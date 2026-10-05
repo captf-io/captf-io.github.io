@@ -18,6 +18,11 @@ instance per `Machine`, control plane or worker. It takes the subnets,
 security groups, instance profiles, API target groups and bootstrap bucket
 from the [cluster](cluster.md) role's exports.
 
+The module's source is
+[`captf-io/terraform-aws-machine`](https://github.com/captf-io/terraform-aws-machine),
+published on the Terraform Registry as
+[`captf-io/machine/aws`](https://registry.terraform.io/modules/captf-io/machine/aws).
+
 ## What it creates
 
 | Resource | Purpose | When |
@@ -38,7 +43,7 @@ lookup) and `control_plane`. With no `failure_domain` it picks a zone from
 the hash of `machine_name`.
 
 User variables, from
-[variables.tf](https://github.com/captf-io/aws-modules/blob/main/machine/variables.tf):
+[variables.tf](https://github.com/captf-io/terraform-aws-machine/blob/main/variables.tf):
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |

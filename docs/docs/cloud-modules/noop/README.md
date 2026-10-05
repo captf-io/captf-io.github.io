@@ -12,9 +12,16 @@ and provision nothing. Every resource is a `terraform_data` holding the
 inputs it was given, so the plans, the state and the outputs are real
 while no cloud is touched and no credentials are read. Use them to try
 CAPTF, to test a management cluster, or as the smallest starting point for
-a module of your own. The images are built from
-[`captf-io/noop-modules`](https://github.com/captf-io/noop-modules), which
-holds the modules and is their only source.
+a module of your own. The modules live in one repository per role:
+[`terraform-noop-cluster`](https://github.com/captf-io/terraform-noop-cluster),
+[`terraform-noop-machine`](https://github.com/captf-io/terraform-noop-machine) and
+[`terraform-noop-machinepool`](https://github.com/captf-io/terraform-noop-machinepool),
+published on the Terraform Registry as
+[`captf-io/cluster/noop`](https://registry.terraform.io/modules/captf-io/cluster/noop),
+[`captf-io/machine/noop`](https://registry.terraform.io/modules/captf-io/machine/noop) and
+[`captf-io/machinepool/noop`](https://registry.terraform.io/modules/captf-io/machinepool/noop).
+The images are built from
+[`captf-io/noop-modules`](https://github.com/captf-io/noop-modules).
 
 <div class="grid cards" markdown>
 

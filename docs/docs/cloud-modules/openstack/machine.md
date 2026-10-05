@@ -20,6 +20,11 @@ control-plane machine it first adds the port's address to the cluster's API
 pools. Everything about the cluster comes from `captf_cluster_outputs`, the
 [cluster role's exports](README.md#exports).
 
+The module's source is
+[`captf-io/terraform-openstack-machine`](https://github.com/captf-io/terraform-openstack-machine),
+published on the Terraform Registry as
+[`captf-io/machine/openstack`](https://registry.terraform.io/modules/captf-io/machine/openstack).
+
 ## What it creates
 
 | Resource | Purpose | When |
@@ -57,7 +62,7 @@ Contract inputs used:
 User variables, set in the `TerraformMachineTemplate`'s
 `spec.template.spec.variables`
 ([Module Variables](../../user-guide/variables.md); source:
-[variables.tf](https://github.com/captf-io/openstack-modules/blob/main/machine/variables.tf)):
+[variables.tf](https://github.com/captf-io/terraform-openstack-machine/blob/main/variables.tf)):
 
 | Variable | Type | Default | Description |
 | --- | --- | --- | --- |

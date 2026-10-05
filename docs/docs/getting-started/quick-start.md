@@ -108,7 +108,8 @@ revoking credentials, and how they reach a Job.
 
 The no-op modules are published as images by
 [`captf-io/noop-modules`](https://github.com/captf-io/noop-modules), so
-there is nothing to build. The cluster and machine roles are:
+there is nothing to build. The module code is also on the Terraform Registry
+as `captf-io/<role>/noop`. The cluster and machine roles are:
 
 ```sh
 export NOOP_CLUSTER_IMAGE=ghcr.io/captf-io/noop-cluster:terraform

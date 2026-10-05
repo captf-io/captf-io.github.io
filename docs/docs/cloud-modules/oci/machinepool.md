@@ -18,6 +18,11 @@ for a `TerraformMachinePool` on OCI: one instance pool, launched from an
 instance configuration and spread over the `MachinePool`'s failure domains,
 at a fixed size or sized by OCI autoscaling.
 
+The module's source is
+[`captf-io/terraform-oci-machinepool`](https://github.com/captf-io/terraform-oci-machinepool),
+published on the Terraform Registry as
+[`captf-io/machinepool/oci`](https://registry.terraform.io/modules/captf-io/machinepool/oci).
+
 ## What it creates
 
 | Resource | Purpose | When |
@@ -42,7 +47,7 @@ Contract inputs used: `captf_cluster` and `machinepool_name` (names),
 and unused.
 
 User variables, from
-[variables.tf](https://github.com/captf-io/oci-modules/blob/main/machinepool/variables.tf):
+[variables.tf](https://github.com/captf-io/terraform-oci-machinepool/blob/main/variables.tf):
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -141,7 +146,8 @@ Members `RUNNING` or `MOVING` are running.
 ## Exceptions
 
 - `tfcapi-lint` warns `pool/autoscaling-ignore-changes`, allowed in the
-  repository's Makefile: the check knows desired-count attributes by name,
+  [`terraform-oci-machinepool` Makefile](https://github.com/captf-io/terraform-oci-machinepool/blob/main/Makefile)
+  (`TFCAPI_LINT_ALLOW`): the check knows desired-count attributes by name,
   and an OCI pool's is `size`, which it does not list. The autoscaled pool
   does ignore `size`.
 - Switching autoscaling on or off replaces the pool and all its instances:

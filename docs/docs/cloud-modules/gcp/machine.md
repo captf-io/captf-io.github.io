@@ -18,6 +18,11 @@ The `ghcr.io/captf-io/gcp-machine` image implements the
 Compute Engine instance per `Machine`, control plane or worker, and joins
 control-plane instances to the API load balancer.
 
+The module's source is
+[`captf-io/terraform-google-machine`](https://github.com/captf-io/terraform-google-machine),
+published on the Terraform Registry as
+[`captf-io/machine/google`](https://registry.terraform.io/modules/captf-io/machine/google).
+
 ## What it creates
 
 | Resource | Purpose | When |
@@ -60,7 +65,7 @@ Contract inputs it uses:
 
 User variables, set with `spec.template.spec.variables` on the
 `TerraformMachineTemplate`
-([variables.tf](https://github.com/captf-io/gcp-modules/blob/main/machine/variables.tf)):
+([variables.tf](https://github.com/captf-io/terraform-google-machine/blob/main/variables.tf)):
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |

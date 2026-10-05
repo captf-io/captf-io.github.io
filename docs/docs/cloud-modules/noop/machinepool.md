@@ -9,6 +9,11 @@ subtitle: "A stand-in group per MachinePool"
 The no-op machinepool module stands in for one native scaling group per
 `MachinePool`. Its image is `ghcr.io/captf-io/noop-machinepool`.
 
+The module's source is
+[`captf-io/terraform-noop-machinepool`](https://github.com/captf-io/terraform-noop-machinepool),
+published on the Terraform Registry as
+[`captf-io/machinepool/noop`](https://registry.terraform.io/modules/captf-io/machinepool/noop).
+
 ## What it creates
 
 One `terraform_data` resource, `group`, holding the inputs below. Like the

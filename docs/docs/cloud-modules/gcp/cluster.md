@@ -19,6 +19,11 @@ firewall rules and the node service accounts in the network you bring, and
 publishes the endpoint, one failure domain per zone and the exports the
 machine and machinepool roles read.
 
+The module's source is
+[`captf-io/terraform-google-cluster`](https://github.com/captf-io/terraform-google-cluster),
+published on the Terraform Registry as
+[`captf-io/cluster/google`](https://registry.terraform.io/modules/captf-io/cluster/google).
+
 ## What it creates
 
 | Resource | Purpose | When |
@@ -68,7 +73,7 @@ Contract inputs it uses:
 unused.
 
 User variables, set with `spec.variables`
-([variables.tf](https://github.com/captf-io/gcp-modules/blob/main/cluster/variables.tf)):
+([variables.tf](https://github.com/captf-io/terraform-google-cluster/blob/main/variables.tf)):
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |

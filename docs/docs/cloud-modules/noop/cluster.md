@@ -10,6 +10,11 @@ The no-op cluster module stands in for what a real cluster module creates
 around a workload cluster's nodes. Its image is
 `ghcr.io/captf-io/noop-cluster`.
 
+The module's source is
+[`captf-io/terraform-noop-cluster`](https://github.com/captf-io/terraform-noop-cluster),
+published on the Terraform Registry as
+[`captf-io/cluster/noop`](https://registry.terraform.io/modules/captf-io/cluster/noop).
+
 ## What it creates
 
 One `terraform_data` resource, `load_balancer`, the stand-in for a load

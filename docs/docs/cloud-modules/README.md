@@ -17,8 +17,8 @@ subtitle: "Five clouds and a no-op set"
 
 The CAPTF project maintains reference modules for five clouds: AWS, Google
 Cloud, Azure, Oracle Cloud Infrastructure (OCI) and OpenStack. Each set
-lives in its own repository, implements the
-[v1alpha1 module contract](../module-author/contract/v1alpha1/README.md),
+has one repository for each role, implements the
+[v1alpha1 module contract](../module-author/contract/v1alpha1/README.md)
 and ships as module images you reference from a `TerraformCluster`,
 `TerraformMachineTemplate` or `TerraformMachinePool`. They are meant to be
 used as they are, and to be forked as the starting point for your own
@@ -32,7 +32,7 @@ CAPTF and testing a management cluster.
 
     The five cloud sets pass static analysis, mocked unit
     tests on Terraform and OpenTofu, and image smoke tests, but none has yet
-    been applied to a real cloud. Each repository's `DESIGN.md` lists the
+    been applied to a real cloud. Each role repository's `DESIGN.md` lists the
     facts the first real apply must confirm. Read it before you rely on a
     module, and pin a release tag.
 
@@ -98,7 +98,7 @@ CAPTF and testing a management cluster.
 
 </div>
 
-| Cloud | Repository | Roles | Provider |
+| Cloud | Images built from | Roles | Provider |
 | --- | --- | --- | --- |
 | [AWS](aws/README.md) | [`captf-io/aws-modules`](https://github.com/captf-io/aws-modules) | cluster, machine, machinepool | `hashicorp/aws` 6.67.0 |
 | [Google Cloud](gcp/README.md) | [`captf-io/gcp-modules`](https://github.com/captf-io/gcp-modules) | cluster, machine, machinepool | `hashicorp/google` 8.5.0 |
@@ -106,6 +106,28 @@ CAPTF and testing a management cluster.
 | [OCI](oci/README.md) | [`captf-io/oci-modules`](https://github.com/captf-io/oci-modules) | cluster, machine, machinepool | `oracle/oci` 9.8.0 |
 | [OpenStack](openstack/README.md) | [`captf-io/openstack-modules`](https://github.com/captf-io/openstack-modules) | cluster, machine | `terraform-provider-openstack/openstack` 3.4.0 |
 | [No-op](noop/README.md) | [`captf-io/noop-modules`](https://github.com/captf-io/noop-modules) | cluster, machine, machinepool | None: `terraform_data` is built in |
+
+The code of each role lives in its own repository,
+`captf-io/terraform-<provider>-<role>`, and is published on the Terraform
+Registry as `captf-io/<role>/<provider>`, for example
+[`captf-io/cluster/aws`](https://registry.terraform.io/modules/captf-io/cluster/aws).
+The provider is `aws`, `azure`, `google`, `oci`, `openstack` or `noop`; the
+images and the cloud pages keep the name `gcp` for Google Cloud.
+
+| Cloud | Role repositories | Registry addresses |
+| --- | --- | --- |
+| AWS | [`terraform-aws-cluster`](https://github.com/captf-io/terraform-aws-cluster), [`-machine`](https://github.com/captf-io/terraform-aws-machine), [`-machinepool`](https://github.com/captf-io/terraform-aws-machinepool) | `captf-io/cluster/aws`, `captf-io/machine/aws`, `captf-io/machinepool/aws` |
+| Google Cloud | [`terraform-google-cluster`](https://github.com/captf-io/terraform-google-cluster), [`-machine`](https://github.com/captf-io/terraform-google-machine), [`-machinepool`](https://github.com/captf-io/terraform-google-machinepool) | `captf-io/cluster/google`, `captf-io/machine/google`, `captf-io/machinepool/google` |
+| Azure | [`terraform-azure-cluster`](https://github.com/captf-io/terraform-azure-cluster), [`-machine`](https://github.com/captf-io/terraform-azure-machine), [`-machinepool`](https://github.com/captf-io/terraform-azure-machinepool) | `captf-io/cluster/azure`, `captf-io/machine/azure`, `captf-io/machinepool/azure` |
+| OCI | [`terraform-oci-cluster`](https://github.com/captf-io/terraform-oci-cluster), [`-machine`](https://github.com/captf-io/terraform-oci-machine), [`-machinepool`](https://github.com/captf-io/terraform-oci-machinepool) | `captf-io/cluster/oci`, `captf-io/machine/oci`, `captf-io/machinepool/oci` |
+| OpenStack | [`terraform-openstack-cluster`](https://github.com/captf-io/terraform-openstack-cluster), [`-machine`](https://github.com/captf-io/terraform-openstack-machine) | `captf-io/cluster/openstack`, `captf-io/machine/openstack` |
+| No-op | [`terraform-noop-cluster`](https://github.com/captf-io/terraform-noop-cluster), [`-machine`](https://github.com/captf-io/terraform-noop-machine), [`-machinepool`](https://github.com/captf-io/terraform-noop-machinepool) | `captf-io/cluster/noop`, `captf-io/machine/noop`, `captf-io/machinepool/noop` |
+
+You can call a module from your own Terraform, but it is a CAPTF root
+module first: it configures its own provider block, which takes no `count`,
+`for_each` or `depends_on` and reads its credentials from the environment;
+it pins its providers exactly; and it needs the `captf_*` contract inputs.
+Each repository's README says how in its Usage section.
 
 OpenStack has no machinepool role: it has no native scaling group, and a
 `MachineDeployment` of individual machines covers the same need.
@@ -178,7 +200,7 @@ shows the pattern and how to build on it.
 
 1. Read the cloud page for the prerequisites and the identity Secret.
 2. Create the identity Secret and the `TerraformClusterIdentity`.
-3. Generate a cluster from the repository's `examples/cluster-kubeadm.yaml`
+3. Generate a cluster from the cluster repository's `examples/cluster-kubeadm.yaml`
    with `clusterctl generate yaml --from`, filling in the network ids and
    the node image.
 4. Install the CNI and the cloud controller manager in the workload cluster
@@ -192,13 +214,16 @@ set with `spec.variables` or `spec.variablesFrom`; see
 
 ## Forking a module
 
-Each repository is built to be forked. Its `CONVENTIONS.md` is the rule
-book the five repositories share; `make verify` checks most of it: the file
-layout, tags on every resource, `terraform validate` and `tofu validate`
-(including the oldest validated runtimes, Terraform 1.5.7 and OpenTofu 1.6.3), the unit tests, tflint,
+Each repository is built to be forked. To change a module, fork its role
+repository (`terraform-<provider>-<role>`): its `CONVENTIONS.md` is the rule
+book every cloud role repository shares, and `make verify` checks most of
+it: the file layout, tags on every resource, `terraform validate` and
+`tofu validate` (including the oldest validated runtimes, Terraform 1.5.7
+and OpenTofu 1.6.3), the unit tests, tflint,
 [`tfcapi-lint`](../module-author/tfcapi-lint.md), shellcheck and a trivy
-scan. To make a fork your own, change the registry and image names in the
-`Makefile` and the workflow, run `make lock`, then `make verify`.
+scan. To build your own module images, fork the cloud's `<cloud>-modules`
+repository, change the registry and image names in the `Makefile` and the
+workflow, run `make lock`, then `make verify` and `make test`.
 [Module Repository Layout](../module-author/repository-layout.md#starting-point)
 walks through forking a set or starting from the no-op modules.
 

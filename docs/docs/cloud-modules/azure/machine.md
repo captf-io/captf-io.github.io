@@ -19,6 +19,11 @@ resource group. `control_plane` picks the subnet, identity and security
 groups, and registers a control-plane VM with the API load balancer before
 it boots.
 
+The module's source is
+[`captf-io/terraform-azure-machine`](https://github.com/captf-io/terraform-azure-machine),
+published on the Terraform Registry as
+[`captf-io/machine/azure`](https://registry.terraform.io/modules/captf-io/machine/azure).
+
 ## What it creates
 
 | Resource | Purpose | When |
@@ -44,7 +49,7 @@ Contract inputs used: `captf_cluster_outputs` (the cluster's exports),
 
 User variables, set with `spec.template.spec.variables` on the
 `TerraformMachineTemplate`
-([variables.tf](https://github.com/captf-io/azure-modules/blob/main/machine/variables.tf)):
+([variables.tf](https://github.com/captf-io/terraform-azure-machine/blob/main/variables.tf)):
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |

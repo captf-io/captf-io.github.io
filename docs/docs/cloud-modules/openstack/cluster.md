@@ -19,6 +19,11 @@ security groups of the nodes, the Octavia load balancer behind the
 Kubernetes API, and a server group that spreads the control plane, and
 publishes them to the machines through its `exports`.
 
+The module's source is
+[`captf-io/terraform-openstack-cluster`](https://github.com/captf-io/terraform-openstack-cluster),
+published on the Terraform Registry as
+[`captf-io/cluster/openstack`](https://registry.terraform.io/modules/captf-io/cluster/openstack).
+
 ## What it creates
 
 | Resource | Purpose | When |
@@ -53,7 +58,7 @@ allowed address pairs). `captf_object`, `kubernetes_version` and
 
 User variables, set in `TerraformCluster.spec.variables`
 ([Module Variables](../../user-guide/variables.md); source:
-[variables.tf](https://github.com/captf-io/openstack-modules/blob/main/cluster/variables.tf)):
+[variables.tf](https://github.com/captf-io/terraform-openstack-cluster/blob/main/variables.tf)):
 
 | Variable | Type | Default | Description |
 | --- | --- | --- | --- |

@@ -17,7 +17,15 @@ bring. The cluster role creates the API server's Network Load Balancer, the
 security groups, IAM roles and instance profiles for the nodes, and an S3
 bucket the nodes fetch their bootstrap data from. The machine role creates
 one EC2 instance per `Machine`, and the machinepool role one Auto Scaling
-group per `MachinePool`. The code lives in
+group per `MachinePool`. The code lives in one repository per role:
+[`terraform-aws-cluster`](https://github.com/captf-io/terraform-aws-cluster),
+[`terraform-aws-machine`](https://github.com/captf-io/terraform-aws-machine) and
+[`terraform-aws-machinepool`](https://github.com/captf-io/terraform-aws-machinepool),
+published on the Terraform Registry as
+[`captf-io/cluster/aws`](https://registry.terraform.io/modules/captf-io/cluster/aws),
+[`captf-io/machine/aws`](https://registry.terraform.io/modules/captf-io/machine/aws) and
+[`captf-io/machinepool/aws`](https://registry.terraform.io/modules/captf-io/machinepool/aws).
+The images are built from
 [`captf-io/aws-modules`](https://github.com/captf-io/aws-modules). Like
 every set, these modules are pre-release; see the status note in
 [Cloud Modules](../README.md).
@@ -71,11 +79,11 @@ The images pin the `hashicorp/aws` provider at 6.67.0.
   `kubernetes.io/role/elb` and `kubernetes.io/role/internal-elb` tags,
   which you set.
 - **Permissions for the identity.** The credentials create and delete
-  everything the three roles manage. The repository's
-  [`examples/identity-policy.json`](https://github.com/captf-io/aws-modules/blob/main/examples/identity-policy.json)
+  everything the three roles manage. The cluster repository's
+  [`examples/identity-policy.json`](https://github.com/captf-io/terraform-aws-cluster/blob/main/examples/identity-policy.json)
   covers all three roles; it scopes IAM changes to roles under `/captf/` and
   S3 to `captf-bootstrap-*` buckets. Its
-  [README](https://github.com/captf-io/aws-modules/blob/main/examples/README.md)
+  [README](https://github.com/captf-io/terraform-aws-cluster/blob/main/examples/README.md)
   explains what it lets the holder do and how to narrow it.
 - **Node images.** cloud-init, the AWS CLI v2 on the `PATH` (for the staged
   bootstrap data), and the Kubernetes binaries for the version.
@@ -155,7 +163,7 @@ projected service account token. See
 ## Quick start
 
 1. Create the identity. Edit the placeholder values in
-   [`examples/identity.yaml`](https://github.com/captf-io/aws-modules/blob/main/examples/identity.yaml),
+   [`examples/identity.yaml`](https://github.com/captf-io/terraform-aws-cluster/blob/main/examples/identity.yaml),
    then apply it:
 
     ```sh
@@ -164,7 +172,7 @@ projected service account token. See
     ```
 
 2. Create the cluster from
-   [`examples/cluster-kubeadm.yaml`](https://github.com/captf-io/aws-modules/blob/main/examples/cluster-kubeadm.yaml):
+   [`examples/cluster-kubeadm.yaml`](https://github.com/captf-io/terraform-aws-cluster/blob/main/examples/cluster-kubeadm.yaml):
    a `TerraformCluster`, a `KubeadmControlPlane`, a `MachineDeployment` and
    an autoscaled `MachinePool`. The only variables a cluster needs are the
    VPC and the zone-to-subnet map:
@@ -266,8 +274,10 @@ tags, so the bootstrap objects carry only `captf_tags`.
       template, which starts a launch-before-terminate instance refresh; every
       other change adds a version under `$Latest` for new instances only.
 
-[`DESIGN.md`](https://github.com/captf-io/aws-modules/blob/main/DESIGN.md)
-records the evidence and the alternatives rejected.
+Each role's `DESIGN.md` records the evidence and the alternatives rejected:
+[cluster](https://github.com/captf-io/terraform-aws-cluster/blob/main/DESIGN.md),
+[machine](https://github.com/captf-io/terraform-aws-machine/blob/main/DESIGN.md) and
+[machinepool](https://github.com/captf-io/terraform-aws-machinepool/blob/main/DESIGN.md).
 
 !!! warning "Not yet verified"
 

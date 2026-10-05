@@ -18,6 +18,11 @@ for a `TerraformMachinePool` on Google Cloud. It creates one regional
 managed instance group per `MachinePool`, spread over the pool's zones,
 with an optional autoscaler. Pool instances are workers.
 
+The module's source is
+[`captf-io/terraform-google-machinepool`](https://github.com/captf-io/terraform-google-machinepool),
+published on the Terraform Registry as
+[`captf-io/machinepool/google`](https://registry.terraform.io/modules/captf-io/machinepool/google).
+
 ## What it creates
 
 | Resource | Purpose | When |
@@ -48,7 +53,7 @@ Contract inputs it uses:
   labels.
 
 User variables, set with `spec.variables` on the `TerraformMachinePool`
-([variables.tf](https://github.com/captf-io/gcp-modules/blob/main/machinepool/variables.tf)):
+([variables.tf](https://github.com/captf-io/terraform-google-machinepool/blob/main/variables.tf)):
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |

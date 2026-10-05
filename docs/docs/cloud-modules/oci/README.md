@@ -18,8 +18,17 @@ network security groups, a network load balancer for the API, and a dynamic
 group and policy so the control-plane nodes run the OCI cloud controller
 manager and CSI controller as instance principals. The machine role creates
 one compute instance per `Machine`; the machinepool role runs an instance
-pool at a fixed size or under OCI autoscaling. The code is in
-[`captf-io/oci-modules`](https://github.com/captf-io/oci-modules); read the
+pool at a fixed size or under OCI autoscaling. The code is in one
+repository per role:
+[`terraform-oci-cluster`](https://github.com/captf-io/terraform-oci-cluster),
+[`terraform-oci-machine`](https://github.com/captf-io/terraform-oci-machine) and
+[`terraform-oci-machinepool`](https://github.com/captf-io/terraform-oci-machinepool),
+published on the Terraform Registry as
+[`captf-io/cluster/oci`](https://registry.terraform.io/modules/captf-io/cluster/oci),
+[`captf-io/machine/oci`](https://registry.terraform.io/modules/captf-io/machine/oci) and
+[`captf-io/machinepool/oci`](https://registry.terraform.io/modules/captf-io/machinepool/oci).
+The images are built from
+[`captf-io/oci-modules`](https://github.com/captf-io/oci-modules). Read the
 status note in [Cloud Modules](../README.md) before you rely on it.
 
 <div class="grid cards" markdown>
@@ -147,7 +156,7 @@ The region is never in the identity: each `TerraformCluster` sets `region`.
 ## Quick start
 
 1. Apply the identity and its Secret from
-   [`examples/identity.yaml`](https://github.com/captf-io/oci-modules/blob/main/examples/identity.yaml),
+   [`examples/identity.yaml`](https://github.com/captf-io/terraform-oci-cluster/blob/main/examples/identity.yaml),
    then replace the Secret's placeholders with your key:
 
     ```sh
@@ -162,7 +171,7 @@ The region is never in the identity: each `TerraformCluster` sets `region`.
     ```
 
 2. Generate the cluster from
-   [`examples/cluster-kubeadm.yaml`](https://github.com/captf-io/oci-modules/blob/main/examples/cluster-kubeadm.yaml):
+   [`examples/cluster-kubeadm.yaml`](https://github.com/captf-io/terraform-oci-cluster/blob/main/examples/cluster-kubeadm.yaml):
    a three-node `KubeadmControlPlane`, a `MachineDeployment`, a
    `MachinePool` and MachineHealthChecks.
 
@@ -264,8 +273,10 @@ backend sets, listeners and backends.
     - **User data inline.** OCI has no store the modules stage bootstrap data in
       yet, so it goes in instance metadata; the role pages say who can read it.
 
-[DESIGN.md](https://github.com/captf-io/oci-modules/blob/main/DESIGN.md)
-has the evidence for each decision.
+Each role's `DESIGN.md` has the evidence for each decision:
+[cluster](https://github.com/captf-io/terraform-oci-cluster/blob/main/DESIGN.md),
+[machine](https://github.com/captf-io/terraform-oci-machine/blob/main/DESIGN.md) and
+[machinepool](https://github.com/captf-io/terraform-oci-machinepool/blob/main/DESIGN.md).
 
 !!! warning "Not yet verified"
 

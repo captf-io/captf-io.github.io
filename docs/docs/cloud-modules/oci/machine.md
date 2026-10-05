@@ -18,6 +18,11 @@ The `ghcr.io/captf-io/oci-machine` image implements the
 Machine's failure domain on the cluster's subnet and network security group
 and, for a control-plane machine, registered in the API load balancer.
 
+The module's source is
+[`captf-io/terraform-oci-machine`](https://github.com/captf-io/terraform-oci-machine),
+published on the Terraform Registry as
+[`captf-io/machine/oci`](https://registry.terraform.io/modules/captf-io/machine/oci).
+
 ## What it creates
 
 | Resource | Purpose | When |
@@ -44,7 +49,7 @@ Contract inputs used: `captf_cluster_outputs` (or
 version.
 
 User variables, from
-[variables.tf](https://github.com/captf-io/oci-modules/blob/main/machine/variables.tf):
+[variables.tf](https://github.com/captf-io/terraform-oci-machine/blob/main/variables.tf):
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -154,6 +159,6 @@ spec:
 ```
 
 Set `provider-id: oci://{{ v1.instance_id }}` and `cloud-provider: external`
-in the bootstrap configuration's `kubeletExtraArgs`, as the repository's
-[example](https://github.com/captf-io/oci-modules/blob/main/examples/cluster-kubeadm.yaml)
+in the bootstrap configuration's `kubeletExtraArgs`, as the cluster repository's
+[example](https://github.com/captf-io/terraform-oci-cluster/blob/main/examples/cluster-kubeadm.yaml)
 does.

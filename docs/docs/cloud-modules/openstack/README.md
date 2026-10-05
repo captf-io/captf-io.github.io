@@ -18,6 +18,13 @@ an Octavia load balancer for the Kubernetes API (internal by default) and a
 Nova server group that spreads the control plane; the machine role creates
 one Nova server per `Machine` on a Neutron port of that subnet and adds
 control-plane servers to the API pools before they boot. The code lives in
+two repositories, one per role:
+[`terraform-openstack-cluster`](https://github.com/captf-io/terraform-openstack-cluster) and
+[`terraform-openstack-machine`](https://github.com/captf-io/terraform-openstack-machine),
+published on the Terraform Registry as
+[`captf-io/cluster/openstack`](https://registry.terraform.io/modules/captf-io/cluster/openstack) and
+[`captf-io/machine/openstack`](https://registry.terraform.io/modules/captf-io/machine/openstack).
+The images are built from
 [`captf-io/openstack-modules`](https://github.com/captf-io/openstack-modules).
 The modules are pre-release; see the status note in
 [Cloud Modules](../README.md).
@@ -83,8 +90,8 @@ describe. For Cluster Autoscaler scale-from-zero, set the
   [OpenStack cloud controller manager](https://github.com/kubernetes/cloud-provider-openstack)
   in the workload cluster, with a `cloud.conf` and a second, dedicated
   application credential you supply: the modules create no node identity.
-  The repository's
-  [`examples/cloud-controller-manager.yaml`](https://github.com/captf-io/openstack-modules/blob/main/examples/cloud-controller-manager.yaml)
+  The cluster repository's
+  [`examples/cloud-controller-manager.yaml`](https://github.com/captf-io/terraform-openstack-cluster/blob/main/examples/cloud-controller-manager.yaml)
   delivers both with a ClusterResourceSet. Keep its `manage-security-groups`
   off: it would edit the node ports' security groups behind the machine
   role. For volumes, install
@@ -146,8 +153,8 @@ spec:
 
 ## Quick start
 
-The repository's
-[`examples/`](https://github.com/captf-io/openstack-modules/tree/main/examples)
+The cluster repository's
+[`examples/`](https://github.com/captf-io/terraform-openstack-cluster/tree/main/examples)
 holds clusterctl templates for each step.
 
 1. Create the identity from `examples/identity.yaml`:
@@ -259,8 +266,9 @@ creates it from the server's block device mapping, which takes no metadata.
       keys, is readable from the metadata service; see
       [Machine](machine.md#bootstrap).
 
-The evidence for each is in the repository's
-[DESIGN.md](https://github.com/captf-io/openstack-modules/blob/main/DESIGN.md).
+The evidence for each is in the roles' `DESIGN.md`:
+[cluster](https://github.com/captf-io/terraform-openstack-cluster/blob/main/DESIGN.md) and
+[machine](https://github.com/captf-io/terraform-openstack-machine/blob/main/DESIGN.md).
 
 !!! warning "Not yet verified"
 

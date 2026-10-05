@@ -30,7 +30,10 @@ enforce, and running the manager against a real cluster.
 | `internal/*/testdata` | Golden files and frozen fixtures that unit tests read, such as real captured Terraform and OpenTofu state under `internal/state/testdata/fixtures`. |
 
 The no-op demo modules are not in this repository: they live in
-[captf-io/noop-modules](https://github.com/captf-io/noop-modules).
+[captf-io/noop-modules](https://github.com/captf-io/noop-modules), and the
+per-role `terraform-<provider>-<role>` repositories hold the same module code
+for the Terraform Registry. Their gate is `make verify`. See [Repositories
+and Images](../reference/repositories.md#terraform-module-repositories).
 
 The documentation lives in a separate repository,
 [captf-io/captf-io.github.io](https://github.com/captf-io/captf-io.github.io),

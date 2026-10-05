@@ -92,6 +92,12 @@ Provider versions are pinned exactly in each role's `versions.tf`:
 OpenStack has no `machinepool` role. The pins move with the module repos, so
 read the `versions.tf` of the tag you use.
 
+The same modules are also published on the Terraform Registry, one per role,
+as `captf-io/<role>/<provider>` with `<provider>` one of `aws`, `azure`,
+`google`, `oci`, `openstack` or `noop`, from the
+`terraform-<provider>-<role>` repositories. Version `0.1.0` matches the
+CAPTF 0.1.0 release and contract `v1alpha1`, like the images.
+
 ### The runtime CLI
 
 The module image supplies the `terraform` or `tofu` binary at

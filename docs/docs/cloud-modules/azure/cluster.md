@@ -20,6 +20,11 @@ groups, and the nodes' managed identities with their role assignments. It
 publishes the endpoint, one failure domain per availability zone, and the
 [exports](README.md#exports) the machine and pool roles read.
 
+The module's source is
+[`captf-io/terraform-azure-cluster`](https://github.com/captf-io/terraform-azure-cluster),
+published on the Terraform Registry as
+[`captf-io/cluster/azure`](https://registry.terraform.io/modules/captf-io/cluster/azure).
+
 ## What it creates
 
 | Resource | Purpose | When |
@@ -54,7 +59,7 @@ kube-apiserver backend port too with kubeadm, while RKE2's is always 6443).
 `kubernetes_version` and `control_plane_initialized` are not used.
 
 User variables, set with `spec.variables` on the `TerraformCluster`
-([variables.tf](https://github.com/captf-io/azure-modules/blob/main/cluster/variables.tf)):
+([variables.tf](https://github.com/captf-io/terraform-azure-cluster/blob/main/variables.tf)):
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |

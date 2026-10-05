@@ -18,6 +18,11 @@ one Auto Scaling group of worker instances per `MachinePool`. It takes the
 subnets, the worker security group and instance profile, and the bootstrap
 bucket from the [cluster](cluster.md) role's exports.
 
+The module's source is
+[`captf-io/terraform-aws-machinepool`](https://github.com/captf-io/terraform-aws-machinepool),
+published on the Terraform Registry as
+[`captf-io/machinepool/aws`](https://registry.terraform.io/modules/captf-io/machinepool/aws).
+
 ## What it creates
 
 | Resource | Purpose | When |
@@ -42,7 +47,7 @@ Contract inputs it uses: `captf_object` (the namespace in the group's name),
 `autoscaling`.
 
 User variables, from
-[variables.tf](https://github.com/captf-io/aws-modules/blob/main/machinepool/variables.tf):
+[variables.tf](https://github.com/captf-io/terraform-aws-machinepool/blob/main/variables.tf):
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |

@@ -19,6 +19,11 @@ Balancer), the security groups, the node identities and the S3 bucket the
 nodes fetch their bootstrap data from, and publishes them in its `exports`
 for the [machine](machine.md) and [machinepool](machinepool.md) roles.
 
+The module's source is
+[`captf-io/terraform-aws-cluster`](https://github.com/captf-io/terraform-aws-cluster),
+published on the Terraform Registry as
+[`captf-io/cluster/aws`](https://registry.terraform.io/modules/captf-io/cluster/aws).
+
 ## What it creates
 
 | Resource | Purpose | When |
@@ -58,7 +63,7 @@ It declares `captf_object`, `kubernetes_version` and
 `control_plane_initialized` without using them.
 
 User variables, from
-[variables.tf](https://github.com/captf-io/aws-modules/blob/main/cluster/variables.tf):
+[variables.tf](https://github.com/captf-io/terraform-aws-cluster/blob/main/variables.tf):
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |

@@ -9,7 +9,8 @@ subtitle: "Changes that span repositories"
 # Working Across Repositories
 
 CAPTF lives in several repositories: the provider, two base images, six module
-repositories, the website and the organization's `.github` repository. Most
+repositories, the 17 `terraform-<provider>-<role>` repositories, the website
+and the organization's `.github` repository. Most
 changes touch one of them. This page is for a change that spans more than one,
 such as a contract change, a new convention for the module repositories or a
 new community file. For the build, lint and test loop of the provider itself,
@@ -67,6 +68,11 @@ in this order:
 3. **Every module repository.** Bring `aws-modules`, `azure-modules`,
    `gcp-modules`, `oci-modules`, `openstack-modules` and `noop-modules` in line
    with the new contract.
+4. **Every `terraform-<provider>-<role>` repository.** These 17 repositories
+   hold the same module code for the Terraform Registry. Until the
+   `*-modules` repositories build from them, both a `terraform-*` repository
+   and the matching role directory of its `*-modules` repository carry the
+   code, so apply the change to both.
 
 The order follows who depends on whom. The module repositories are linted by
 the provider's tfcapi-lint, so they can only pass a new check once the
@@ -127,6 +133,11 @@ to it when the change is to the image build, the tags or the CI jobs; skip
 changes that belong to `CONVENTIONS.md`, the layout check or the lock files.
 Its Makefile has only `help`, `build` and `test`, so it does not run
 `make verify`.
+
+The `terraform-*` repositories are not part of the skeleton above: each holds
+one role at its root, and the gate is `make verify`. Keep a module in step
+with the same role in the matching `*-modules` repository (`google` is `gcp`
+there), and run `make verify` in each before you push.
 
 ## Community files and READMEs
 

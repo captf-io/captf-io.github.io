@@ -51,6 +51,15 @@ fallback](#manual-fallback).
       against this repository (for `make release-github`) and `skopeo` (for
       `make release` to read the pushed image's registry digest).
 
+## Terraform module repositories
+
+The 17 `terraform-<provider>-<role>` repositories release on their own. A
+release is a signed `vX.Y.Z` tag on `main`, pushed after `make verify` and CI
+are green. The Terraform Registry publishes `captf-io/<role>/<provider>` at
+that version within a minute. No image is built from these repositories, and
+versions follow the CAPTF release. The module images are still released from
+the `*-modules` repositories.
+
 ## Images from `main`
 
 Every push to `main` publishes the manager image as `:edge` and

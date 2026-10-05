@@ -18,7 +18,16 @@ server's Standard load balancer, the nodes' network security groups,
 application security groups and managed identities with their role
 assignments. The machine role creates one Linux VM per Machine, and the
 machinepool role one virtual machine scale set per MachinePool. The source
-is [`captf-io/azure-modules`](https://github.com/captf-io/azure-modules).
+is one repository per role:
+[`terraform-azure-cluster`](https://github.com/captf-io/terraform-azure-cluster),
+[`terraform-azure-machine`](https://github.com/captf-io/terraform-azure-machine) and
+[`terraform-azure-machinepool`](https://github.com/captf-io/terraform-azure-machinepool),
+published on the Terraform Registry as
+[`captf-io/cluster/azure`](https://registry.terraform.io/modules/captf-io/cluster/azure),
+[`captf-io/machine/azure`](https://registry.terraform.io/modules/captf-io/machine/azure) and
+[`captf-io/machinepool/azure`](https://registry.terraform.io/modules/captf-io/machinepool/azure).
+The images are built from
+[`captf-io/azure-modules`](https://github.com/captf-io/azure-modules).
 The modules are pre-release; read the status note in
 [Cloud Modules](../README.md) first.
 
@@ -111,7 +120,7 @@ The Secret holds the azurerm provider's environment variables:
 For a client certificate, set `ARM_CLIENT_CERTIFICATE_PATH` to a file under
 `/var/run/captf/credentials/` and `ARM_CLIENT_CERTIFICATE_PASSWORD` instead
 of `ARM_CLIENT_SECRET`. From
-[`examples/identity.yaml`](https://github.com/captf-io/azure-modules/blob/main/examples/identity.yaml):
+[`examples/identity.yaml`](https://github.com/captf-io/terraform-azure-cluster/blob/main/examples/identity.yaml):
 
 ```yaml title="identity.yaml"
 apiVersion: v1
@@ -145,7 +154,7 @@ the Secret reaches the Jobs.
 
 ## Quick start
 
-1. Create the identity from the repository's example:
+1. Create the identity from the cluster repository's example:
 
     ```sh
     export NAMESPACE=team-a AZURE_TENANT_ID=... AZURE_SUBSCRIPTION_ID=... \
@@ -154,7 +163,7 @@ the Secret reaches the Jobs.
     ```
 
 2. Generate the cluster from
-   [`examples/cluster-kubeadm.yaml`](https://github.com/captf-io/azure-modules/blob/main/examples/cluster-kubeadm.yaml):
+   [`examples/cluster-kubeadm.yaml`](https://github.com/captf-io/terraform-azure-cluster/blob/main/examples/cluster-kubeadm.yaml):
    a KubeadmControlPlane of three, a MachineDeployment of two and a
    MachinePool of two. Quote the image ID so the shell keeps the braces:
 
@@ -269,8 +278,10 @@ of them live in the cluster's resource group, which is tagged.
     - **Trusted launch is off by default:** the CAPZ reference images do not
       support it.
 
-The evidence for each is in
-[DESIGN.md](https://github.com/captf-io/azure-modules/blob/main/DESIGN.md).
+The evidence for each is in the role's `DESIGN.md`:
+[cluster](https://github.com/captf-io/terraform-azure-cluster/blob/main/DESIGN.md),
+[machine](https://github.com/captf-io/terraform-azure-machine/blob/main/DESIGN.md) and
+[machinepool](https://github.com/captf-io/terraform-azure-machinepool/blob/main/DESIGN.md).
 
 !!! warning "Not yet verified"
 

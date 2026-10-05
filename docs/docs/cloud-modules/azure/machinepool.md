@@ -19,6 +19,11 @@ Azure: one uniform Linux virtual machine scale set of worker nodes per
 setting that holds its capacity. See [Machine Pools](../../user-guide/machine-pools.md)
 for the objects to create.
 
+The module's source is
+[`captf-io/terraform-azure-machinepool`](https://github.com/captf-io/terraform-azure-machinepool),
+published on the Terraform Registry as
+[`captf-io/machinepool/azure`](https://registry.terraform.io/modules/captf-io/machinepool/azure).
+
 ## What it creates
 
 | Resource | Purpose | When |
@@ -40,7 +45,7 @@ Contract inputs used: `captf_cluster_outputs` (the cluster's exports),
 validated; `captf_cluster` and `captf_object` are not used.
 
 User variables, set with `spec.variables` on the `TerraformMachinePool`
-([variables.tf](https://github.com/captf-io/azure-modules/blob/main/machinepool/variables.tf)):
+([variables.tf](https://github.com/captf-io/terraform-azure-machinepool/blob/main/variables.tf)):
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
