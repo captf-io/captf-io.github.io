@@ -250,6 +250,7 @@ list, and `clusterctl move` does not carry status over.
 | `status.failureDomains[].name` | string | **Required.** The failure domain name. **Range:** 1 to 256 characters. |
 | `status.failureDomains[].controlPlane` | boolean | Whether control-plane machines may use this domain. |
 | `status.failureDomains[].attributes` | map | Free-form string attributes the module reports for the domain. |
+| `status.exports` | any JSON value | A copy of the module's `exports` output, published for consumers outside CAPTF to read through the Kubernetes API. Absent or null exports publish `{}`. Not published, and the field cleared, when the compact JSON exceeds 64 KiB (65536 bytes); the manager then emits the `ExportsNotPublished` Warning event. Not set for an externally managed cluster. Readable by anyone who can `get` the object, so it must never hold secrets. The controller never reads it back. |
 | `status.plan` | object | The change waiting for approval under `spec.applyPolicy: Manual`. Empty when none waits. Approve it by setting `captf.io/approve-plan` to `status.plan.planHash`. |
 | `status.plan.inputsHash` | string | **Required** when a plan is set. The hash of the inputs the plan was made for. **Range:** 1 to 128 characters. |
 | `status.plan.job` | string | **Required** when a plan is set. The Job that made the plan: a plan Job, or an approved apply that found the plan changed. **Range:** 1 to 63 characters. |
@@ -293,6 +294,9 @@ list, and `clusterctl move` does not carry status over.
           controlPlane: true
         - name: eu-west-1b
           controlPlane: true
+      exports:
+        schema: captf.io/aws-cluster/v1
+        region: eu-west-1
       lastRun:
         job: demo-plan-4f7c2
         operation: plan
@@ -425,8 +429,12 @@ Job policy rules are skipped, so its finalizer stays removable.
 On create, the controller waits for the owning `Cluster`, resolves the
 identity, mirrors credentials, prepares the runner's RBAC and runs an
 apply Job. After the apply it validates the module's outputs, writes the
-endpoint and failure domains, and sets `status.initialization.provisioned`.
-Machines and pools wait for the cluster's apply to finish. See
+endpoint and failure domains, publishes the module's `exports` to
+`status.exports` and sets `status.initialization.provisioned`.
+The controller refreshes `status.exports` on every reconcile that reads
+the state, and never reads it back; machines and pools take the exports
+from the state, not from status. Machines and pools wait for the
+cluster's apply to finish. See
 [The reconcile lifecycle](../../concepts/lifecycle.md) and
 [Job inputs](../../concepts/inputs.md).
 

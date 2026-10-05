@@ -250,6 +250,10 @@ is:
    inputs, and rendered into `captf_cluster_outputs` (see section 4 for the
    pool role's one encoding difference).
 
+The controller also publishes a copy of `exports` to the cluster's
+`status.exports`, so consumers outside CAPTF can read it through the
+Kubernetes API. Machines and pools do not use it: they still read the state.
+
 **When it is read.** A machine's inputs (and so `exports`) are rebuilt on
 every reconcile while it is not yet provisioned — before its status has
 latched `status.initialization.provisioned = true` — whether or not that
@@ -413,6 +417,12 @@ owner references).
 The size is reported on the `captf_inputs_bytes` gauge (per object, by
 kind/namespace/name) even when the render was too large to run; see
 [`metrics.md`](../reference/metrics.md).
+
+A separate limit applies to the copy of `exports` published to
+`TerraformCluster.status.exports`: at most 64 KiB (65536 bytes) of compact
+JSON. Above that the field is cleared and the manager emits a `Warning`
+event, `ExportsNotPublished`. Machines and pools are unaffected, because
+they read `exports` from the state, not from status.
 
 ## 10. Not an input
 

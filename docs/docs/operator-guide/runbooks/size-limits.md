@@ -109,7 +109,11 @@ and user variables:
   the cluster. See
   [What a cluster hands to its machines and pools](../../concepts/inputs.md#5-what-a-cluster-hands-to-its-machines-and-pools).
   Publish only what the machine or pool module actually needs from
-  `exports`, not the cluster module's full internal state.
+  `exports`, not the cluster module's full internal state. `exports` also
+  has its own limit: the copy published to `status.exports` must fit in
+  64 KiB (65536 bytes) of compact JSON. Above that, the field is cleared and
+  the manager emits a `Warning` event, `ExportsNotPublished`. Machines and
+  pools are unaffected, because they read `exports` from the state.
 - **User variables** (`spec.variables`, `spec.variablesFrom`): trim large
   inline values, especially ones duplicated across many objects that could
   instead reference a `ConfigMap` or `Secret` your module reads directly

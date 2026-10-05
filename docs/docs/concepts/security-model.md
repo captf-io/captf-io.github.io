@@ -229,6 +229,13 @@ need `pods/log` access to read. The events the runner emits on the object
 codes, durations and resource-change counts, and, on failure, the same
 curated summary as status — never tfvars, plan output or resource values.
 
+The one exception is `TerraformCluster` `status.exports`: a copy of the
+cluster module's `exports` output, published so consumers outside CAPTF can
+read it through the Kubernetes API. It is an output value, readable by anyone
+who can `get` the object. This is safe only because the contract forbids
+secrets in `exports`. The published copy ignores the `sensitive` marking, so
+a module must not rely on it to hide a value.
+
 Runner failure summaries, events and logs also replace known secrets with
 `(sensitive)`. That covers environment values whose name looks like a
 credential (it contains `KEY`, `SECRET`, `TOKEN`, `PASS`, `CREDENTIAL`,

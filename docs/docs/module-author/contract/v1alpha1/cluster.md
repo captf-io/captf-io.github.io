@@ -127,7 +127,7 @@ Common outputs apply (`health`).
 | --- | --- | --- | --- |
 | `control_plane_endpoint` | `object({host=string, port=number})` or `null` | yes (may be null) | `TerraformCluster.spec.controlPlaneEndpoint` → `Cluster.spec.controlPlaneEndpoint` (below) |
 | `failure_domains` | `list(object({name=string, control_plane=optional(bool, true), attributes=optional(map(string), {})}))` or `null` | yes (may be null or `[]`) | `TerraformCluster.status.failureDomains` (below) |
-| `exports` | `any` (object recommended) | yes (may be null, treated as `{}`) | Injected verbatim into machine/pool modules as `captf_cluster_outputs` (below) |
+| `exports` | `any` (object recommended) | yes (may be null, treated as `{}`) | Injected verbatim into machine/pool modules as `captf_cluster_outputs`, and published to `TerraformCluster.status.exports` (below) |
 
 ### `control_plane_endpoint` (output)
 
@@ -194,11 +194,21 @@ default, applied by the controller. `null` and `[]` both clear the field.
 
 ### `exports` (output)
 
-Injected verbatim into machine/pool modules as `captf_cluster_outputs`. May
-be marked `sensitive`: the generated root re-exports it `"sensitive": true`
-regardless, so this has no effect on the controller (see
-[`README.md`](README.md#type-conventions) "Type conventions"). Put secrets
-in the identity, not here. Convention: publish the load balancer
+Injected verbatim into machine/pool modules as `captf_cluster_outputs`. The
+controller also publishes a copy to
+[`status.exports`](../../../reference/resources/terraformcluster.md#status) on
+the `TerraformCluster`, for consumers outside CAPTF (CI, a Terraform root
+that installs add-ons, scripts) to read through the Kubernetes API. Absent or
+null exports publish `{}`. The copy is published as compact JSON only when it
+is at most 64 KiB (65536 bytes); above that the field is cleared and the
+manager emits a `Warning` event with reason `ExportsNotPublished`. Machines
+and pools are unaffected: they read `exports` from the cluster's state.
+
+Anyone who can `get` the `TerraformCluster` can read `status.exports`. The
+module may mark `exports` `sensitive`, and the generated root re-exports it
+`"sensitive": true` regardless (see [`README.md`](README.md#type-conventions)
+"Type conventions"), but the published copy ignores that marking and is not
+hidden. Never put secrets in `exports`; put them in the identity. Convention: publish the load balancer
 target/backend-pool id(s) here for control-plane machine modules to
 register against (see
 [`machine.md`](machine.md#control-plane-machines) "Control-plane

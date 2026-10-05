@@ -77,6 +77,7 @@ event is in [Conditions](conditions.md).
 | `Paused` | Normal | any provisioned kind | The `Paused` condition became True. Reconciliation stops starting Jobs. | Resume when ready: clear the pause on the object or its `Cluster`. |
 | `Resumed` | Normal | any provisioned kind | `Paused` went from True to False. Reconciliation resumes. | None. |
 | `OutputsInvalid` | Warning | any provisioned kind | The module's outputs broke the contract. | Fix the module output named in the note. See [`OutputsValid`](conditions.md#outputsvalid). |
+| `ExportsNotPublished` | Warning | `TerraformCluster` | The module's `exports` exceed 64 KiB as compact JSON, so `status.exports` was cleared instead of set. | Shrink `exports` in the cluster module. Machines and pools are unaffected: they still read `exports` from the state. See [`status.exports`](resources/terraformcluster.md#status). |
 | `ConditionChanged` | Normal or Warning | any provisioned kind | Any owned condition without a more specific reason changed status or reason. Warning when it moved into its bad state, Normal otherwise. | For a Warning, read the condition named in the note. |
 | `DigestPinned` | Normal | any provisioned kind | An image digest was recorded on the durable inputs Secret, or pinned again after an apply of a mutable kind. | None. |
 | `DigestUnknown` | Warning | any provisioned kind | No digest could be pinned, or an operation runs the `spec` reference for lack of one. | Check that the registry is reachable and the reference resolves. |

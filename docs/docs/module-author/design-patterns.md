@@ -71,8 +71,10 @@ The consequence is the rule: **treat exports as a stable interface.**
   a fractional part or an exponent is rejected with `exports contains a
   fractional or exponent number; export numbers as integers or strings`.
 - **No secrets.** The generated root marks `exports` sensitive, so a secret
-  there does not fail the plan, but secrets belong in the identity. See [Sensitive
-  values](#sensitive-values).
+  there does not fail the plan, but the marking does not hide the value:
+  the controller publishes `exports` to `status.exports`, which anyone who
+  can `get` the `TerraformCluster` can read. Secrets belong in the identity.
+  See [Sensitive values](#sensitive-values).
 - **Know what a pool replaces.** A pool module that reads an export and
   replaces a resource when it changes is held for approval, but rotations
   that replace resources (an instance configuration, say) matter after a
@@ -218,7 +220,8 @@ see [Total State Loss and Import](../operator-guide/runbooks/total-state-loss.md
   environment variables and files. `tfcapi-lint` warns on a provider block that
   sets a credential-named argument to a literal (`module/provider-config`).
 - **What the controller keeps out.** Status and events carry counts and
-  addresses, never values. The runner redacts the values it knows about
+  addresses, never values, with one exception: `status.exports` publishes the
+  cluster's `exports` output. The runner redacts the values it knows about
   (credentials, sensitive variables, bootstrap data, sensitive plan values)
   from the Job's result and events. It cannot redact a secret a module
   derives and prints. See [What CAPTF keeps out of status, events and

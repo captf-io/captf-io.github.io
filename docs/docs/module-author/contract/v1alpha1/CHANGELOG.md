@@ -195,6 +195,10 @@ compatibility guarantee (see [`README.md`](README.md#versioning)
 
 ### Changed
 
+- Cluster `exports` is also published to `TerraformCluster.status.exports`, up
+  to 64 KiB of compact JSON, readable by anyone who can `get` the object
+  (`cluster.md` "`exports` (output)"). A clarification: the module contract
+  is unchanged, and `exports` still must not hold secrets.
 - Machine `provider_id` going missing after provisioning takes two
   samples (`machine.md` "`provider_id` (output)", `common.md` "Out-of-band
   termination"): the first refresh that reads `null` or `""` sets

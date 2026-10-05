@@ -11,7 +11,7 @@ subtitle: "Reuse state, data and outputs"
 A Cluster API provider written in Go reads only what its CRD fields express.
 A CAPTF module is ordinary Terraform, so it can read anything Terraform can
 read: the network a platform team already built, another team's Terraform
-state, the outputs of the cluster module itself. This guide shows what that
+state, the exports of the cluster module itself. This guide shows what that
 allows, with working examples: adopting infrastructure that exists, handing
 values forward to machines and pools, and running a later Terraform root
 (here a Helm add-on) that builds on what CAPTF created.
@@ -21,7 +21,7 @@ flowchart LR
     infra["Existing infrastructure<br/>(VPC, subnets, DNS)"] -->|data sources| cluster
     upstream["Existing Terraform state<br/>(platform network)"] -->|terraform_remote_state| cluster
     cluster["Cluster module<br/>(TerraformCluster)"] -->|exports| machines["Machine and pool modules"]
-    cluster -->|state: exports| addon["Add-on root<br/>(Helm release)"]
+    cluster -->|status.exports| addon["Add-on root<br/>(Helm release)"]
     kc["Secret &lt;cluster&gt;-kubeconfig<br/>(Cluster API)"] --> addon
     addon --> workload["Workload cluster"]
 ```
@@ -40,8 +40,8 @@ flowchart LR
   or creates reaches every machine and pool as an input. See [Hand values
   forward with exports](#hand-values-forward-with-exports).
 - **The same language, state and review workflow for day-2 add-ons.** A later
-  Terraform root reads the cluster's outputs and installs software into the
-  workload cluster. See [Build on CAPTF's state in later
+  Terraform root reads the cluster's `status.exports` and installs software
+  into the workload cluster. See [Build on CAPTF's state in later
   runs](#build-on-captfs-state-in-later-runs).
 - **Drift checks notice when the world under a cluster changes.** A changed
   upstream value shows up as drift on the next check. See [When upstream
@@ -225,39 +225,44 @@ Rules that matter here:
 
 ## Build on CAPTF's state in later runs
 
-CAPTF stores one state for each `TerraformCluster`, `TerraformMachine` and
-`TerraformMachinePool`, in the `kubernetes` backend, workspace `default`,
-in a Secret named `tfstate-default-<suffix>`. The suffix is the first 16 hex
-characters of `sha256("<namespace>/<Kind>/<name>")`, then `-c`, `-m` or `-mp`
-([Secret names and the
-suffix](../concepts/state.md#secret-names-and-the-suffix));
-`status.stateSecretSuffix` records it.
+The supported way for a later run to read what the cluster module
+published is `status.exports` on the `TerraformCluster`. The controller
+copies the module's `exports` output there, so any client that can `get`
+the object through the Kubernetes API can read it: a script, a CI job or
+another Terraform root.
 
-What a later run can read from that state is limited. The generated root
-module calls your module as `module "role"` and re-exports only the contract
-outputs: for a cluster, `control_plane_endpoint`, `failure_domains`,
-`exports` and `health`, each marked sensitive. A non-contract output of your
-module is not in the state's root outputs. So `exports` is the deliberate
-interface for downstream consumers too: put in it what add-ons need. Because
-the contract forbids secrets in `exports`, `nonsensitive()` is reasonable
-when you read it.
+```sh
+kubectl get terraformcluster <name> -n <ns> -o jsonpath='{.status.exports}'
+```
 
-!!! warning "This reads CAPTF's internal state layout"
+`exports` is the deliberate interface for downstream consumers: put in it
+what add-ons need. A non-contract output of your module is not published
+anywhere.
 
-    No page of this book sanctions reading CAPTF state from another root.
-    The names, labels and suffix rule are part of `v1alpha1`, but they may
-    change before the first release. A consumer must only read: never write,
-    and never run `terraform state` commands against this backend.
+`status.exports` is readable by anyone who can `get` the `TerraformCluster`,
+and the published copy ignores the `sensitive` marking, so `exports` must
+never hold secrets. It is at most 64 KiB of compact JSON.
+
+!!! note "Reading the state directly"
+
+    Reading CAPTF's state from another root, the way earlier versions of
+    this page did, still works, but it depends on the `v1alpha1` state
+    layout (the Secret names, labels and suffix rule in [Secret names and
+    the suffix](../concepts/state.md#secret-names-and-the-suffix)), which
+    may change before the first release. Prefer `status.exports`. The field
+    is absent when `exports` exceed 64 KiB (the manager emits a Warning
+    event, `ExportsNotPublished`) and for an externally managed cluster.
 
 ### Example: the AWS Load Balancer Controller
 
 This root runs from a workstation or CI with a kubeconfig for the management
-cluster. It reads the cluster's exports from CAPTF's state, fetches the
+cluster. It reads the cluster's exports from `status.exports`, fetches the
 workload cluster's kubeconfig from the Secret Cluster API writes, and
 installs the AWS Load Balancer Controller chart with values from the exports.
-The provider syntax is for the Helm and Kubernetes providers' 3.x major
-versions (the Helm provider takes `kubernetes` as an attribute, and `set` as
-a list of objects).
+The provider syntax is for the Kubernetes and Helm providers' 3.x major
+versions (`kubernetes_resource` returns the object as `object`; the Helm
+provider takes `kubernetes` as an attribute, and `set` as a list of
+objects).
 
 ```hcl
 terraform {
@@ -287,40 +292,24 @@ variable "terraform_cluster_name" {
   description = "Name of the TerraformCluster object."
 }
 
-locals {
-  # hex(sha256("<namespace>/TerraformCluster/<name>"))[:16] + "-c"
-  state_suffix = "${substr(sha256("${var.namespace}/TerraformCluster/${var.terraform_cluster_name}"), 0, 16)}-c"
-  # A label value is the name, or the first 16 hex characters of its sha256
-  # when the name is longer than 63 characters.
-  owner_name_label = length(var.terraform_cluster_name) <= 63 ? var.terraform_cluster_name : substr(sha256(var.terraform_cluster_name), 0, 16)
-  cluster_label    = length(var.cluster_name) <= 63 ? var.cluster_name : substr(sha256(var.cluster_name), 0, 16)
-}
-
 provider "kubernetes" {
   config_path = var.management_kubeconfig
 }
 
-# CAPTF's state for the cluster. Read only. The labels must match exactly:
-# a wrong map finds no state, without an error.
-data "terraform_remote_state" "cluster" {
-  backend = "kubernetes"
-  config = {
-    secret_suffix     = local.state_suffix
-    namespace         = var.namespace
-    in_cluster_config = false
-    config_path       = var.management_kubeconfig
-    labels = {
-      "captf.infrastructure.cluster.x-k8s.io/owner-kind" = "TerraformCluster"
-      "captf.infrastructure.cluster.x-k8s.io/owner-name" = local.owner_name_label
-      "cluster.x-k8s.io/cluster-name"                    = local.cluster_label
-      "captf.io/managed"                                 = "true"
-      "clusterctl.cluster.x-k8s.io/move"                 = ""
-    }
+# The TerraformCluster, read through the Kubernetes API. Its status.exports
+# is a copy of the cluster module's exports output.
+data "kubernetes_resource" "cluster" {
+  api_version = "infrastructure.cluster.x-k8s.io/v1alpha1"
+  kind        = "TerraformCluster"
+
+  metadata {
+    name      = var.terraform_cluster_name
+    namespace = var.namespace
   }
 }
 
 locals {
-  exports = nonsensitive(data.terraform_remote_state.cluster.outputs.exports)
+  exports = data.kubernetes_resource.cluster.object.status.exports
 }
 
 # Written by Cluster API, not CAPTF: "<cluster-name>-kubeconfig", key "value".
@@ -362,11 +351,6 @@ resource "helm_release" "aws_load_balancer_controller" {
 
 Points to check before you run it:
 
-- **`owner-name` and `cluster-name` labels.** Each is the object's name, or
-  the first 16 hex characters of its sha256 if the name is longer than 63
-  characters; the `locals` above compute both. [State
-  Restore](../operator-guide/runbooks/state-restore.md#manual-recovery-with-no-backup)
-  has the same backend block.
 - **`clusterName`.** The value is `kubernetes_cluster_id` from the exports.
   The AWS README gives it as the `<id>` in the `kubernetes.io/cluster/<id>`
   tag that the reference modules put on the cluster's resources
@@ -445,19 +429,14 @@ want add-ons managed by controllers rather than by Terraform runs.
 
 ## Caveats
 
-- Reading CAPTF's state depends on the `v1alpha1` state layout, which may
-  change before the first release.
-- Read only. Never write to, or run `terraform state` commands against, an
-  object's state.
-- Every output in the state is marked sensitive; `exports` holds no secrets,
-  so `nonsensitive()` is reasonable only for it.
-- Only the contract outputs are in the state. Put what a consumer needs in
+- `status.exports` is at most 64 KiB of compact JSON. Above that it is
+  absent and the manager emits the `ExportsNotPublished` Warning event.
+- It is absent for an externally managed cluster.
+- It is readable by anyone who can `get` the `TerraformCluster`, and the
+  published copy ignores the `sensitive` marking: never put secrets in
   `exports`.
 - Credentials and egress: a remote-state or data-source read in a Job uses
   the identity's credentials and the pod's network path.
-- OpenTofu state encryption makes the state unreadable to CAPTF, and so to a
-  consumer reading it as above ([OpenTofu state
-  encryption](../concepts/state.md#opentofu-state-encryption)).
 
 !!! related "See also"
 
