@@ -57,7 +57,7 @@ spec:
         fsGroup: 65532                     # lets a non-root image user read 0440 files
       initContainers:
       - name: runner                       # the manager's runner image
-        image: ghcr.io/captf-io/cluster-api-provider-terraform:vX.Y.Z
+        image: ghcr.io/captf-io/cluster-api-provider-terraform@sha256:<digest>
         command: ["/runner", "copy", "/captf/bin/runner"]
         volumeMounts:
         - {name: runner, mountPath: /captf/bin}

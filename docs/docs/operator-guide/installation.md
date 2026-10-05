@@ -129,7 +129,8 @@ and ClusterClass](../user-guide/clusterclass.md).
 ## The manager image and the runner image
 
 `clusterctl init` sets the manager container's image to the release's
-image, `ghcr.io/captf-io/cluster-api-provider-terraform:vX.Y.Z`. The same
+image, pinned by digest:
+`ghcr.io/captf-io/cluster-api-provider-terraform@sha256:<digest>`. The same
 reference is also set as the `CAPTF_MANAGER_IMAGE` environment variable on
 that container: it is the default of `--runner-image`, the image the
 manager runs as the init container that injects the runner binary into

@@ -39,7 +39,8 @@ with the rest of captf.io, published at
 [Writing Documentation](documentation.md).
 
 Each Go module (`.`, `api` and `test`) is listed in `go.work`. `hack/verify-modules.sh`
-(`make verify`) checks that none carries a `replace` directive and that
+(`make verify`) checks that none carries a `replace` directive, except the
+root module's `api => ./api` (which tools that ignore `go.work` need), and that
 they agree on the Kubernetes and controller-runtime versions they share.
 Because `api` only exists inside the workspace, `go mod tidy` run from the
 repository root does not update its `go.mod`; add or bump one of its

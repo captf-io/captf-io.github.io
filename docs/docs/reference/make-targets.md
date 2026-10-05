@@ -199,7 +199,7 @@ faster when only one has failed. Several need `python3`, `git` or `podman`.
 | `verify` | Run all the checks in this table. |
 | `verify-godoc` | Check that every declaration, parameter, return value and package has a doc comment. |
 | `verify-gen` | Run `generate` and `manifests`, then fail if `git diff` shows a change. It needs `git`. |
-| `verify-modules` | Check `go.work` and `go.mod` pins, and that no module uses `replace`. |
+| `verify-modules` | Check `go.work` and `go.mod` pins, and that no module uses `replace` other than the root module's `api => ./api`. |
 | `verify-schemas` | Validate the contract JSON Schemas, their examples and the golden inputs and outputs. It needs `python3` with `jsonschema`. |
 | `verify-components` | Check the clusterctl components built from `config/default`. |
 | `verify-metadata` | Validate `metadata.yaml`, and check that `releaseSeries` only grows compared with the previous tag. |
