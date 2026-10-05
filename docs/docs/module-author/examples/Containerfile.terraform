@@ -1,28 +1,36 @@
-# Reference source image, Terraform base (docs/book/src/module-author/image-contract.md "Reference:
-# Terraform base"). Run from your module's root directory:
+# Reference module image on the CAPTF Terraform base (see "CAPTF base
+# images" in module-author/image-contract.md). Run from your module's root
+# directory:
 #
 #   podman build -f Containerfile.terraform --build-arg ROLE=cluster \
 #     --build-arg IMAGE_SOURCE=https://github.com/<org>/<repo> \
 #     --build-arg IMAGE_REVISION="$(git rev-parse HEAD)" \
 #     --build-arg IMAGE_VERSION=<tag> -t <registry>/<repo>:<tag> .
 #
-# The image tag is the module version. Lint first:
+# The image tag is the module version. Lint the module first and the image
+# after:
 #   tfcapi-lint module . --role cluster --strict
+#   tfcapi-lint image <registry>/<repo>:<tag> --role cluster --strict
+#
+# Add a .dockerignore (podman reads it too) with at least `.terraform/`,
+# `*.tfstate*` and the Containerfile itself, so none of them lands in
+# /captf/module.
+#
+# Pin BASE by digest for reproducible builds; Dependabot bumps the pin:
+#   ghcr.io/captf-io/terraform-base:<version>@sha256:<digest>
 
-ARG RUNTIME_VERSION=1.16.4
-# The org.opencontainers.image.* labels below (image-contract.md "OCI
-# labels"): leave these unset for a local/test build, or pass them from
-# your CI pipeline (source repo URL, commit SHA, the image tag).
-ARG IMAGE_SOURCE=""
-ARG IMAGE_REVISION=""
-ARG IMAGE_VERSION=""
+ARG BASE=ghcr.io/captf-io/terraform-base:1.16.4
 
-# Optional but recommended: hermetic provider mirror for the platforms you
-# publish. Needs registry egress at build time; drop this stage (and the
-# COPY --from=mirror below) for a non-hermetic image.
-FROM docker.io/hashicorp/terraform:${RUNTIME_VERSION} AS mirror
+# Optional but recommended: hermetic provider mirror for every platform the
+# image publishes. Needs registry egress at build time; drop this stage (and
+# the COPY --from=mirror below) for an image whose `init` downloads
+# providers at run time.
+FROM ${BASE} AS mirror
+# The base runs as 65532; writing /captf/providers needs root in this stage,
+# which is not shipped.
+USER root
 WORKDIR /src
-COPY . /src
+COPY . .
 # get: `providers mirror` refuses a module whose nested local modules are not
 # installed; get installs them (no providers), in this stage only.
 # mkdir: `providers mirror` does not create the target when the module
@@ -31,22 +39,18 @@ RUN terraform get \
  && mkdir -p /captf/providers \
  && terraform providers mirror -platform=linux_amd64 -platform=linux_arm64 /captf/providers
 
-FROM docker.io/hashicorp/terraform:${RUNTIME_VERSION}
-ARG ROLE=cluster
-ARG RUNTIME_VERSION
-ARG IMAGE_SOURCE
-ARG IMAGE_REVISION
-ARG IMAGE_VERSION
-COPY --from=mirror /captf/providers /captf/providers
-COPY . /captf/module
-RUN ln -s /bin/terraform /captf/runtime \
- && adduser -D -u 65532 captf \
- && chown -R 65532:65532 /captf
-USER 65532
-LABEL io.captf.contract="v1alpha1" \
-      io.captf.role="${ROLE}" \
-      io.captf.runtime="terraform" \
-      io.captf.runtime.version="${RUNTIME_VERSION}" \
+# The final stage starts from the base again, so it runs as the base's
+# non-root user (captf, 65532:65532).
+FROM ${BASE}
+ARG ROLE
+ARG IMAGE_SOURCE=""
+ARG IMAGE_REVISION=""
+ARG IMAGE_VERSION=""
+COPY --from=mirror --chown=65532:65532 /captf/providers /captf/providers
+COPY --chown=65532:65532 . /captf/module
+# io.captf.contract, io.captf.runtime and io.captf.runtime.version come from
+# the base.
+LABEL io.captf.role="${ROLE}" \
       org.opencontainers.image.source="${IMAGE_SOURCE}" \
       org.opencontainers.image.revision="${IMAGE_REVISION}" \
       org.opencontainers.image.version="${IMAGE_VERSION}"

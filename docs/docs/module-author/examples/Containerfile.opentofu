@@ -1,35 +1,36 @@
-# Reference source image, OpenTofu base (docs/book/src/module-author/image-contract.md "Reference:
-# OpenTofu base"). Run from your module's root directory:
+# Reference module image on the CAPTF OpenTofu base (see "CAPTF base
+# images" in module-author/image-contract.md). Run from your module's root
+# directory:
 #
 #   podman build -f Containerfile.opentofu --build-arg ROLE=machine \
 #     --build-arg IMAGE_SOURCE=https://github.com/<org>/<repo> \
 #     --build-arg IMAGE_REVISION="$(git rev-parse HEAD)" \
 #     --build-arg IMAGE_VERSION=<tag> -t <registry>/<repo>:<tag> .
 #
-# The image tag is the module version. Lint first:
+# The image tag is the module version. Lint the module first and the image
+# after:
 #   tfcapi-lint module . --role machine --strict
+#   tfcapi-lint image <registry>/<repo>:<tag> --role machine --strict
 #
-# The full ghcr.io/opentofu/opentofu image refuses to be a FROM base
-# (ONBUILD RUN exit 1); use the -minimal tag via COPY --from as below.
+# Add a .dockerignore (podman reads it too) with at least `.terraform/`,
+# `*.tfstate*` and the Containerfile itself, so none of them lands in
+# /captf/module.
+#
+# Pin BASE by digest for reproducible builds; Dependabot bumps the pin:
+#   ghcr.io/captf-io/opentofu-base:<version>@sha256:<digest>
 
-ARG RUNTIME_VERSION=1.12.6
-# The org.opencontainers.image.* labels below (image-contract.md "OCI
-# labels"): leave these unset for a local/test build, or pass them from
-# your CI pipeline (source repo URL, commit SHA, the image tag).
-ARG IMAGE_SOURCE=""
-ARG IMAGE_REVISION=""
-ARG IMAGE_VERSION=""
+ARG BASE=ghcr.io/captf-io/opentofu-base:1.12.6
 
-FROM ghcr.io/opentofu/opentofu:${RUNTIME_VERSION}-minimal AS tofu
-
-# Optional but recommended: hermetic provider mirror for the platforms you
-# publish. Needs registry egress at build time; drop this stage (and the
-# COPY --from=mirror below) for a non-hermetic image.
-FROM docker.io/library/alpine:3.22 AS mirror
-RUN apk add --no-cache ca-certificates
-COPY --from=tofu /usr/local/bin/tofu /usr/local/bin/tofu
+# Optional but recommended: hermetic provider mirror for every platform the
+# image publishes. Needs registry egress at build time; drop this stage (and
+# the COPY --from=mirror below) for an image whose `init` downloads
+# providers at run time.
+FROM ${BASE} AS mirror
+# The base runs as 65532; writing /captf/providers needs root in this stage,
+# which is not shipped.
+USER root
 WORKDIR /src
-COPY . /src
+COPY . .
 # get: `providers mirror` refuses a module whose nested local modules are not
 # installed; get installs them (no providers), in this stage only.
 # mkdir: `providers mirror` does not create the target when the module
@@ -38,23 +39,18 @@ RUN tofu get \
  && mkdir -p /captf/providers \
  && tofu providers mirror -platform=linux_amd64 -platform=linux_arm64 /captf/providers
 
-FROM docker.io/library/alpine:3.22
-ARG ROLE=machine
-ARG RUNTIME_VERSION
-ARG IMAGE_SOURCE
-ARG IMAGE_REVISION
-ARG IMAGE_VERSION
-RUN apk add --no-cache ca-certificates \
- && adduser -D -u 65532 captf
-COPY --from=tofu /usr/local/bin/tofu /captf/runtime
-COPY --from=mirror /captf/providers /captf/providers
-COPY . /captf/module
-RUN chown -R 65532:65532 /captf
-USER 65532
-LABEL io.captf.contract="v1alpha1" \
-      io.captf.role="${ROLE}" \
-      io.captf.runtime="tofu" \
-      io.captf.runtime.version="${RUNTIME_VERSION}" \
+# The final stage starts from the base again, so it runs as the base's
+# non-root user (captf, 65532:65532).
+FROM ${BASE}
+ARG ROLE
+ARG IMAGE_SOURCE=""
+ARG IMAGE_REVISION=""
+ARG IMAGE_VERSION=""
+COPY --from=mirror --chown=65532:65532 /captf/providers /captf/providers
+COPY --chown=65532:65532 . /captf/module
+# io.captf.contract, io.captf.runtime and io.captf.runtime.version come from
+# the base.
+LABEL io.captf.role="${ROLE}" \
       org.opencontainers.image.source="${IMAGE_SOURCE}" \
       org.opencontainers.image.revision="${IMAGE_REVISION}" \
       org.opencontainers.image.version="${IMAGE_VERSION}"

@@ -239,7 +239,9 @@ defaults field by field, within the limits the webhook enforces; see
     so the Job leaves `runAsNonRoot` and `runAsUser` unset. The webhook
     rejects an explicit root setting, but an image that runs as root by
     default still does. The container holds cloud credentials, so build the
-    image to run as a non-root user. See [Pod
+    image to run as a non-root user: the
+    [CAPTF base images](../module-author/image-contract.md#captf-base-images)
+    already run as `captf` (65532). See [Pod
     security](../concepts/security-model.md#pod-security).
 
 ## Runner command and args

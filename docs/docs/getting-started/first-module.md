@@ -28,8 +28,9 @@ and the [image contract](../module-author/image-contract.md).
     - `podman` or `docker`, to build the image.
     - A directory to work in. This tutorial calls it `machine/`.
 
-Terraform or OpenTofu itself is not required on your machine: the reference
-Containerfile below downloads it inside the build, and `tfcapi-lint module`
+Terraform or OpenTofu itself is not required on your machine: the
+[CAPTF base image](../module-author/image-contract.md#captf-base-images)
+the Containerfile builds FROM already contains it, and `tfcapi-lint module`
 parses the module's files directly.
 
 ## 1. Write the module
@@ -113,8 +114,12 @@ check ID.
 
 CAPTF runs a module as one OCI image that bundles the module's files and
 the Terraform or OpenTofu binary; there is no separate module source and
-no separate runtime image. Save the reference Terraform-based Containerfile
-into `machine/`:
+no separate runtime image. You do not assemble the runtime yourself: the
+[CAPTF base images](../module-author/image-contract.md#captf-base-images)
+(`ghcr.io/captf-io/terraform-base` and `ghcr.io/captf-io/opentofu-base`)
+supply the runtime, the non-root user and the contract labels, and your
+Containerfile adds the module, an optional provider mirror and the role
+label. Save the reference Terraform-based Containerfile into `machine/`:
 
 ```dockerfile title="Containerfile.terraform"
 --8<-- "module-author/examples/Containerfile.terraform"
@@ -122,9 +127,19 @@ into `machine/`:
 
 !!! tip "OpenTofu works too"
 
-    An OpenTofu-based equivalent is also available
-    ([`Containerfile.opentofu`](../module-author/image-contract.md#reference-opentofu-base));
-    either runtime satisfies the contract.
+    An OpenTofu-based equivalent,
+    [`Containerfile.opentofu`](../module-author/image-contract.md#building-an-image),
+    differs only in the base image and the runtime command; either runtime
+    satisfies the contract.
+
+Also add a `.dockerignore` in `machine/` so the Containerfile and any local
+state stay out of the image:
+
+```text title=".dockerignore"
+.terraform/
+*.tfstate*
+Containerfile*
+```
 
 Build from inside `machine/`:
 
