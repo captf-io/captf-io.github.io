@@ -29,7 +29,7 @@ and the [image contract](../module-author/image-contract.md).
     - A directory to work in. This tutorial calls it `machine/`.
 
 Terraform or OpenTofu itself is not required on your machine: the
-[CAPTF base image](../module-author/image-contract.md#captf-base-images)
+[CAPTF base image](../module-author/base-images.md)
 the Containerfile builds FROM already contains it, and `tfcapi-lint module`
 parses the module's files directly.
 
@@ -115,7 +115,7 @@ check ID.
 CAPTF runs a module as one OCI image that bundles the module's files and
 the Terraform or OpenTofu binary; there is no separate module source and
 no separate runtime image. You do not assemble the runtime yourself: the
-[CAPTF base images](../module-author/image-contract.md#captf-base-images)
+[CAPTF base images](../module-author/base-images.md)
 (`ghcr.io/captf-io/terraform-base` and `ghcr.io/captf-io/opentofu-base`)
 supply the runtime, the non-root user and the contract labels, and your
 Containerfile adds the module, an optional provider mirror and the role
@@ -128,7 +128,7 @@ label. Save the reference Terraform-based Containerfile into `machine/`:
 !!! tip "OpenTofu works too"
 
     An OpenTofu-based equivalent,
-    [`Containerfile.opentofu`](../module-author/image-contract.md#building-an-image),
+    [`Containerfile.opentofu`](../module-author/base-images.md#building-a-module-image),
     differs only in the base image and the runtime command; either runtime
     satisfies the contract.
 

@@ -1,5 +1,5 @@
 ---
-description: "The normative image contract: fixed paths, OCI labels, user, multi-arch publishing, and reference Containerfiles for Terraform and OpenTofu."
+description: "The normative image contract: fixed paths, OCI labels, user, multi-arch publishing, and pointers to the base images."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"
 git_creation_date_iso: "2026-09-29"
@@ -71,8 +71,8 @@ accept either layout it can produce: the *packed* layout
 
 `providers mirror` creates its target directory only when it writes at
 least one provider, so a module that requires none needs the mirror stage
-to create `/captf/providers` itself (see the reference Containerfiles
-below) or the later `COPY --from=mirror` fails. It also fails with
+to create `/captf/providers` itself (see the reference
+Containerfiles on [Base Images](base-images.md#building-a-module-image)) or the later `COPY --from=mirror` fails. It also fails with
 "Module not installed" when the module calls local modules that are not
 yet installed, so run `terraform get` / `tofu get` first, in the same
 stage; that installs modules only, never providers.
@@ -103,7 +103,7 @@ base must set every label itself.
 | `io.captf.runtime.version` | For example `1.12.6`. |
 | `org.opencontainers.image.source`, `.revision`, `.version` | Standard OCI annotations; `.version` should equal the tag. |
 
-The reference Containerfiles below take these three as `IMAGE_SOURCE`,
+The reference Containerfiles on [Base Images](base-images.md#building-a-module-image) take these three as `IMAGE_SOURCE`,
 `IMAGE_REVISION` and `IMAGE_VERSION` build args (empty by default), so a
 build pipeline sets them with `--build-arg` from the source repository
 URL, the commit, and the tag being built.
@@ -125,20 +125,9 @@ use these labels; pool images may carry them, but they are ignored.
 
 Set the labels from build arguments with a fixed architecture value, never
 from `TARGETARCH`, so every platform of a multi-arch build gets identical
-labels. The [`aws-modules`
-Dockerfile](https://github.com/captf-io/aws-modules/blob/main/Dockerfile.opentofu)
-does this in its `machine` stage:
-
-```dockerfile
-FROM module AS machine
-ARG MACHINE_CAPACITY
-ARG MACHINE_ARCH
-LABEL io.captf.capacity="${MACHINE_CAPACITY}" \
-      io.captf.node-info="{\"architecture\":\"${MACHINE_ARCH}\",\"operatingSystem\":\"linux\"}"
-```
-
-The build passes `--build-arg MACHINE_CAPACITY='{"cpu":"2","memory":"8Gi"}'
---build-arg MACHINE_ARCH=amd64` to every platform.
+labels. [One Dockerfile for every
+role](base-images.md#one-dockerfile-for-every-role) shows the `machine`
+stage and build command.
 
 ## User
 
@@ -160,10 +149,8 @@ management cluster's node architecture to the platform the image ships:
 `--platform`/`--all-platforms` select others. A provider mirror must carry
 a package for the target platform it is checked against.
 
-The CAPTF base images are multi-arch (`linux/amd64`, `linux/arm64`) and
-run on baseline x86-64 nodes: Ubuntu 26.04 targets the baseline ISA. If you
-replace the base with a RHEL 10 family image (such as Rocky Linux 10), its
-final stage requires x86-64-v3, which older amd64 nodes lack.
+The CAPTF base images are multi-arch; see
+[Platforms](base-images.md#platforms) for the x86-64 baseline.
 
 ## Versioning and pinning
 
@@ -197,104 +184,22 @@ podman build -t "$IMAGE" .
 tfcapi-lint image "$IMAGE" --role cluster --strict
 ```
 
-Add a `.dockerignore` next to the Containerfile with at least
-`.terraform/`, `*.tfstate*` and the Containerfile itself, so a local
-`init` directory, state or the build file never lands in `/captf/module`.
-Podman reads `.dockerignore` as well.
-
-The reference images below ship as
-[`examples/Containerfile.terraform`](examples/Containerfile.terraform) and
-[`examples/Containerfile.opentofu`](examples/Containerfile.opentofu). Each
-builds FROM a [CAPTF base image](#captf-base-images) and takes `ARG ROLE`;
-`ARG BASE` selects the base tag.
-
-=== "Terraform"
-
-    ```dockerfile title="Containerfile.terraform"
-    --8<-- "module-author/examples/Containerfile.terraform"
-    ```
-
-=== "OpenTofu"
-
-    ```dockerfile title="Containerfile.opentofu"
-    --8<-- "module-author/examples/Containerfile.opentofu"
-    ```
-
-!!! note "Mirroring providers needs registry egress at build time"
-
-    Drop the `mirror` stage (and its `COPY --from=mirror`) for a
-    non-hermetic image.
+Keep a `.dockerignore` next to the Containerfile so a local `.terraform/`
+directory, state or the build file never lands in `/captf/module`. The
+reference Containerfiles for Terraform and OpenTofu, and the build
+commands, are on [Base Images](base-images.md#building-a-module-image).
 
 ### CAPTF base images
 
-CAPTF publishes one base image per runtime, and every module image builds
-FROM one of them:
-
-- `ghcr.io/captf-io/opentofu-base`, sources in
-  [`opentofu-base`](https://github.com/captf-io/opentofu-base)
-- `ghcr.io/captf-io/terraform-base`, sources in
-  [`terraform-base`](https://github.com/captf-io/terraform-base)
-
-The base supplies the runtime half of the contract:
-
-- `/captf/runtime`, a symlink to the `tofu` or `terraform` binary.
-- User `captf` (`65532:65532`) with a `nologin` shell and home `/tmp`, set
-  as the image `USER`.
-- Ubuntu 26.04 LTS with `ca-certificates`, `git` and `openssh-client`: CA
-  roots for registry and provider downloads, and `git` and `ssh` for
-  modules and providers fetched over git.
-- A shell, for `local-exec` provisioners.
-- The labels `io.captf.contract`, `io.captf.runtime` and
-  `io.captf.runtime.version`, inherited by module images.
-
-The base leaves the reserved paths absent for the Job to mount. It does not
-provide `/captf/module`, `/captf/providers` or `io.captf.role`. The module
-image adds:
-
-- the module at `/captf/module` and, optionally, the provider mirror at
-  `/captf/providers`, both owned by `65532:65532`;
-- the `io.captf.role` label and the `org.opencontainers.image.*` labels;
-- on machine images, the `io.captf.capacity` and `io.captf.node-info`
-  labels.
-
-#### Stage layout
-
-A module image uses the stages `mirror`, `module`, then one final stage per
-role. The `mirror` stage runs as `USER root` on the base to write
-`/captf/providers`; `module` starts again from the base, which is the
-non-root user, and copies the mirror and the module in. A repository that
-ships all three roles from one Dockerfile names the final stages
-`cluster`, `machine` and `machinepool`, and builds each with `--target`
-equal to the role, along with `--build-arg ROLE=<role>`. See the
-[`aws-modules` Dockerfile](https://github.com/captf-io/aws-modules/blob/main/Dockerfile.opentofu).
-A single-role repository can use the shorter two-stage form above.
-
-#### Tags and pinning
-
-| Tag | Moves | Meaning |
-| --- | --- | --- |
-| `<version>`, for example `1.12.6` | yes | The newest build for that runtime release, rebuilt weekly. |
-| `<major.minor>`, for example `1.12` | yes | The newest build of the newest patch release of that minor. |
-| `<version>-YYYYMMDD` | no | That day's build. |
-| `latest` | yes | The newest build. |
-
-Pin the base in a module image by tag and digest, for example
-`opentofu-base:1.12.6@sha256:<digest>`: the tag documents the version, and
-the digest fixes the content. Dependabot bumps a pin of this form.
-
-The base is rebuilt every Monday at 05:17 UTC, without the build cache and
-with `apt-get upgrade`, to pick up Ubuntu security fixes. A digest pin does
-not receive those fixes until you bump it to a newer digest, so keep
-Dependabot (or an equivalent) enabled for the `FROM` line. Each push to
-GHCR carries an SBOM and `mode=max` provenance attestations.
-
-#### Without the CAPTF base
-
-A hand-rolled image must provide every fixed path, a non-root `USER`, and
-all the labels in [OCI labels](#oci-labels). A `distroless/static:nonroot`
-final stage works if the module needs no other tool, because `tofu` is
-statically linked. It has no `git`, no `ssh` and no shell, so a module that
-fetches over git, or runs a `local-exec` provisioner, fails on it.
+CAPTF publishes `ghcr.io/captf-io/opentofu-base` and
+`ghcr.io/captf-io/terraform-base`. They supply the runtime half of this
+contract (`/captf/runtime`, the non-root user and the `io.captf.contract`
+and `io.captf.runtime*` labels), and every reference module image builds
+FROM one. Using one is recommended, not required: an image built another
+way must provide every fixed path, a non-root `USER` and all the labels
+above. See [Base Images](base-images.md) for what they provide, stage
+layout, tags, digest pinning and [building without
+one](base-images.md#without-a-base-image).
 
 ## Checklist for `tfcapi-lint image`
 

@@ -1,5 +1,5 @@
-# Reference module image on the CAPTF Terraform base (see "CAPTF base
-# images" in module-author/image-contract.md). Run from your module's root
+# Reference module image on the CAPTF Terraform base (see
+# module-author/base-images.md). Run from your module's root
 # directory:
 #
 #   podman build -f Containerfile.terraform --build-arg ROLE=cluster \

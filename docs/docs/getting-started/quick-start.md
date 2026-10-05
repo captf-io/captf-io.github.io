@@ -116,7 +116,7 @@ export NOOP_MACHINE_IMAGE=ghcr.io/captf-io/noop-machine:terraform
 ```
 
 Each image comes in two tags, one per [base
-image](../module-author/image-contract.md#captf-base-images):
+image](../module-author/base-images.md):
 `<version>-terraform` and `<version>-opentofu`, such as `vX.Y.Z-terraform`. Either satisfies the
 [image contract](../module-author/image-contract.md). The bare `terraform`
 and `opentofu` tags move to the newest release; pin a release tag, or a

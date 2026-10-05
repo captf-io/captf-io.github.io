@@ -223,6 +223,10 @@
     "icon": "lucide/package",
     "subtitle": "Paths and labels an image needs"
   },
+  "module-author/base-images.md": {
+    "icon": "lucide/layers",
+    "subtitle": "Images every module builds FROM"
+  },
   "module-author/contract/v1alpha1/CHANGELOG.md": {
     "icon": "lucide/history",
     "subtitle": "Contract changes by version"

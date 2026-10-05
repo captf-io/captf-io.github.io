@@ -240,7 +240,7 @@ defaults field by field, within the limits the webhook enforces; see
     rejects an explicit root setting, but an image that runs as root by
     default still does. The container holds cloud credentials, so build the
     image to run as a non-root user: the
-    [CAPTF base images](../module-author/image-contract.md#captf-base-images)
+    [CAPTF base images](../module-author/base-images.md)
     already run as `captf` (65532). See [Pod
     security](../concepts/security-model.md#pod-security).
 

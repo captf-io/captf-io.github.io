@@ -135,7 +135,8 @@ Every role is published as `ghcr.io/captf-io/<cloud>-<role>`, for example
 `ghcr.io/captf-io/aws-machine`, for `linux/amd64` and `linux/arm64`, in two
 flavours: one built FROM
 [`terraform-base`](https://github.com/captf-io/terraform-base) and one FROM
-[`opentofu-base`](https://github.com/captf-io/opentofu-base). The tags name
+[`opentofu-base`](https://github.com/captf-io/opentofu-base) (see [Base
+Images](../module-author/base-images.md)). The tags name
 the runtime (`<version>-terraform`, `<version>-opentofu`). Each image carries a mirror of the providers its role needs, so a Job
 never downloads a provider at run time.
 
