@@ -38,7 +38,7 @@ namespace, is bound to one ClusterRole scoped to exactly what reconciling
 | --- | --- | --- |
 | `terraformclusters`, `terraformmachines`, `terraformmachinepools`, `terraformclusteridentities`, their `*Template` kinds | get, list, watch, create, update, patch, delete | Reconciles and owns every kind it serves |
 | The `/status` subresources of every kind above except `terraformmachinepooltemplates` (which has none) | get, update, patch | Writes status separately from the spec |
-| The `/finalizers` subresources of `terraformclusters`, `terraformmachines`, `terraformmachinepools` and `terraformclusteridentities` (never a `*Template` kind) | update | Adds and removes its own finalizers |
+| The `/finalizers` subresources of `terraformclusters`, `terraformmachines` and `terraformmachinepools` (never a `*Template` kind or `terraformclusteridentities`) | update | Adds and removes its own finalizers |
 | `clusters`, `clusters/status`, `machines/status`, `machinepools/status` | get, list, watch | Reads the Cluster API objects a `Terraform*` object belongs to |
 | `machines` | get, list, watch, patch | Reads Machines and patches the `cluster.x-k8s.io/remediate-machine` annotation it sets to request remediation |
 | `machinepools` | get, list, watch, patch | Reads MachinePools and writes back an autoscaled pool's observed replicas |
@@ -51,14 +51,32 @@ namespace, is bound to one ClusterRole scoped to exactly what reconciling
 | `leases` | get, list, watch, create, update, delete | Its own run and cluster-operation-gate leases, and cleaning up the backend's state lock lease on delete |
 | `jobs` | get, list, watch, create, patch, delete | Creates, watches and prunes the runner Jobs |
 | `jobs/finalizers` | update | Granted alongside `jobs`; the controller itself never sets a finalizer on a Job |
-| `pods` | get, list, watch | Reads a Job's pod status for its outcome and the image digest it ran |
-| `pods/log` | get, list, watch | Granted alongside `pods`; the controller itself never reads a pod's logs |
+| `pods` | get, list | Reads a Job's pod status for its outcome and the image digest it ran (no `watch`) |
 | `events`, `events.k8s.io/events` | create, patch | Records reconcile events on `Terraform*` objects |
 | `authentication.k8s.io/tokenreviews` | create | Backs the authenticated diagnostics endpoint |
 | `authorization.k8s.io/subjectaccessreviews` | create | Backs the authenticated diagnostics endpoint and the identity webhook's Secret-read check |
 
 The manager is never labeled to aggregate into a broader ClusterRole, and it
-holds no permission on any resource outside this table.
+holds no permission on any resource outside this table. In particular it has
+no access to pod logs: there is no `pods/log` rule anywhere in the shipped
+RBAC.
+
+### The grant is cluster-wide
+
+Every rule above is in a ClusterRole bound by a ClusterRoleBinding, so it
+applies in every namespace. That includes `create`, `update`, `patch` and
+`delete` on `secrets`, `create` and `delete` on `serviceaccounts`, and
+`create`, `update` and `delete` on `rolebindings` (with `bind` limited to the
+`captf-runner` ClusterRole).
+The manager can therefore write any Secret in the cluster, and can create a
+RoleBinding to `captf-runner` in any namespace.
+
+The manager's `--namespace` flag restricts what its cache watches, not
+what its ServiceAccount is allowed to do: RBAC is unchanged. Nothing in the
+repository ships a namespaced (Role-based) install of the manager, so a
+namespaced install is not supported; the manager needs the ClusterRole as
+shipped. See [Multi-tenancy](multi-tenancy.md) for what this means when you
+share a management cluster.
 
 ## The leader-election Role
 

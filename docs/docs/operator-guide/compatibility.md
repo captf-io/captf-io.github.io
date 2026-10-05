@@ -16,8 +16,8 @@ subtitle: "Supported versions and runtimes"
 
 This page lists the versions CAPTF is built against and what it needs from
 its environment. It separates what is **tested** from what is **assumed**,
-because CAPTF is pre-alpha and has never run against a live management
-cluster. The numbers come from the repository at the time of writing
+because CAPTF is pre-alpha and has been exercised only on one local kind
+cluster, never on a real cloud. The numbers come from the repository at the time of writing
 (`go.mod`, `metadata.yaml`, the Makefile and the noop module images), so
 check them against the tag you install.
 
@@ -29,16 +29,30 @@ check them against the tag you install.
 | Cluster API | v1.14.2 (the Go module the controllers build against) | `go.mod` |
 | Cluster API contract | `v1beta2` | `metadata.yaml`, the CRD label |
 | controller-runtime | v0.24.1 | `go.mod` |
-| Kubernetes client libraries | v0.36.3 (`k8s.io/api`, `apimachinery`, `client-go`) | `go.mod` |
+| Kubernetes client libraries | v0.36.5 (`k8s.io/api`, `apimachinery`, `client-go`) | `go.mod` |
 | CAPTF release series | 0.1 (none published) | `metadata.yaml` |
 | CAPTF API and module contract | `v1alpha1`, provisional | the CRDs, [contract](../module-author/contract/README.md) |
 | cert-manager | `cert-manager.io/v1` API required; no minimum release stated | [Installation](installation.md) |
-| Terraform | Any 1.x with the CLI surface below; modules require `>= 1.5` | [image contract](../module-author/image-contract.md) |
-| OpenTofu | Any 1.x with the same surface; modules require `>= 1.5` | the same |
-| Terraform in the noop images | 1.16.4, pinned by digest | [`noop-modules`](https://github.com/captf-io/noop-modules) `Dockerfile.terraform` |
-| OpenTofu in the noop images | 1.12.6, pinned by digest | [`noop-modules`](https://github.com/captf-io/noop-modules) `Dockerfile.opentofu` |
+| Terraform | Any 1.x with the CLI surface below; the reference modules require `>= 1.5.0` and are validated on 1.5.7 | [image contract](../module-author/image-contract.md) |
+| OpenTofu | Any 1.x with the same surface; the reference modules are validated on the floor 1.6.3 (OpenTofu has no 1.5) | the same |
+| Terraform in the base image | 1.16.4 | [`terraform-base`](https://github.com/captf-io/terraform-base) `Dockerfile` |
+| OpenTofu in the base image | 1.12.6 (the `-minimal` image) | [`opentofu-base`](https://github.com/captf-io/opentofu-base) `Dockerfile` |
 | State file format | Version 4 only | the state reader |
-| Architectures | `linux/amd64` and `linux/arm64` image builds | the Makefile's `PLATFORMS` |
+| Architectures | CI builds the manager image for `linux/amd64` and `linux/arm64`; `make release` pushes a host-platform image (see [Architectures](#architectures)) | `security.yaml`, the Makefile |
+
+### Architectures
+
+The `security` workflow builds the manager image for `linux/amd64` and
+`linux/arm64` on every run, without pushing it, and scans and runs
+the `linux/amd64` build only. The Makefile has a `docker-buildx` target that
+builds `PLATFORMS` (default `linux/amd64,linux/arm64`) into a manifest list,
+but `make release` runs `docker-build` and `docker-push`, which build and
+push an image for the host platform of the machine that runs the release.
+So a release publishes an `arm64` image only if it is run on, or
+cross-built for, `arm64`; the release flow does not do so by itself. The
+`tfcapi-lint` release assets are built per platform by GoReleaser. The base
+images are published as multi-arch indexes, and the module images build
+`linux/amd64` and `linux/arm64` provider mirrors.
 
 ### Kubernetes
 
@@ -50,13 +64,41 @@ version it is built for and anything else as unverified; the features it
 uses are standard (Jobs, Leases, Secrets, validating webhooks,
 `SubjectAccessReview`).
 
+### Base images and runtimes
+
+The reference module images build `FROM` the CAPTF base images
+[`terraform-base`](https://github.com/captf-io/terraform-base) (Terraform
+1.16.4) and [`opentofu-base`](https://github.com/captf-io/opentofu-base)
+(OpenTofu 1.12.6). Each base is Ubuntu 26.04 with `ca-certificates`, `git`
+and `openssh-client`, runs as user `captf` (65532:65532), and exposes the
+runtime at `/captf/runtime`. Each module Dockerfile pins its base by tag and
+digest. The noop images use the same bases; they no longer pin an upstream
+runtime image directly.
+
+Every reference module declares `required_version = ">= 1.5.0"` (the noop
+modules `">= 1.5"`). The cloud module repos validate each role on both
+current runtimes and on the floors Terraform 1.5.7 and OpenTofu 1.6.3.
+Provider versions are pinned exactly in each role's `versions.tf`:
+
+| Module set | Provider | Pinned version |
+| --- | --- | --- |
+| [`aws-modules`](https://github.com/captf-io/aws-modules) | `hashicorp/aws` | 6.67.0 |
+| [`azure-modules`](https://github.com/captf-io/azure-modules) | `hashicorp/azurerm` | 5.7.0 |
+| [`gcp-modules`](https://github.com/captf-io/gcp-modules) | `hashicorp/google` | 8.5.0 |
+| [`oci-modules`](https://github.com/captf-io/oci-modules) | `oracle/oci` | 9.8.0 |
+| [`openstack-modules`](https://github.com/captf-io/openstack-modules) | `terraform-provider-openstack/openstack` | 3.4.0 |
+| [`noop-modules`](https://github.com/captf-io/noop-modules) | none (`terraform_data` only) | n/a |
+
+OpenStack has no `machinepool` role. The pins move with the module repos, so
+read the `versions.tf` of the tag you use.
+
 ### The runtime CLI
 
 The module image supplies the `terraform` or `tofu` binary at
 `/captf/runtime`. CAPTF needs the 1.x CLI surface `version`, `init`,
 `validate`, `plan`, `apply`, `destroy`, `force-unlock`, `show` and `state
 push`/`state list`. It does not check a minimum version. The reference
-modules declare `required_version = ">= 1.5"`, because they use
+modules declare `required_version = ">= 1.5.0"`, because they use
 `terraform_data` and `plantimestamp()`. CAPTF reads the state through
 the Kubernetes backend and only accepts state file version 4. OpenTofu
 client-side state encryption is unsupported. See [Image
@@ -73,6 +115,27 @@ from those providers' contracts, not from a live run.
 
 ## What is tested
 
+### The tested combination
+
+One combination is exercised, by the opt-in end-to-end suites on a local
+kind cluster. The versions are pinned in `test/framework/versions.go` and
+the Makefile of the provider:
+
+| Component | Version |
+| --- | --- |
+| kind | v0.33.0 |
+| Kubernetes (kind node image, by digest) | v1.36.4 |
+| Cluster API (core, kubeadm bootstrap, kubeadm control plane) | v1.14.2 |
+| cert-manager | v1.21.1 |
+| `clusterctl` (Makefile pin) | v1.14.2 |
+| Runtimes in the noop images | Terraform 1.16.4, OpenTofu 1.12.6 |
+
+This is the only matrix that has run. Use a `clusterctl` whose version
+matches the Cluster API version in `go.mod` (v1.14.2). Anything else is
+unverified.
+
+### Continuous integration
+
 The continuous-integration workflow runs these on every push:
 
 | Check | Covers |
@@ -82,30 +145,46 @@ The continuous-integration workflow runs these on every push:
 | The `verify` targets | Generated files are current, component manifests, templates, JSON schemas, `metadata.yaml` append-only, the local clusterctl repository layout, licenses and the Prometheus rules (`promtool` check and tests) |
 
 The workflow also builds every binary and takes a `tfcapi-lint` release
-snapshot. It does not run the end-to-end suites: `make e2e-foundation` and
-`make e2e-noop` run them on a local kind cluster that pulls the published
-no-op images, and you run them yourself. The docs checks and the release
-flow are also outside the workflow.
+snapshot. It does not run the end-to-end suites. They are opt-in: you run
+them yourself with `make e2e-foundation` and then `make e2e-noop`. The docs
+checks and the release flow are also outside the workflow.
+
+### End-to-end suites
+
+The provider's `test/README.md` records two suites, run on a kind cluster on
+rootless podman, with measurements dated 2026-10-04:
+
+- **`make e2e-foundation`** brings up the cluster, runs `clusterctl init`
+  with Cluster API core, the kubeadm bootstrap and control-plane providers,
+  and CAPTF built from the working tree, and checks the components, a real
+  reconcile of a `TerraformClusterIdentity`, and a stability window.
+- **`make e2e-noop`** drives the published noop module images through real
+  Cluster API objects, with Terraform and OpenTofu: a cluster, two machines
+  and a machine pool, a scale, a drift check, a failed and a recovered apply,
+  digest pinning, and deletion with a full cleanup of Secrets and Jobs.
 
 ## What is assumed
 
-!!! warning "Nothing below has been exercised against a live system"
+!!! warning "Beyond the suites above, nothing has been exercised"
 
     Treat every item in this list as unverified.
 
-- **A real management cluster.** No `clusterctl init`, `upgrade` or `move`
-  has run end to end; the move behavior is derived from the code and
-  `clusterctl`'s documented rules.
-- **Real Terraform or OpenTofu execution under CAPTF.** The runner is unit
-  tested against recorded plan and state JSON. Other versions of the runtime
-  than the pinned noop ones are assumed to behave.
+- **Anything but the tested combination.** Other Kubernetes server versions,
+  cert-manager releases and Cluster API releases.
+- **A management cluster that is not a single-node kind cluster.**
+- **`clusterctl upgrade` and `clusterctl move`.** No suite runs either. The
+  move behavior is derived from the code and `clusterctl`'s documented rules.
 - **Real infrastructure providers.** The noop modules create no cloud
-  resources, and no module that does has been run under CAPTF in CI.
-- **Kubernetes server versions other than 1.36, cert-manager releases, and
-  Cluster API releases other than the one built against.**
-- **The `arm64` image.** It is built by the Makefile; no CI job runs it.
-- **KubeadmControlPlane and RKE2ControlPlane integration.** Documented
-  against their contracts; not run.
+  resources, and no module that does has been run under CAPTF.
+- **Real Terraform or OpenTofu execution against a cloud.** The noop modules
+  run the real runtimes, but only the pinned ones. Other versions are assumed
+  to behave.
+- **The `arm64` image.** CI builds it but does not run it.
+- **KubeadmControlPlane and RKE2ControlPlane integration.** The kubeadm
+  providers are installed in the e2e cluster, but the suites create clusters
+  with no control plane. The integration is documented against the providers'
+  contracts and has not run.
+- **The Docker engine path of the test environment.** Only podman has run.
 
 If you find a version that works or does not, that is the information this
 page needs. See [Known Limitations](limitations.md) and the [project

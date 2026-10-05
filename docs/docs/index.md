@@ -150,8 +150,9 @@ diagram and how one apply flows through them.
     with it (see the contract's
     [changelog](module-author/contract/v1alpha1/CHANGELOG.md)).
 
-    CAPTF has no end-to-end tests yet. Its test suite is unit tests that
-    mock the Kubernetes API and Job execution; nothing in it creates a real
-    cluster. See [Testing](developer-guide/testing.md) for how the test
+    CAPTF's end-to-end coverage is narrow and opt-in: two suites run on a
+    local kind cluster, one against the installed components and one driving
+    the noop modules, and neither runs in CI. No real cloud has been
+    exercised. See [Testing](developer-guide/testing.md) for how the test
     suite is organized, and [Known Limitations](operator-guide/limitations.md)
     for everything CAPTF does not do yet.

@@ -20,8 +20,10 @@ provide.
 
 !!! warning "Pre-alpha: treat this as a minimum, not a certification"
 
-    CAPTF is pre-alpha: no release is published yet, and no end-to-end run
-    against a live management cluster has happened (see [Project
+    CAPTF is pre-alpha: no release is published yet. It has run only in the
+    opt-in end-to-end suites on a local kind cluster, with the noop modules
+    and no real cloud; `clusterctl upgrade` and `move` have not run (see
+    [Compatibility](compatibility.md#what-is-tested) and [Project
     status](../index.md#project-status)). Treat the checklist as the
     minimum for a trial you intend to keep, not as a certification.
 
@@ -38,6 +40,9 @@ provide.
 | Access | Who may write specs and who may approve is decided | [Approver and writer split](#approver-and-writer-split) |
 | Network | The manager and the Job pods have egress policies | [Network policy](#network-policy) |
 | Jobs | Pod Security level, Job policy defaults and quotas fit | [Runner Jobs](#runner-jobs) |
+| Supply chain | You know what is scanned, signed and rebuilt, and how you pin images | [Supply chain](#supply-chain) |
+| Manager pod | The shipped pod security settings suit your policy | [Manager pod security](#manager-pod-security) |
+| Reporting | You know how to report a vulnerability and what is supported | [Vulnerability reporting](#vulnerability-reporting-and-supported-versions) |
 | After go-live | You know what to watch in the first week | [First week](#the-first-week) |
 
 ## Manager availability
@@ -234,6 +239,87 @@ change of the cluster's exports re-applies pools without approval. See
   RoleBinding. Size object-count quotas for retained Jobs: finished Jobs
   stay until pruned. See [Reconcile
   Errors](runbooks/reconcile-errors.md).
+
+## Manager pod security
+
+The shipped Deployment in `config/manager/manager.yaml` sets:
+
+- **Pod:** `runAsNonRoot: true`, user and group `65532`, and seccomp
+  `RuntimeDefault`.
+- **Container:** `readOnlyRootFilesystem: true`,
+  `allowPrivilegeEscalation: false`, `privileged: false`, and all
+  capabilities dropped.
+- **Scheduling:** a toleration for the `node-role.kubernetes.io/control-plane`
+  `NoSchedule` taint, so it may run on control-plane nodes. There is no
+  node selector, affinity, anti-affinity or PodDisruptionBudget.
+- **Probes:** liveness on `/healthz` (15s initial delay, 20s period) and
+  readiness on `/readyz` (5s, 10s), both on port 9440.
+- **Other:** one replica, a 10 second termination grace period, and
+  resources as in [Sizing](#sizing).
+
+This satisfies the `restricted` Pod Security profile for the manager's
+namespace; the Job pods are a separate matter, covered under
+[Runner Jobs](#runner-jobs).
+
+## Supply chain
+
+CAPTF publishes scanning results and a few build guarantees, but not signed
+artifacts. Plan your own verification on top.
+
+**Scanning.** The provider's `security` workflow runs on pushes to `main`,
+on pull requests and weekly (Monday 05:17 UTC). The scanners below fail
+their job on a finding, except CodeQL, which reports to code scanning:
+
+| Scan | What it checks | Notes |
+| --- | --- | --- |
+| CodeQL | Go code, `security-and-quality` queries | Runs only when the repository variable `ADVANCED_SECURITY` is `true`; alerts go to code scanning |
+| govulncheck | Reachable known vulnerabilities in the root and `api` modules | |
+| osv-scanner | Dependencies, recursively | A pull-request variant scans the change |
+| gitleaks | The full git history for secrets | |
+| gosec | Go source, with SARIF upload | |
+| Trivy, manifests | Misconfigurations in the rendered release manifest | Fails on HIGH and CRITICAL |
+| Trivy, repository | Vulnerabilities and secrets in the tree | Fails on HIGH and CRITICAL, ignoring unfixed |
+| Trivy, image | The `linux/amd64` manager image | Fails on HIGH and CRITICAL, ignoring unfixed |
+| hadolint, zizmor, actionlint | The Dockerfile and the workflows | |
+
+A separate `scorecard` workflow runs OpenSSF Scorecard on pushes to `main`
+and weekly, only when the repository variable `SCORECARD` is `true`.
+
+**The manager image.** It is built `FROM gcr.io/distroless/static:nonroot`,
+pinned by digest, and runs as `65532:65532` with `/manager` as the
+entrypoint. The same image is the runner. Pin the image you install by
+digest as well.
+
+**SBOM.** The `security` workflow produces an SPDX SBOM of the manager
+image, but only as a CI workflow artifact (`manager-image.spdx.json`); it is
+not attached to releases. The base images do publish an SBOM and a maximum-mode provenance
+attestation with each build.
+
+**No signatures.** The manager image and the release assets carry no cosign
+signature and no provenance attestation. The release flow
+(`make release`, GoReleaser for `tfcapi-lint`) produces a checksum file for
+`tfcapi-lint` only. Nothing in CAPTF verifies a module image's signature;
+see [Module image signatures](../concepts/security-model.md#pod-security).
+Verify by digest, and admit images through your own policy controller if you
+need signatures.
+
+**Base image rebuilds.** The base images, `terraform-base` and
+`opentofu-base`, are rebuilt weekly (Monday 05:17 UTC) with `apt-get
+upgrade`, so a current base tag carries recent Ubuntu fixes. A module image
+that pins a base by digest does not move with it: it gets OS fixes only
+when its pin is bumped (Dependabot proposes this) and the module image is
+rebuilt and re-published. Track both, and rebuild your own module images
+on the same schedule.
+
+## Vulnerability reporting and supported versions
+
+Report vulnerabilities privately through GitHub's private vulnerability
+reporting, on the Security tab of the affected repository. Do not open a
+public issue. The team aims to acknowledge a report within seven days, with no
+guaranteed response time. CAPTF is pre-1.0: fixes land on `main` and in the
+next release, with no backports to earlier releases, and the base images are
+rebuilt weekly, so use a current tag. The full policy is in
+[`SECURITY.md`](https://github.com/captf-io/cluster-api-provider-terraform/blob/main/SECURITY.md).
 
 ## The first week
 

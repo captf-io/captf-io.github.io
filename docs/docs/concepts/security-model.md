@@ -176,6 +176,9 @@ approve](approvals/operating.md#who-can-approve).
     module image's signature before running it: digest pinning fixes which
     image ran after the fact, it does not check who published it.
 
+    For what is scanned, what is published and what is unsigned, see
+    [Supply chain](../operator-guide/production-readiness.md#supply-chain).
+
 ## Pod security
 
 The Job's pod defaults satisfy the Pod Security `baseline` profile without

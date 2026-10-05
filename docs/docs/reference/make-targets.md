@@ -36,7 +36,7 @@ make lint test verify
 | --- | --- |
 | `make lint` | Style and correctness findings from `golangci-lint` in every module, including the e2e-tagged test code, and from `kube-api-linter` on `api/`. |
 | `make test` | The unit tests of every Go module, with the race detector. |
-| `make verify` | Every other consistency check: generated files, manifests, schemas, templates, alert rules and the test-tier guard. |
+| `make verify` | Every other consistency check: generated files, manifests, schemas, templates, alert rules, license headers and the test-tier guard. |
 
 After you change `api/v1alpha1` or a controller's kubebuilder markers, run
 `make generate manifests` first. `make fmt` formats Go code before you
@@ -208,6 +208,8 @@ faster when only one has failed. Several need `python3`, `git` or `podman`.
 | `verify-local-repository` | Generate the provider and both flavors from a clusterctl local repository of the release assets, offline and without a cluster. |
 | `verify-test-tiers` | Check that e2e code carries the `e2e` build tag and lives only in `test/e2e/` and `test/env/lifecycle/`. |
 | `check-licenses` | Check that no MPL-2.0 dependency of `tfcapi-lint` applies Exhibit B. |
+| `check-headers` | Check that every source file starts with the Apache-2.0 license header, copyright The CAPTF Authors. `.licenserc.yaml` lists the exempt files. Runs Apache SkyWalking Eyes in a container pinned by digest, with `CONTAINER_TOOL`. Part of `verify`. |
+| `fix-headers` | Add the Apache-2.0 license header to every source file that lacks it. |
 | `promtool-check` | Check the alert rules with `promtool`, and build the Prometheus component on `config/default`. |
 | `promtool-test` | Unit-test the alert rules. |
 

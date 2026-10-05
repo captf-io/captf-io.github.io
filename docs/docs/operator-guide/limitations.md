@@ -25,10 +25,14 @@ what has and has not been tested, see [Compatibility](compatibility.md).
   `v1alpha1`, and the module contract is `v1alpha1` and provisional: it may
   change before a real module has provisioned a cluster with it. See
   [Project status](../index.md#project-status).
-- **No end-to-end run against a live management cluster has happened.** The
-  tests are unit tests that mock the Kubernetes API and Job execution; CI
-  runs unit tests, lint and the offline verifications. Anything that needs a
-  real cluster, a real cloud or a real provider is untested: see
+- **End-to-end coverage is narrow and opt-in.** Two suites run on a local
+  kind cluster: one checks the installed components and a real reconcile,
+  and one drives the noop modules through a cluster, machines and a machine
+  pool. They are not in CI; you run them with `make e2e-foundation` and
+  `make e2e-noop`. No real cloud, no module that creates cloud resources,
+  `clusterctl upgrade` or `clusterctl move` has been exercised. The unit
+  tests mock the Kubernetes API and Job execution, and CI runs them with
+  lint and the offline verifications. See
   [Compatibility](compatibility.md#what-is-tested).
 
 ## Approvals and gates

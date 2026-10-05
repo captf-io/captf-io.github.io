@@ -20,9 +20,11 @@ administers the management cluster, not for cluster tenants.
 
 !!! info "Before you begin"
 
-    - A management cluster with Cluster API's core, bootstrap and
-      control-plane providers already initialized, and a `kubectl` context
-      pointing at it.
+    - A management cluster and a `kubectl` context pointing at it. On a
+      fresh cluster, `clusterctl init --infrastructure terraform` also
+      installs Cluster API's core, bootstrap (kubeadm) and control-plane
+      providers (see the [Quick start](../getting-started/quick-start.md)). On
+      a cluster where Cluster API is already initialized, it adds only CAPTF.
     - `clusterctl`, matching the version documented for the Cluster API release
       you run.
     - `cert-manager`, with the `cert-manager.io/v1` API available. `clusterctl
@@ -66,17 +68,24 @@ clusterctl init --config clusterctl.yaml --infrastructure terraform
 `clusterctl init --infrastructure terraform:vX.Y.Z` pins a specific
 released version instead of the newest one clusterctl can see.
 
-If you plan to use the ClusterClass flavor, enable the `ClusterTopology`
-feature gate before running `init` — it is alpha in Cluster API and off by
-default:
+On a fresh cluster this also installs the Cluster API core and kubeadm
+providers. If you plan to use the ClusterClass flavor, enable the
+`ClusterTopology` feature gate before running `init` — it is alpha in
+Cluster API and off by default:
 
 ```sh
 CLUSTER_TOPOLOGY=true clusterctl init --config clusterctl.yaml --infrastructure terraform
 ```
 
+`CLUSTER_TOPOLOGY=true` only takes effect when this `init` installs the
+core provider. If Cluster API's core is already installed, the variable
+changes nothing: enable the `ClusterTopology` feature gate on the core
+controller (`capi-controller-manager`) instead.
+
 ## What gets installed
 
-Everything below lands in one namespace, `captf-system`; `clusterctl init`
+Everything below lands in one namespace, `captf-system`, which the install
+creates as a `Namespace` object; `clusterctl init`
 also installs `cert-manager` itself when it is missing, in its own
 namespace.
 
@@ -94,8 +103,11 @@ namespace.
   `captf-validating-webhook-configuration`, one rule per kind, backed by the
   `captf-webhook-service` `Service`. Its serving certificate is a
   `cert-manager` `Certificate` (`captf-serving-cert`, issued by the
-  self-signed `Issuer` `captf-selfsigned-issuer`), mounted into the manager
-  pod and kept current by `cert-manager`'s CA injection.
+  self-signed `Issuer` `captf-selfsigned-issuer`). cert-manager writes it to
+  the Secret `captf-webhook-service-cert`, which the manager pod mounts
+  read-only at `/tmp/k8s-webhook-server/serving-certs`; CA injection keeps the
+  webhook configuration's CA current. The pod cannot start until that Secret
+  exists.
 - **RBAC** for the manager itself: the `ClusterRole` `captf-manager-role`
   and its `ClusterRoleBinding`, plus a leader-election `Role` and
   `RoleBinding` scoped to `captf-system`. The manager also creates a
@@ -103,6 +115,11 @@ namespace.
   first use, from the static `ClusterRole` `captf-runner`. See
   [RBAC](rbac.md) for what each role grants and for the per-namespace
   runner setup.
+
+The manager pod tolerates the `node-role.kubernetes.io/control-plane:NoSchedule`
+taint, and has liveness (`/healthz`) and readiness (`/readyz`) probes on the
+`healthz` port. For what to tune for production, see
+[Production Readiness](production-readiness.md).
 
 None of this installs a `TerraformClusterIdentity` or any Terraform*
 object: those come from templates you apply afterward, covered in
@@ -178,6 +195,7 @@ kubectl -n captf-system rollout status deployment/captf-controller-manager
 kubectl get crds -l cluster.x-k8s.io/provider=infrastructure-terraform
 kubectl get validatingwebhookconfigurations captf-validating-webhook-configuration
 kubectl -n captf-system get certificate captf-serving-cert
+kubectl -n captf-system get secret captf-webhook-service-cert
 ```
 
 The rollout command returns once the manager pod is ready. The CRD list
@@ -186,6 +204,21 @@ must both exist and the certificate must report `Ready=True`, cert-manager
 was able to issue the webhook's serving certificate: without it, webhook
 calls from the API server fail closed (`failurePolicy: Fail`) and every
 `Terraform*` create or update is rejected.
+
+If the manager pod sits in `ContainerCreating`, check the last command
+first: the pod mounts that Secret, and it does not exist until cert-manager
+has issued the certificate. `kubectl -n captf-system describe certificate
+captf-serving-cert` shows why issuance is stuck.
+
+If you installed the [Prometheus component](observability.md#enabling-the-prometheus-component),
+confirm who is allowed to scrape the metrics endpoint:
+
+```sh
+kubectl get clusterrolebinding captf-metrics-reader -o yaml
+```
+
+The `subjects` list should name your Prometheus ServiceAccount (the shipped
+default is `monitoring/prometheus-k8s`).
 
 `clusterctl init` itself prints the components it installed; `clusterctl
 describe cluster` (once you have created one) reports whether CAPTF's

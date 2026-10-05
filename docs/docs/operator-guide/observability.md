@@ -104,9 +104,20 @@ grants.
     transformers.
 
 The `ServiceMonitor` scrapes over HTTPS with `insecureSkipVerify` set,
-since the metrics server's certificate is self-signed by default; once you
-mount a CA-signed certificate, set `tlsConfig.ca` instead and drop
+since the metrics server's certificate is self-signed by default. The
+manager has no flag for the metrics certificate directory: the metrics
+server reads a certificate from controller-runtime's default,
+`/tmp/k8s-metrics-server/serving-certs/`, and generates a self-signed one
+when none is there. The shipped Deployment mounts nothing at that path, so
+to serve a CA-signed certificate, patch the Deployment to mount a Secret
+there, then set `tlsConfig.ca` on the `ServiceMonitor` and drop
 `insecureSkipVerify`.
+
+To check which subject the component lets scrape `/metrics`:
+
+```sh
+kubectl get clusterrolebinding captf-metrics-reader -o yaml
+```
 
 To confirm it works without waiting on Prometheus, read the endpoint
 yourself with the same kind of token Prometheus uses:

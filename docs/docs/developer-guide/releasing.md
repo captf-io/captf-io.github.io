@@ -47,6 +47,10 @@ GoReleaser only builds the `tfcapi-lint` binaries and checksums: it does not
 build the image or publish the release. `make release` builds and pushes the
 image, and `make release-github` publishes.
 
+The release assets are uploaded without signatures. The manager image is
+pinned by digest in `infrastructure-components.yaml`, which is what ties the
+components to one specific image build.
+
 ## Checklist
 
 1. If this release starts a new minor series, append it to `metadata.yaml`
@@ -75,10 +79,26 @@ image, and `make release-github` publishes.
 
     `release-preflight` refuses a dirty tree, an untagged HEAD, a malformed
     version, or a metadata change that is not append-only. `release` then
-    builds and pushes the manager image, reads its registry digest with
+    runs `docker-build` and `docker-push`, which build the image for the
+    host platform only and push it, reads its registry digest with
     `skopeo`, and builds the assets with the image pinned by that digest,
     so the published components never follow a moved tag. The assets land
     in `out/release/`.
+
+    !!! warning "`make release` publishes a single-architecture image"
+
+        `release` does not call `docker-buildx`, so the pushed image has the
+        architecture of the machine that ran it. The Makefile also has
+        `make docker-buildx`, which builds a multi-arch manifest list for
+        `PLATFORMS` (`linux/amd64,linux/arm64` by default) and requires
+        podman. `docker-push` pushes such a list with all its images when
+        `CONTAINER_TOOL` is podman. To publish both architectures, build and
+        push the list yourself with `IMG` set to the release image, for
+        example `make docker-buildx docker-push
+        IMG=ghcr.io/captf-io/cluster-api-provider-terraform:vX.Y.Z`, then
+        build the assets from its digest with `make release-assets
+        VERSION=vX.Y.Z RELEASE_IMG=<repo>@<digest>`. The digest is what
+        `make release-image-digest VERSION=vX.Y.Z` prints.
 6. Smoke-test from a local repository against a real cluster, by hand: see
     [Installing from a local repository](#installing-from-a-local-repository).
     `make e2e-foundation e2e-noop` also runs the opt-in e2e suites on a

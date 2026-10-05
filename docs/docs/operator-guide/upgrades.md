@@ -37,6 +37,11 @@ target one:
   records every contract-visible change, newest first, whether or not the
   contract's own version number moved.
 
+The project is pre-1.0 and does not backport: fixes land on `main` and in
+the next release, never in an earlier one (see
+[SECURITY.md](https://github.com/captf-io/cluster-api-provider-terraform/blob/main/SECURITY.md)).
+Staying on an old release means staying without later fixes.
+
 ## Upgrade with clusterctl
 
 ```sh
@@ -59,6 +64,15 @@ clusterctl upgrade apply --infrastructure terraform:vX.Y.Z
     versions means reinstalling from a local repository, the same way as a
     first install (see [Installing from a local
     repository](../developer-guide/releasing.md#installing-from-a-local-repository)).
+
+## The runner image after an upgrade
+
+The release components pin the manager image by digest, and
+`CAPTF_MANAGER_IMAGE` is set to the same reference, so after an upgrade the
+runner image is the same build as the manager. An upgrade replaces the
+installed manifests, so an override you set with
+[`--runner-image`](configuration.md#--runner-image) is not carried over:
+re-apply it after each upgrade.
 
 ## Contract versioning
 

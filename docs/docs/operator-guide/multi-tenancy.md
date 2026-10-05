@@ -116,9 +116,13 @@ Consequences for a platform team:
   the other's state and credentials.
 - **An untrusted or experimental module gets its own namespace**, with its
   own identity whose credentials can do no more than that experiment needs.
-- **The manager itself reads Secrets cluster-wide**, as any provider that
-  uses the Kubernetes state backend does. Protect the manager's namespace
-  and its image supply chain accordingly.
+- **The manager itself holds Secret access cluster-wide**: its ClusterRole
+  grants get, list, watch, create, update, patch and delete on Secrets in
+  every namespace, and it can bind the `captf-runner` ClusterRole in any
+  namespace. `--namespace` narrows what it watches, not what it may do, and a
+  namespaced install is not supported (see [The grant is
+  cluster-wide](rbac.md#the-grant-is-cluster-wide)). Protect the manager's
+  namespace and its image supply chain accordingly.
 
 ### Override ServiceAccounts
 

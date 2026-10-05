@@ -99,9 +99,14 @@ The full target list, grouped the same way, is in
 
 - **Commits**: an imperative subject in `<subsystem>: <summary>` form, such
     as `runner: name the exit codes` — check `git log` for the subsystem names already in use.
-- **License header**: every hand-written Go file starts with the Apache 2.0
-    header the other files in its package carry; `hack/boilerplate.go.txt` is
-    the header `controller-gen` writes on `api/v1alpha1/zz_generated.deepcopy.go`.
+- **License header**: every source file carries the full Apache-2.0 header
+    with the copyright line "Copyright <year> The CAPTF Authors."
+    `make check-headers` fails on a file without it and is part of
+    `make verify`; CI runs it in the `license-headers` job, so it needs a
+    container engine (`CONTAINER_TOOL`). `make fix-headers` adds the header to
+    every file missing it. `.licenserc.yaml` defines the header and lists the
+    files that are exempt. `hack/boilerplate.go.txt` is the header
+    `controller-gen` writes on `api/v1alpha1/zz_generated.deepcopy.go`.
 - **Documentation comments**: `hack/godoccheck` (`make verify-godoc`, part of
     `make verify`) enforces one rule per declaration and one per package,
     everywhere except generated files and `hack/tools`:

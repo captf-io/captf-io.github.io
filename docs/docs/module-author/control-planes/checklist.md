@@ -36,8 +36,9 @@ Some `lint`-worthy rules have no check today; those are called out in
 
 !!! warning "No `e2e` row has been verified"
 
-    The project has no end-to-end suite today, so no `e2e` row below has
-    been verified against a real control plane.
+    The opt-in end-to-end suites drive the noop modules without a control
+    plane, so no `e2e` row below has been verified against a real control
+    plane.
 
 ## Endpoint and load balancer
 
