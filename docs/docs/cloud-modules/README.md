@@ -147,7 +147,9 @@ never downloads a provider at run time.
 | `edge-opentofu`, `edge-terraform` | The newest build of `main` |
 
 Pin a release tag, or a digest, in anything you keep. The examples in each
-cloud repository pin `v0.1.0-opentofu`.
+cloud repository pin `v0.1.0-opentofu`. [Releasing a
+Module](../module-author/releasing.md) covers how these tags are published
+and which reference to pin.
 
 ## What you bring
 
@@ -193,6 +195,8 @@ layout, tags on every resource, `terraform validate` and `tofu validate`
 [`tfcapi-lint`](../module-author/tfcapi-lint.md), shellcheck and a trivy
 scan. To make a fork your own, change the registry and image names in the
 `Makefile` and the workflow, run `make lock`, then `make verify`.
+[Module Repository Layout](../module-author/repository-layout.md#starting-point)
+walks through forking a set or starting from the no-op modules.
 
 The no-op modules are the smallest modules that meet the contract, and the
 starting point of [Your First Module](../getting-started/first-module.md).

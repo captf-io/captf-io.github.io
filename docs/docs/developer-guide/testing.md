@@ -79,7 +79,9 @@ verify-version` run them before the check itself.
 
 The e2e tier needs `podman` or `docker`, and network access on the first
 run to download the pinned kind, Cluster API and cert-manager assets. Every
-version and image is pinned in `test/framework/versions.go`.
+version and image is pinned in `test/framework/versions.go`. The suites run
+the pinned noop images; to test your own module images end to end, see
+[Testing a Module](../module-author/testing.md#end-to-end).
 
 ### The test environment
 

@@ -194,6 +194,8 @@ cluster that has the CAPTF CRDs, cert-manager and Cluster API.
 
     - [Testing](testing.md)
     - [Releasing](releasing.md)
+    - [Working Across Repositories](cross-repo.md) for a change that spans
+      more than one repository.
     - [Writing Documentation](documentation.md), [Contributing to the
       Docs](docs-workflow.md) and [Updating the Website](website.md) for
       changes to captf.io itself.

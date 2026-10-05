@@ -19,6 +19,10 @@
     "icon": "lucide/book-a",
     "subtitle": "Terms used across the docs"
   },
+  "reference/repositories.md": {
+    "icon": "lucide/map",
+    "subtitle": "Every repo and what it ships"
+  },
   "concepts/security-model.md": {
     "icon": "lucide/shield-check",
     "subtitle": "Trust boundaries and guards"
@@ -246,6 +250,18 @@
   "module-author/tfcapi-lint.md": {
     "icon": "lucide/spell-check",
     "subtitle": "Check a module for contract errors"
+  },
+  "module-author/repository-layout.md": {
+    "icon": "lucide/folder-tree",
+    "subtitle": "Structure a repo of modules"
+  },
+  "module-author/testing.md": {
+    "icon": "lucide/flask-conical",
+    "subtitle": "From unit tests to end to end"
+  },
+  "module-author/releasing.md": {
+    "icon": "lucide/tag",
+    "subtitle": "Tags, images and publishing"
   },
   "module-author/control-planes/README.md": {
     "icon": "lucide/crown",
@@ -522,6 +538,10 @@
   "developer-guide/contributing.md": {
     "icon": "lucide/git-pull-request",
     "subtitle": "Set up, build and send a change"
+  },
+  "developer-guide/cross-repo.md": {
+    "icon": "lucide/git-merge",
+    "subtitle": "Changes that span repositories"
   },
   "developer-guide/testing.md": {
     "icon": "lucide/flask-conical",

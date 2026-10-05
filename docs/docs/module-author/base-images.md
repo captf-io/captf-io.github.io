@@ -223,5 +223,8 @@ provisioner, fails on it.
 !!! related "See also"
 
     - [Image Contract](image-contract.md)
+    - [Module Repository Layout](repository-layout.md)
+    - [Testing a Module](testing.md)
+    - [Releasing a Module](releasing.md)
     - [tfcapi-lint](tfcapi-lint.md)
     - [Compatibility](../operator-guide/compatibility.md)

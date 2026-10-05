@@ -126,6 +126,9 @@ nav = [
     { "Runtime Environment" = "docs/module-author/runtime-environment.md" },
     { "Module Design Patterns" = "docs/module-author/design-patterns.md" },
     { "Linting with tfcapi-lint" = "docs/module-author/tfcapi-lint.md" },
+    { "Module Repository Layout" = "docs/module-author/repository-layout.md" },
+    { "Testing a Module" = "docs/module-author/testing.md" },
+    { "Releasing a Module" = "docs/module-author/releasing.md" },
     { "Control-Plane Integration" = [
       "docs/module-author/control-planes/README.md",
       { "KubeadmControlPlane" = "docs/module-author/control-planes/kubeadm.md" },
@@ -214,6 +217,7 @@ nav = [
     ] },
   ] },
   { "Reference" = [
+    { "Repositories and Images" = "docs/reference/repositories.md" },
     { "Custom Resources" = [
       "docs/reference/resources/README.md",
       { "TerraformCluster" = "docs/reference/resources/terraformcluster.md" },
@@ -248,6 +252,7 @@ nav = [
   ] },
   { "Contributing" = [
     { "Contributing" = "docs/developer-guide/contributing.md" },
+    { "Working Across Repositories" = "docs/developer-guide/cross-repo.md" },
     { "Testing" = "docs/developer-guide/testing.md" },
     { "Releasing" = "docs/developer-guide/releasing.md" },
     { "Docs and Website" = [
@@ -578,6 +583,9 @@ https://captf.io/llms-full.txt is the whole site in one file. News: https://capt
   { "docs/module-author/runtime-environment.md" = "What a module sees when the runner executes it: working directory, environment, provider mirror, command order, failure reporting and size limits." },
   { "docs/module-author/design-patterns.md" = "Design modules that behave well under CAPTF: where resources belong, stable exports, health, autoscaling, import, destroy safety, secrets and testing." },
   { "docs/module-author/tfcapi-lint.md" = "Install tfcapi-lint, lint a module or image against the CAPTF contracts, use strict mode and exit codes, and run it in CI." },
+  { "docs/module-author/repository-layout.md" = "How to structure a repository of CAPTF modules, modelled on the reference repos: layout, lock files, runtime support, quality gates and docs, and how to start one." },
+  { "docs/module-author/testing.md" = "Test a CAPTF module and its image from fastest to slowest: format and validate, mocked unit tests, lint, image smoke test, and end-to-end on kind." },
+  { "docs/module-author/releasing.md" = "How CAPTF module images are named, tagged and published from the reference repositories, and which image reference to put in spec.source.image." },
   { "docs/module-author/control-planes/README.md" = "How CAPTF cluster and machine modules integrate with the KubeadmControlPlane and RKE2ControlPlane providers, and the load-balancer patterns that fit." },
   { "docs/module-author/control-planes/kubeadm.md" = "What KubeadmControlPlane and CABPK require of your CAPTF cluster and machine modules: endpoint, load balancer, lifecycle and a module checklist." },
   { "docs/module-author/control-planes/rke2.md" = "What RKE2ControlPlane and CAPRKE2 require of your CAPTF cluster and machine modules: listeners, addresses, lifecycle and a module checklist." },
@@ -642,6 +650,7 @@ https://captf.io/llms-full.txt is the whole site in one file. News: https://capt
   { "docs/concepts/jobs/leader-election.md" = "Configure leader election and see what a manager failover does to Jobs in flight." },
 ]
 "Reference" = [
+  { "docs/reference/repositories.md" = "A map of the captf-io GitHub organization: every repository, what it holds and publishes, the container images and their tags, release assets and versioning." },
   { "docs/reference/resources/README.md" = "Every CAPTF custom resource, one page each: what it is, YAML examples, and every spec and status field with its default, validation and behavior." },
   { "docs/reference/resources/terraformcluster.md" = "Field-by-field reference for the TerraformCluster kind: spec, status, conditions, printer columns, admission rules and lifecycle." },
   { "docs/reference/resources/terraformclustertemplate.md" = "Field-by-field reference for the TerraformClusterTemplate kind: the template a ClusterClass uses to create a TerraformCluster, with its immutability rules." },
@@ -666,6 +675,7 @@ https://captf.io/llms-full.txt is the whole site in one file. News: https://capt
 ]
 "Contributing" = [
   { "docs/developer-guide/contributing.md" = "Build, lint, test and verify CAPTF itself: repository layout, prerequisites, conventions and running the manager against a real cluster." },
+  { "docs/developer-guide/cross-repo.md" = "Work across the captf-io repositories: a shared workspace, the order of a contract change, files that must stay identical, license headers and base image bumps." },
   { "docs/developer-guide/testing.md" = "What make test runs, the unit and e2e tiers, coverage floors, golden files, the test environment, and how to run one package or one test." },
   { "docs/developer-guide/releasing.md" = "Cut a CAPTF release: what it consists of, the checklist, and installing the assets from a local repository." },
   { "docs/developer-guide/docs-workflow.md" = "Change the CAPTF docs or website: set up a preview, edit or add a page, run the checks and open a pull request." },

@@ -160,7 +160,8 @@ is a new tag referenced by a new `Terraform*Template`. The controller pins
 the digest it actually ran after the first successful apply and, for
 immutable machines, uses that digest for every later drift and destroy
 Job; see [Security Model](../concepts/security-model.md#image-pinning-by-digest)
-for the full mechanics and why it matters.
+for the full mechanics and why it matters. [Releasing a
+Module](releasing.md) describes the tags the reference repositories publish.
 
 Contract version is not declared in the image: labels are informational.
 The controller injects the contract it generates against as

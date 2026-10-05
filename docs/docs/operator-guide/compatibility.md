@@ -194,4 +194,6 @@ status](../index.md#project-status).
 
     - [Installation](installation.md) and [Upgrades](upgrades.md).
     - [Testing](../developer-guide/testing.md) for how the suite is organized.
+    - [Supporting Terraform and OpenTofu](../module-author/repository-layout.md#supporting-terraform-and-opentofu)
+      for the runtime floors a module set validates on.
     - [Production Readiness](production-readiness.md).
