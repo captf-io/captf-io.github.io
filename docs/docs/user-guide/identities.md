@@ -114,6 +114,12 @@ spec:
 | `list` and `selector` both set | The union of the two |
 | `{}` (empty object) | Rejected: write `selector: {}` for every namespace instead |
 
+CAPTF reads the namespace's labels straight from the API server, not from a
+cache, so a label change applies at once. If the selector is invalid, or the
+namespace no longer exists, the namespace is denied; only `selector: {}`
+allows a namespace that does not exist. An invalid selector is a denial, not
+a retry.
+
 An empty selector reads as "every namespace" rather than "no namespace",
 so `allowedNamespaces: {}` is rejected outright rather than treated as one
 or the other. `list` accepts up to 100 namespace names; `selector` follows

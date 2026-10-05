@@ -77,9 +77,10 @@ A `TerraformCluster` that is deleting lists, through the uncached reader,
 the `TerraformMachine` and `TerraformMachinePool` objects in its namespace
 that carry its cluster name in the `cluster.x-k8s.io/cluster-name` label.
 While any exist it sets `DeletionBlocked=True`/`DependentsExist` with a
-count and requeues every 30 seconds, and starts no destroy. When none are
+count and the names of up to three Machines and three Pools, sorted (then "and N more"), and requeues every 30 seconds, and starts no destroy. When none are
 left it sets `DeletionBlocked=False`/`NotBlocked` and carries on.
 
+- Use `kubectl get terraformmachines,terraformmachinepools -l cluster.x-k8s.io/cluster-name=<name>` for the full list.
 - The lists are unfiltered by `--watch-filter`: machines of another manager
   instance count too.
 - The cluster name is the object's own label, else its owning Cluster's

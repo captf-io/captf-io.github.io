@@ -263,11 +263,17 @@ contract](../module-author/contract/README.md).
 | --- | --- | --- |
 | `True` | `OutputsValid` | The outputs are valid. |
 | `True` | `InstancesTruncated` | A pool's `instances` output had more entries than the controller keeps, and CAPTF shortened it. The pool still provisions and nothing else about its outputs is invalid. See the [`MachinePool` role](../module-author/contract/v1alpha1/machinepool.md). |
-| `False` | `FailureDomainMismatch` | A machine's `failure_domain` output differs from the failure domain it requested. |
+| `False` | `FailureDomainMismatch` | The Machine requested a failure domain (`spec.failureDomain`) and the module's `failure_domain` output is `null` or differs from it. With no request, any placement is valid. |
 | `False` | `OutputsInvalid` | An output violates the contract or a Cluster API marker. The message names it. |
 | `False` | `OutputsMissing` | A required output is not declared. Check the module with [`tfcapi-lint`](../module-author/tfcapi-lint.md). |
 | `False` | `ProviderIDChanged` | `provider_id` changed after it was first written. It is immutable. Delete the `Machine` to replace the instance. |
 | `Unknown` | `OutputsPending` | Required outputs are `null`, so the first apply has not produced them yet. |
+
+When several problems exist at once, the reason is the first that applies, in
+this order: `OutputsMissing`, `OutputsInvalid`, `FailureDomainMismatch`,
+`ProviderIDChanged`, `OutputsPending`, `InstancesTruncated`, `OutputsValid`.
+The message is not limited to that reason: it lists every problem found,
+separated by `; `.
 
 ## InfrastructureHealthy
 

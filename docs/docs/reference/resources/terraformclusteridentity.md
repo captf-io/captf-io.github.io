@@ -139,7 +139,7 @@ validation (`MinItems=1`).
 applied to the labels of the `Namespace` object, so `matchLabels` and
 `matchExpressions` both work. CAPTF reads the namespace of the referencing
 object at reconcile time. It does not list namespaces ahead of time. A
-selector that is invalid, or a namespace that does not exist, denies access;
+selector that is invalid, or a namespace that does not exist, denies access (except `selector: {}`, which allows every namespace, existing or not; an invalid selector is a denial, not a retry); the labels are read from the API server uncached, so a label change applies at once;
 a failed read of the namespace leaves the check `Unknown`
 (`IdentityCheckFailed`) and retries.
 

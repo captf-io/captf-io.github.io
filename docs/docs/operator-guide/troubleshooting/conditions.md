@@ -234,9 +234,14 @@ Whether the module's outputs, read from state, match the role's contract.
 | `True` | `InstancesTruncated` | A pool's `instances` output had more than 1000 entries; `status.instances` keeps the first 1000. The pool still provisions. | A very large pool. | Usually nothing. Count against the contract's cap. | [MachinePool role](../../module-author/contract/v1alpha1/machinepool.md) |
 | `False` | `OutputsMissing` | A required output is not declared. | The module lacks an output its role requires. | Add the output. Check the module with `tfcapi-lint`. | [tfcapi-lint](../../module-author/tfcapi-lint.md) |
 | `False` | `OutputsInvalid` | An output breaks the contract or a Cluster API marker. | A wrong type, shape or value. The message names the output. | Fix the module's output. | [Module contract](../../module-author/contract/README.md) |
-| `False` | `FailureDomainMismatch` | A machine's `failure_domain` output differs from the one its Machine requested. | The module placed the instance elsewhere. | Honor the requested failure domain in the module. | [Machine role](../../module-author/contract/v1alpha1/machine.md) |
+| `False` | `FailureDomainMismatch` | The Machine requested a failure domain (`spec.failureDomain`) and the module's `failure_domain` output is null or differs from it. With no request, any placement is fine. | The module placed the instance elsewhere, or does not report `failure_domain`. | Honor the requested failure domain in the module. | [Machine role](../../module-author/contract/v1alpha1/machine.md) |
 | `False` | `ProviderIDChanged` | `provider_id` changed after it was first written. It is immutable. | The module replaced the instance outside Cluster API's replacement, or the output is unstable. | Do not edit `spec.providerID`. Delete the Machine to replace the instance. | [Machine role](../../module-author/contract/v1alpha1/machine.md) |
 | `Unknown` | `OutputsPending` | Required outputs are null, or there is no state yet. | The first apply has not finished. | Wait for the apply. | [Jobs](../../concepts/jobs/troubleshooting.md) |
+
+With several problems at once, the reason is the first that applies:
+`OutputsMissing`, `OutputsInvalid`, `FailureDomainMismatch`,
+`ProviderIDChanged`, `OutputsPending`, `InstancesTruncated`, `OutputsValid`.
+The message lists every problem, separated by `; `, so read it in full.
 
 ## InfrastructureHealthy
 
