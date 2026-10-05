@@ -1,5 +1,5 @@
 ---
-description: "How to structure a repository of CAPTF modules, modelled on the reference repos: layout, lock files, runtime support, quality gates and docs, and how to start one."
+description: "How the CAPTF reference modules are laid out, one module per repository, and how the module images are built from separate image repositories."
 authors:
   - "The CAPTF Authors"
 icon: lucide/folder-tree
@@ -8,14 +8,23 @@ subtitle: "Structure a repo of modules"
 
 # Module Repository Layout
 
-A module repository holds one root module for each CAPTF role (`cluster`,
-`machine`, `machinepool`), the Dockerfiles that turn each into an image, and
-the checks that keep them consistent. The five cloud repositories
-([`aws-modules`](https://github.com/captf-io/aws-modules) and its siblings)
-share one layout and one rulebook, and
-[`noop-modules`](https://github.com/captf-io/noop-modules) is the smallest
-working version of it. This page describes that layout and how to start your
-own.
+The reference modules use one repository for each module. A repository holds
+the root module for one CAPTF role (`cluster`, `machine` or `machinepool`) at
+its root, and the checks that keep it consistent. It is named
+`terraform-<provider>-<role>`, for example
+[`terraform-aws-cluster`](https://github.com/captf-io/terraform-aws-cluster),
+and is published on GitHub and on the Terraform Registry as
+`captf-io/<role>/<provider>`. The providers are `aws`, `azure`, `google`,
+`oci`, `openstack` and `noop`; OpenStack has no `machinepool`. The 14 cloud
+repositories share one layout and one rulebook, and the three
+[`terraform-noop-*`](https://github.com/captf-io/terraform-noop-cluster)
+repositories are the smallest working version of it.
+
+The module images (`ghcr.io/captf-io/<cloud>-<role>`) are built from separate
+repositories, [`aws-modules`](https://github.com/captf-io/aws-modules) and its
+siblings, which hold the Dockerfiles, the lock files and the image smoke test.
+This page describes the module repositories first and the image repositories
+[after them](#the-image-repositories).
 
 The image contract is in [Image Contract](image-contract.md); this page covers
 only how a repository is organized.
@@ -24,94 +33,96 @@ only how a repository is organized.
 
 There are two routes.
 
-**Fork a reference cloud repository.** Take the repository closest to your
-target. You inherit the rulebook, the gates, the CI workflow and a working
-test suite, and you replace the cloud-specific resources. Choose this when
-you are building modules for a real cloud or platform and want the same
-quality bar as the reference sets.
+**Fork a reference cloud repository.** Take the `terraform-*` repository
+closest to your target. You inherit the rulebook, the gates, the CI workflow
+and a working test suite, and you replace the cloud-specific resources. Choose
+this when you are building modules for a real cloud or platform and want the
+same quality bar as the reference sets.
 
-To publish the fork under your own registry and name, change:
+To publish the fork under your own name, change:
 
-- `CLOUD` and `REGISTRY` in the `Makefile`.
-- The image names in `.github/workflows/build.yml`.
-- The provider pins in each role's `versions.tf`, and the provider blocks in
+- `CLOUD` and `ROLE` in the `Makefile`, and its header comment.
+- The provider pins in `versions.tf`, and the provider blocks in
   `providers.tf` and the plugin in `.tflint.hcl` to match.
-- `MACHINE_CAPACITY` and `MACHINE_ARCH` in the `Makefile`: the capacity and
-  architecture labels of the machine image, describing the module's default
-  instance shape. Leave both empty if the machine module has no default shape,
-  as in `openstack-modules`.
-- `.trivyignore.yaml`, which carries ignores specific to the original
-  resources.
+- `TFCAPI_LINT_ALLOW` in the `Makefile`, if you accept a `tfcapi-lint`
+  warning, and `.trivyignore.yaml`, which carries ignores specific to the
+  original resources.
+- The README, `DESIGN.md` and `examples/`, which describe the original.
 
-Then rerun `make lock`, and run `make verify` and `make test`. A role you do
-not need is deleted along with its directory: the `ROLES` variable lists the
-directories that hold a `versions.tf`, so the Makefile follows; also remove the
-role from the publish matrix in `.github/workflows/build.yml`. `openstack-modules`
-has no `machinepool/` because OpenStack has no native scaling group.
+Then run `make verify`. A role you do not need is a repository you do not
+fork. To ship images as well, fork the matching `<cloud>-modules`
+repository too (see [the image repositories](#the-image-repositories)).
 
-**Start from `noop-modules`.** It has all three roles, both Dockerfiles, a
-smoke test and nothing else: every resource is a `terraform_data`, there are no
-providers and no lock files, and the Makefile has `help`, `build`, `test` and
-the license-header checks only. Choose this when you are writing a module for
-one site or one platform, or when you want to grow the checks yourself. You can
-adopt the reference gates later by copying `hack/`, `CONVENTIONS.md` and the
-Makefile targets from a cloud repository.
+**Start from `terraform-noop-*`.** Each repository has one role, a handful of
+files and nothing else: every resource is a `terraform_data`, there are no
+providers, and the checks are format, `validate` on both runtimes and their
+floors, an apply and destroy of `test/root` (every contract input), and
+license headers. Choose this when you are writing a module for one site or one
+platform, or when you want to grow the checks yourself. You can adopt the
+reference gates later by copying `hack/`, `CONVENTIONS.md` and the Makefile
+targets from a cloud repository. To build images, start from
+[`noop-modules`](https://github.com/captf-io/noop-modules).
 
 !!! note
 
-    The cloud repositories keep `CONVENTIONS.md`, `.dockerignore`,
-    `hack/check-layout.sh`, `hack/tf-run.sh` and `test/smoke.sh` identical. If
-    you maintain several repositories, keep them identical in yours too.
+    The cloud repositories keep `CONVENTIONS.md`, `hack/tf-run.sh`,
+    `hack/check-layout.sh`, `hack/check-shell.sh`, `hack/check-tags.sh`,
+    `hack/testdata/`, `.gitignore`, `.licenserc.yaml`,
+    `.github/workflows/ci.yml` and `.github/dependabot.yml` identical. If you
+    maintain several repositories, keep them identical in yours too; nothing
+    enforces it, so apply a change everywhere and `diff` against one of them.
 
 ## The layout
 
-The tree of a reference repository, modelled on
-[`CONVENTIONS.md`](https://github.com/captf-io/aws-modules/blob/main/CONVENTIONS.md)
+The tree of a reference module repository, modelled on
+[`CONVENTIONS.md`](https://github.com/captf-io/terraform-aws-cluster/blob/main/CONVENTIONS.md)
 section 1:
 
 ```text
-<cloud>-modules/
-  README.md                 what the modules are, images, quick start, forking
+terraform-<provider>-<role>/
+  README.md                 what the module creates, how to develop it
   CONVENTIONS.md            the rulebook for module code
-  DESIGN.md                 why the modules look the way they do
+  DESIGN.md                 why the module looks the way it does
   LICENSE.md                Apache-2.0
-  Makefile                  every check and build; `make help`
-  Dockerfile.terraform      module images on the terraform-base image
-  Dockerfile.opentofu       module images on the opentofu-base image
-  .dockerignore .gitignore .tflint.hcl .trivyignore.yaml .licenserc.yaml
-  .github/workflows/build.yml  .github/dependabot.yml
+  Makefile                  every check; `make help`
+  .gitignore .licenserc.yaml .tflint.hcl .trivyignore.yaml
+  .github/workflows/ci.yml  .github/dependabot.yml
   hack/                     check-layout.sh, check-tags.sh, tags.json,
                             check-shell.sh, tf-run.sh, testdata/
-  locks/terraform/<role>.terraform.lock.hcl
-  locks/opentofu/<role>.terraform.lock.hcl
   examples/                 README.md, identity Secret, manifests
-  test/smoke.sh             image smoke test
-  cluster/ machine/ machinepool/      one directory per role
-    *.tf  templates/*.tftpl  tests/*.tftest.hcl  README.md
+  *.tf  templates/*.tftpl  tests/*.tftest.hcl
+                            the root module, at the repository root
 ```
+
+The repository also carries the community files (`CODE_OF_CONDUCT.md`,
+`CONTRIBUTING.md`, `SECURITY.md`, `CODEOWNERS`, the pull request template).
+It has no `Dockerfile`, no `locks/` and no `test/smoke.sh`: nothing in it
+builds an image.
 
 `hack/testdata/` holds good and bad fixtures: `check-layout.sh` runs itself
 against them, so every rule it enforces has a test. `hack/tf-run.sh` runs one
-Terraform or OpenTofu action for one role in a digest-pinned container, and is
-what the Makefile calls; you can run it by hand to reproduce one cell of
+Terraform or OpenTofu action for the module in a digest-pinned container, and
+is what the Makefile calls; you can run it by hand to reproduce one cell of
 `make validate`.
 
-Three things are never committed. `.gitignore` lists them:
+Two things are never committed. `.gitignore` lists them:
 
-- `.terraform/` directories.
-- A `.terraform.lock.hcl` inside a role directory. Lock files live under
-  `locks/`.
+- `.terraform/` directories and any `.terraform.lock.hcl`. No lock file is
+  committed (see [Lock files and the provider
+  mirror](#lock-files-and-the-provider-mirror)).
 - State files (`*.tfstate*`), and the local `build/`, `.cache/` and `.tools/`
   directories the Makefile creates.
 
-`.dockerignore` goes the other way and lists what an image does receive: only
-the role directories and `locks/`. Tests, READMEs, `.terraform/` and lock files
-are left out of `/captf/module`.
+The `terraform-noop-*` repositories are lighter: `main.tf`, `variables.tf`,
+`outputs.tf` and `versions.tf` at the root, a `test/root` that sets every
+contract input, a `Makefile` with `help`, `fmt`, `validate`, `test` and the
+license-header targets, and `hack/tf-run.sh`. They have no `CONVENTIONS.md`.
 
 ## Inside a role directory
 
-The full rules are in
-[`CONVENTIONS.md`](https://github.com/captf-io/aws-modules/blob/main/CONVENTIONS.md)
+The module sits at the repository root, one role to a repository. The full
+rules are in
+[`CONVENTIONS.md`](https://github.com/captf-io/terraform-aws-cluster/blob/main/CONVENTIONS.md)
 sections 2 and 3. The shape of them:
 
 **One block per file.** Every `.tf` file holds exactly one `resource` or
@@ -166,65 +177,67 @@ whatever `terraform fmt` and `tofu fmt` produce.
 
 **Variables and outputs.** Contract inputs use exactly the contract's names
 and types, and every output has a `description`. Names, tags, health and
-exports have their own sections in `CONVENTIONS.md`. The reference sets
-document the same decisions per role in their READMEs.
+exports have their own sections in `CONVENTIONS.md`. Each repository's
+`DESIGN.md` documents the same decisions for its role.
 
-`noop-modules` is simpler on purpose: each role has `main.tf`, `variables.tf`,
-`outputs.tf` and `versions.tf`. The one-block-per-file rule is a convention of
-the cloud sets, enforced by their `check-layout.sh`; the image contract does
-not require it.
+The `terraform-noop-*` modules are simpler on purpose, with a single
+`main.tf`. The one-block-per-file rule is a convention of the cloud sets,
+enforced by their `check-layout.sh`; the image contract does not require it.
 
 ## Lock files and the provider mirror
 
-Provider versions are pinned twice: exactly in `versions.tf`, and with hashes
-in a lock file. The lock files live outside the role directories, at
-`locks/<runtime>/<role>.terraform.lock.hcl`, for two reasons:
+Provider versions are pinned exactly in `versions.tf`, and a module repository
+commits no lock file (`CONVENTIONS.md` section 5). `.gitignore` excludes
+`**/.terraform.lock.hcl`, and every `init` in the Makefile and in CI resolves
+the exact pins afresh, on a staged copy of the module that is thrown away
+with the stage. One lock file could not serve both runtimes anyway: Terraform
+drops entries for registry hosts the configuration does not use, and
+OpenTofu's provider builds have different hashes. A provider upgrade is its
+own commit: bump the pin, then `make verify`.
 
-- One lock file cannot serve both runtimes. Terraform drops entries for
-  registry hosts the configuration does not use, and OpenTofu's provider
-  builds have different hashes.
-- The role directory is what ships in the image, and the image should not
-  carry them. `.dockerignore` excludes lock files from `/captf/module`.
+CAPTF never reads a module's lock file at run time: the controller generates
+the root module, and the image's provider mirror plus the exact pin decide
+what runs.
 
-`make lock` regenerates all of them, for the platforms `linux_amd64`,
-`linux_arm64` and `darwin_arm64`. Every `init` in the Makefile and the
-Dockerfiles runs on a staged copy of the role with its lock file, with
-`-lockfile=readonly`, so a stale lock fails the build rather than updating
-silently. A provider upgrade is its own commit: bump the pin, run
-`make lock`, then `make verify`.
+The lock files and the mirror belong to the image build, in the `<cloud>-modules`
+repositories. There the lock files live outside the role directories, at
+`locks/<runtime>/<role>.terraform.lock.hcl`, and the role directory is what
+ships in the image, which should not carry them. `make lock` regenerates all
+of them, for the platforms `linux_amd64`, `linux_arm64` and `darwin_arm64`.
+Every `init` in that Makefile and in the Dockerfiles runs on a staged copy of
+the role with its lock file, with `-lockfile=readonly`, so a stale lock fails
+the build rather than updating silently. A provider upgrade is a bump of the
+pin in the module, then `make lock` in the image repository.
 
 The image's `mirror` stage copies the role and its lock file and runs
 `providers mirror` for `linux_amd64` and `linux_arm64`, which produces the
 hermetic mirror at `/captf/providers`. See
 [Building a module image](base-images.md#building-a-module-image) and
 [One Dockerfile for every role](base-images.md#one-dockerfile-for-every-role).
-CAPTF never reads a module's lock file at run time: the controller generates
-the root module, and the mirror plus the exact pin decide what runs. The locks
-pin development, CI and image builds.
-
-A module with no providers, like `noop-modules`, has no locks. Its mirror stage
-runs `tofu get` and creates an empty `/captf/providers`.
+A module with no providers, like the noop modules, has no locks. Its mirror
+stage runs `tofu get` and creates an empty `/captf/providers`.
 
 ## Supporting Terraform and OpenTofu
 
-Every module repository ships two images per role, one on each runtime: a
-`terraform` image built `FROM` [`terraform-base`](base-images.md) and an
-`opentofu` image built `FROM` `opentofu-base`. Both are built from the same
-module source, from the same role directory, so the module has to work on both.
-The tags are `vX.Y.Z-terraform` and `vX.Y.Z-opentofu`.
+Every module ships two images per role, one on each runtime: a `terraform`
+image built `FROM` [`terraform-base`](base-images.md) and an `opentofu` image
+built `FROM` `opentofu-base`. Both are built from the same module source, so
+the module has to work on both. The tags are `vX.Y.Z-terraform` and
+`vX.Y.Z-opentofu`.
 
-**Version floor.** In the cloud sets every role declares
-`required_version = ">= 1.5.0"`; `noop-modules` declares `">= 1.5"`. The
-repositories validate on the floors, Terraform 1.5.7 and OpenTofu 1.6.3, as
-well as on the runtimes of the base images, so a feature newer than 1.5 fails
-`make validate`. The tests are the exception: they need Terraform 1.7 or
-OpenTofu 1.8 (mock providers) and run only on the base images' runtimes.
+**Version floor.** In the cloud sets every module declares
+`required_version = ">= 1.5.0"`. The module repositories validate on the
+floors, Terraform 1.5.7 and OpenTofu 1.6.3, as well as on the runtimes of the
+base images, so a feature newer than 1.5 fails `make validate`. The tests are
+the exception: they need Terraform 1.7 or OpenTofu 1.8 (mock providers) and
+run only on the base images' runtimes.
 
-**Separate lock files.** Each role has one lock file per runtime, under
-`locks/terraform/` and `locks/opentofu/` (see above).
+**No shared lock file.** Nothing is committed, so the two runtimes cannot
+disagree about one (see above). The image repositories keep one lock file per
+runtime.
 
-**What keeps a module portable.** `hack/check-layout.sh` rejects these in a
-role directory:
+**What keeps a module portable.** `hack/check-layout.sh` rejects these in the
+module:
 
 - `main.tf` files, `.tofu` files and `.tf.json` files.
 - `module` calls (modules are flat), `check` blocks, and `moved`, `removed`
@@ -269,30 +282,30 @@ container pinned by digest, as the host user, with the repository mounted at
 `/work`, so nothing in the repository is left owned by root and a gate gives
 the same result on every machine.
 
-`make help` lists the targets. `make verify` runs all the checks, in this
-order:
+`make help` lists the targets. `make verify` runs all the checks, and is the
+only thing CI runs (`.github/workflows/ci.yml`):
 
 | Target | Enforces |
 | --- | --- |
 | `check-headers` | The Apache-2.0 license header on every source file (`.licenserc.yaml`). |
 | `fmt-check` | `terraform fmt` and `tofu fmt` output, recursively. |
 | `check-conventions` | `hack/check-layout.sh` (file layout, naming, forbidden blocks and functions) and `hack/check-tags.sh` (every taggable resource sets its tags from `local.tags`; `hack/tags.json` lists exempt types with a reason). |
-| `shellcheck` | `hack/check-shell.sh`: shellcheck over `hack/`, `test/` and every shell template, rendered with placeholders. |
-| `validate` | `init` and `validate` per role, on both current runtimes and on the floors Terraform 1.5.7 and OpenTofu 1.6.3. |
-| `unit-test` | `terraform test` and `tofu test` per role, with mocked providers. |
+| `shellcheck` | `hack/check-shell.sh`: shellcheck over `hack/` and every shell template, rendered with placeholders. |
+| `validate` | `init` and `validate` on both current runtimes and on the floors Terraform 1.5.7 and OpenTofu 1.6.3. |
+| `unit-test` | `terraform test` and `tofu test`, with mocked providers. |
 | `tflint` | tflint with the terraform ruleset (preset `all`) and the cloud's ruleset, configured in `.tflint.hcl`. |
-| `tfcapi-lint` | `tfcapi-lint module --strict` per role. It is built from the provider repository (`PROVIDER_DIR`), or taken from `TFCAPI_LINT`, and skips when neither is available. |
-| `scan` | `trivy config` over Dockerfiles, workflows and HCL. Every ignore in `.trivyignore.yaml` needs a path and a statement of why. |
+| `tfcapi-lint` | `tfcapi-lint module --role <role> --strict`. It is built from the provider repository (`PROVIDER_DIR`), or taken from `TFCAPI_LINT`, and skips when neither is available. |
+| `scan` | `trivy config` over workflows and HCL. Every ignore in `.trivyignore.yaml` needs a path and a statement of why. |
 
-`make build` builds the images, and `make test` builds them and runs
-`test/smoke.sh`: labels, then `init` and `validate` from the image's provider
-mirror with networking off, then `tfcapi-lint image --strict`. Variables such
-as `ROLES=machine`, `RUNTIMES=opentofu` and `ENGINE=docker` narrow or redirect
-a run.
+There is no `lock`, `build` or `test` target: a module repository builds no
+image. Variables such as `RUNTIMES=opentofu` and `ENGINE=docker` narrow or
+redirect a run. The noop repositories run a smaller `verify`: `check-headers`,
+`fmt-check`, `validate` and `test`, which applies and destroys `test/root`.
 
 !!! warning
 
-    `PROVIDER_DIR` defaults to `../../cluster-api-provider-terraform`. If the
+    `PROVIDER_DIR` defaults to `../cluster-api-provider-terraform`, which is
+    right when the module and the provider repository are siblings. If the
     provider repository is cloned elsewhere, `tfcapi-lint` skips without
     failing. Pass `PROVIDER_DIR=<path>` or `TFCAPI_LINT=<binary>` so the gate
     runs.
@@ -302,44 +315,91 @@ The test layers, and how to write the `*.tftest.hcl` files, are in
 
 ## Documenting a module
 
-Each role has a `README.md` with the H1 `<cloud>-<role>` and these sections,
-in this order (`CONVENTIONS.md` section 17):
+Each module's `README.md` has the H1 `terraform-<provider>-<role>`, a badge
+row and a status note, an intro paragraph, then these sections, in this order
+(`CONVENTIONS.md` section 17):
 
-1. What it creates, as a resource table.
-2. Prerequisites: network, quotas, the identity's permissions, image
+1. Usage: the module image, the Terraform Registry address
+   `captf-io/<role>/<provider>`, and what calling the module directly implies.
+2. What it creates, as a resource table.
+3. Prerequisites: network, quotas, the identity's permissions, image
    requirements.
-3. Inputs: the contract inputs used and a table of user variables.
-4. Outputs.
-5. Exports.
-6. Identity Secret.
-7. Lifecycle (machinepool): what updates in place and what rolls.
-8. Bootstrap (machine and machinepool).
-9. Tags.
-10. Health.
-11. Any cloud-specific sections.
-12. Limitations.
-13. Exceptions.
-14. Examples.
+4. Inputs: the contract inputs used and a table of user variables.
+5. Outputs.
+6. Exports.
+7. Identity Secret.
+8. Lifecycle (machinepool): what updates in place and what rolls.
+9. Bootstrap (machine and machinepool).
+10. Tags.
+11. Health.
+12. Any cloud-specific sections.
+13. Limitations.
+14. Exceptions.
+15. Examples.
+16. Development: the host tools and the `make` targets.
+
+Links in the README are absolute
+(`https://github.com/captf-io/<repo>/blob/main/...`), because the Terraform
+Registry renders it as the module's page, where relative links break.
 
 **Exceptions** is where a deliberate deviation from `CONVENTIONS.md` is
 recorded, with its reason. A warning that `tfcapi-lint` is allowed to emit is
-listed there too, next to the `TFCAPI_LINT_ALLOW_<role>` variable in the
-Makefile that permits it, and a `.trivyignore.yaml` entry carries its own
-statement.
+listed there too, next to the `TFCAPI_LINT_ALLOW` variable in the Makefile
+that permits it, and a `.trivyignore.yaml` entry carries its own statement.
 
-`DESIGN.md` has exactly five top-level sections: Scope, Decisions, Exports,
-Unverified and Rejected alternatives. It records each decision with the
-evidence behind it, what was rejected, and which facts have not yet been
-checked against a real cloud. Write the unverified list honestly: it tells a
-reader what the first real apply is testing.
-
-The top-level `README.md` covers what the modules are and why, the images and
-tags, compatibility (runtimes, provider pins, contract version), a quick
-start, development targets, releasing and forking.
+`DESIGN.md` is specific to the repository's role and has exactly five
+top-level sections: Scope, Decisions, Exports, Unverified and Rejected
+alternatives. It records each decision with the evidence behind it, what was
+rejected, and which facts have not yet been checked against a real cloud.
+Decision and Unverified numbers stay stable, because code comments cite them.
+Write the unverified list honestly: it tells a reader what the first real
+apply is testing.
 
 `examples/` holds a `README.md`, the identity Secret, and manifests that use
 the images. The manifests pin a release tag (`vX.Y.Z-<runtime>`), never a
-moving tag. Role READMEs do the same.
+moving tag. The README does the same.
+
+## The image repositories
+
+The images are built from the `<cloud>-modules` repositories and from
+[`noop-modules`](https://github.com/captf-io/noop-modules), one set for each
+provider. Each holds the three roles side by side and turns them into images;
+the module code of each image is its role directory. The layout, from `aws-modules`:
+
+```text
+<cloud>-modules/
+  README.md  CONVENTIONS.md  DESIGN.md  LICENSE.md
+  Makefile                  build, test, lock and the checks; `make help`
+  Dockerfile.terraform      module images on the terraform-base image
+  Dockerfile.opentofu       module images on the opentofu-base image
+  .dockerignore .gitignore .tflint.hcl .trivyignore.yaml .licenserc.yaml
+  .github/workflows/build.yml  .github/dependabot.yml
+  hack/                     check-layout.sh, check-tags.sh, tags.json,
+                            check-shell.sh, tf-run.sh, testdata/
+  locks/terraform/<role>.terraform.lock.hcl
+  locks/opentofu/<role>.terraform.lock.hcl
+  examples/                 README.md, identity Secret, manifests
+  test/smoke.sh             image smoke test
+  cluster/ machine/ machinepool/      one directory per role
+    *.tf  templates/*.tftpl  tests/*.tftest.hcl  README.md
+```
+
+`.dockerignore` lists what an image does receive: only the role directories
+and `locks/`. Tests, READMEs, `.terraform/` and lock files are left out of
+`/captf/module`. The `Makefile`, `Dockerfile.*` and
+`.github/workflows/build.yml` differ between clouds only in per-cloud values
+(`CLOUD`, `MACHINE_CAPACITY` and `MACHINE_ARCH`, the image names, and the
+OpenStack role matrix).
+
+To publish a fork's images under your own registry and name, change `CLOUD`
+and `REGISTRY` in the `Makefile`, the image names in
+`.github/workflows/build.yml`, and `MACHINE_CAPACITY` and `MACHINE_ARCH`
+(the capacity and architecture labels of the machine image, empty if the
+machine module has no default shape), then rerun `make lock` and run
+`make verify` and `make test`. See [Releasing a
+Module](releasing.md#publishing-from-a-fork). `noop-modules` is the smallest
+image repository: every role, both Dockerfiles, a smoke test, no providers,
+no locks and no verify gates.
 
 !!! related "See also"
 

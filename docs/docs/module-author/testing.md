@@ -11,10 +11,15 @@ subtitle: "From unit tests to end to end"
 A module is tested in layers, from checks that finish in seconds on a laptop
 to a full run on a Kubernetes cluster. Run the cheap layers on every change
 and the expensive ones before a release. This page describes the layers the
-reference repositories use, with `aws-modules` as the example, and what each
-one catches. The same targets exist in the other `<cloud>-modules`
-repositories; [`noop-modules`](https://github.com/captf-io/noop-modules) has
-only `build` and `test`.
+reference repositories use and what each one catches. The code checks live in
+the one-module-per-repository `terraform-<provider>-<role>` repositories, with
+[`terraform-aws-cluster`](https://github.com/captf-io/terraform-aws-cluster) as the example; the
+same targets exist in the other cloud repositories. The image smoke test lives
+in the `<cloud>-modules` repositories that build the images, with
+[`aws-modules`](https://github.com/captf-io/aws-modules) as the example. The
+[`terraform-noop-*`](https://github.com/captf-io/terraform-noop-cluster) repositories run format,
+`validate` and an apply and destroy of `test/root`, and
+[`noop-modules`](https://github.com/captf-io/noop-modules) has only `build` and `test`.
 
 ## Overview
 
@@ -23,26 +28,28 @@ only `build` and `test`.
 | [Static checks](#static-checks) | Unformatted code, syntax errors, invalid references, constructs that the oldest supported runtime cannot parse. | `fmt-check`, `validate` |
 | [Unit tests](#unit-tests-with-mocked-providers) | Wrong outputs, wrong health, missing validation, wrong resource arguments. No cloud account needed. | `unit-test` |
 | [Lint](#lint) | Style and provider-rule violations, and contract violations in the module source. | `tflint`, `tfcapi-lint` |
-| [Image tests](#image-tests) | A wrong user or label, a provider missing from the mirror, a module that cannot `init` offline, an image that breaks the contract. | `build`, `test` |
+| [Image tests](#image-tests) | A wrong user or label, a provider missing from the mirror, a module that cannot `init` offline, an image that breaks the contract. | `build`, `test` (in `<cloud>-modules`) |
 | [End-to-end](#end-to-end) | Behavior of the controllers and the module together on a real cluster. | Provider repository: `e2e-foundation`, `e2e-noop` |
 
-`make verify` runs every layer above the image tests, plus license, layout,
-shell and configuration scans. `make test` builds the images and smoke-tests
-them. Run `make help` in a repository for the full list. The host needs
+In a `terraform-*` repository, `make verify` runs every layer above the image
+tests, plus license, layout, shell and configuration scans; it is the only
+thing CI runs there. In a `<cloud>-modules` repository, `make test` builds the
+images and smoke-tests them. Run `make help` in a repository for the full
+list. The host needs
 `make`, `podman` (or `docker` with `ENGINE=docker`), `jq` and Go; the
 Terraform, OpenTofu, tflint and trivy tools run in containers pinned by
 digest, so every contributor and CI run the same versions.
 
-Narrow a run with variables, for example `make unit-test ROLES=machine
+Narrow a run with variables, for example `make unit-test
 RUNTIMES=opentofu`.
 
 ## Static checks
 
 `make fmt-check` fails on any file that `terraform fmt` or `tofu fmt` would
 change; `make fmt` rewrites them. `make validate` runs `init
--backend=false` and `validate` for every role on both runtimes.
+-backend=false` and `validate` on both runtimes.
 
-`validate` runs each role twice per runtime:
+`validate` runs the module twice per runtime:
 
 - on the runtime in the module's [base image](base-images.md), the version
   the module ships on;
@@ -50,7 +57,7 @@ change; `make fmt` rewrites them. `make validate` runs `init
 
 The floors exist because a module image can be built `FROM` either runtime,
 and a user may validate or reuse the module on an older release than the
-newest one you test with. Every role declares `required_version = ">= 1.5.0"`;
+newest one you test with. The module declares `required_version = ">= 1.5.0"`;
 the floor run proves that claim by failing on syntax or functions that the
 old runtimes do not have. See [Supporting Terraform and
 OpenTofu](repository-layout.md#supporting-terraform-and-opentofu) for the
@@ -58,40 +65,40 @@ version policy.
 
 The reference `Makefile` pins the floors as `TF_FLOOR_terraform` and
 `TF_FLOOR_opentofu`. Each `validate` and `test` action runs on a staged copy
-of the role with the lock file from `locks/<runtime>/<role>.terraform.lock.hcl`
-and `-lockfile=readonly`, so the role directory is never modified.
-[`hack/tf-run.sh`](https://github.com/captf-io/aws-modules/blob/main/hack/tf-run.sh)
-runs one action for one role in the pinned container; call it directly to
+of the module, and resolves the exact provider pins of `versions.tf` afresh,
+because no lock file is committed, so the repository itself is never modified.
+[`hack/tf-run.sh`](https://github.com/captf-io/terraform-aws-cluster/blob/main/hack/tf-run.sh)
+runs one action for the module in the pinned container; call it directly to
 reproduce one cell of `make validate`:
 
 ```sh
-hack/tf-run.sh validate opentofu base cluster
+hack/tf-run.sh validate opentofu default
 ```
 
-The arguments are the action, the runtime, `base` (or a full image
-reference) and the role.
+The arguments are the action, the runtime, and `default` (the base image the
+`Makefile` pins) or a full image reference.
 
 ## Unit tests with mocked providers
 
 `terraform test` and `tofu test` run `.tftest.hcl` files. With
 `mock_provider`, they plan and apply the module against fake providers, so
 the tests need no credentials and finish in seconds. Tests live in
-`<role>/tests/`:
+`tests/`, at the repository root:
 
 ```text
-cluster/tests/
+tests/
   cluster.tftest.hcl                  # happy path, every output asserted
   cluster_validation.tftest.hcl       # one expect_failures run per validation
   cluster_endpoint_guard.tftest.hcl
 ```
 
-`make unit-test` runs them for every role that has a `tests/` directory, on
-both runtimes. The `tests/` directory is not copied into the image.
+`make unit-test` runs them on both runtimes, and skips when there is no
+`tests/*.tftest.hcl`. The `tests/` directory is not copied into the image.
 
 Each file declares a `mock_provider` per provider with defaults for the
 computed attributes the module reads, a top-level `variables` block with
 every contract input, then `run` blocks. A trimmed example from
-[`cluster/tests/cluster_validation.tftest.hcl`](https://github.com/captf-io/aws-modules/blob/main/cluster/tests/cluster_validation.tftest.hcl):
+[`tests/cluster_validation.tftest.hcl`](https://github.com/captf-io/terraform-aws-cluster/blob/main/tests/cluster_validation.tftest.hcl):
 
 ```hcl
 mock_provider "aws" {
@@ -140,7 +147,7 @@ run "invalid_captf_contract" {
 - **Stability.** Re-apply the same inputs and assert that ids stay the same,
   to prove that a change updates in place rather than replacing.
 
-The `aws-modules` [conventions](https://github.com/captf-io/aws-modules/blob/main/CONVENTIONS.md)
+The `terraform-aws-cluster` [conventions](https://github.com/captf-io/terraform-aws-cluster/blob/main/CONVENTIONS.md)
 fix the run names (`happy_path`, `reapply_is_stable`, `invalid_<variable>`
 and so on) so reviewers can find them. Your module may use its own names.
 
@@ -153,7 +160,7 @@ floors handle test files differently:
 - Terraform 1.5 ignores `*.tftest.hcl` files.
 - OpenTofu 1.6 reads them at `init` and fails on `mock_provider`. The
   reference `Makefile` sets `NO_TESTS=1` for that floor, so `tf-run.sh`
-  stages the role without `tests/`.
+  stages the module without `tests/`.
 
 The two runtimes also differ in mock behavior. The reference conventions
 require every test to pass on both, and list what to avoid: `override_during`,
@@ -167,7 +174,7 @@ time, so a test that proves a replacement by a changed id checks less there.
 Two linters run on the module source.
 
 **tflint** runs in a pinned container with the configuration in
-[`.tflint.hcl`](https://github.com/captf-io/aws-modules/blob/main/.tflint.hcl):
+[`.tflint.hcl`](https://github.com/captf-io/terraform-aws-cluster/blob/main/.tflint.hcl):
 the `terraform` ruleset with `preset = "all"` and the cloud ruleset for the
 module's provider (the `aws` ruleset here, with `deep_check = false` so the
 run needs no credentials). Rulesets are pinned by version and cached under
@@ -177,16 +184,16 @@ is enforced by `hack/check-layout.sh` instead. Run it with `make tflint`.
 
 **tfcapi-lint** checks the module against the [image
 contract](image-contract.md): `make tfcapi-lint` runs `tfcapi-lint module
---role <role> --strict` for each role. Strict mode turns warnings into
+--role <role> --strict`. Strict mode turns warnings into
 failures; a warning a module accepts deliberately goes in the Makefile as
-`TFCAPI_LINT_ALLOW_<role> := --allow-warning <id>`, with the reason in a
-comment and in the role's README. See [tfcapi-lint](tfcapi-lint.md#lint-a-module)
+`TFCAPI_LINT_ALLOW := --allow-warning <id>`, with the reason in a
+comment and in the README's Exceptions section. See [tfcapi-lint](tfcapi-lint.md#lint-a-module)
 and [Strict mode and allowed
 warnings](tfcapi-lint.md#strict-mode-and-allowed-warnings).
 
 The reference repositories build tfcapi-lint from source instead of
 installing a release. `PROVIDER_DIR` (default
-`../../cluster-api-provider-terraform`) names a checkout of the provider
+`../cluster-api-provider-terraform`, a sibling checkout) names a checkout of the provider
 repository, and the Makefile runs `go build ./cmd/tfcapi-lint` there into
 `.tools/bin/tfcapi-lint`. Set `TFCAPI_LINT` to a ready binary to skip the
 build. When neither is available, `make tfcapi-lint` prints `SKIP` and exits
@@ -207,6 +214,8 @@ For a standalone install, see [Install](tfcapi-lint.md#install).
 
 ## Image tests
 
+The image tests run in the `<cloud>-modules` repositories, which build the
+images; the `terraform-*` repositories have no `build` or `test` target.
 `make build` builds `ghcr.io/captf-io/<cloud>-<role>:<version>-<runtime>` for
 every role and runtime on the host platform (`VERSION` defaults to `dev`).
 `make test` builds, then runs
@@ -307,27 +316,34 @@ layer for pre-release checks.
 
 ## In CI
 
-The reference repositories run these layers in
+A `terraform-*` repository runs one job, `verify`, in
+[`.github/workflows/ci.yml`](https://github.com/captf-io/terraform-aws-cluster/blob/main/.github/workflows/ci.yml),
+on pull requests, pushes to `main` and `v*.*.*` tags. It calls `make verify
+ENGINE=docker` on `ubuntu-24.04`, after checking out the provider repository's
+`main` into `.cache/provider` and passing `PROVIDER_DIR=.cache/provider`, so
+the contract lint runs in CI. `make verify` covers license headers, format,
+layout, shell, `validate` and `unit-test` on both runtimes and the floors,
+tflint, `tfcapi-lint` and the trivy scan, with the independent groups side by
+side. The noop repositories run `make verify` too, with its smaller set:
+headers, format, `validate` and the apply and destroy of `test/root`. Nothing
+there builds or smoke-tests an image.
+
+The image repositories test and publish the images in
 [`.github/workflows/build.yml`](https://github.com/captf-io/aws-modules/blob/main/.github/workflows/build.yml),
-on pull requests, pushes to `main` and `v*.*.*` tags. The
-`license-headers`, `verify` and `test` jobs call `make` with
-`ENGINE=docker`. The `verify` and `test` jobs also check out the provider
-repository's `main` into `.cache/provider` and pass
-`PROVIDER_DIR=.cache/provider`, so the contract lint runs in CI:
+on pull requests, pushes to `main` and `v*.*.*` tags:
 
 | Job | Runs on | What it runs |
 | --- | --- | --- |
-| `license-headers` | `ubuntu-24.04` | `make check-headers` |
-| `verify` | `ubuntu-24.04` | `make verify`: formatting, layout, shell, validate on both runtimes and floors, unit tests, tflint, `tfcapi-lint` and the trivy scan |
+| `verify` | `ubuntu-24.04` | `make verify` on the role directories |
 | `test` | `ubuntu-24.04` and `ubuntu-24.04-arm`, for each runtime | `make test RUNTIMES=<runtime>`: build and smoke-test every role natively on amd64 and arm64, including the image lint |
-| `publish` | `ubuntu-24.04` | On push only, after the three jobs above pass: builds each role and runtime for `linux/amd64` and `linux/arm64` with QEMU and buildx, and pushes to GHCR with an SBOM and provenance |
+| `publish` | `ubuntu-24.04` | On push only, after the jobs above pass: builds each role and runtime for `linux/amd64` and `linux/arm64` with QEMU and buildx, and pushes to GHCR with an SBOM and provenance |
 
 The `test` job runs a matrix of two runners and two runtimes, so each image
 is smoke-tested on both architectures it ships for. CI lints against the
-provider's `main`, so run `make tfcapi-lint` and `make test` locally with
-`PROVIDER_DIR` set before you push, to catch contract violations first
-(see [Lint](#lint)). See [Releasing a
-Module](releasing.md) for publishing and tags, and [tfcapi-lint
+provider's `main`, so run `make tfcapi-lint` in the module repository, and
+`make test` in the image repository, locally with `PROVIDER_DIR` set before
+you push, to catch contract violations first (see [Lint](#lint)). See
+[Releasing a Module](releasing.md) for publishing and tags, and [tfcapi-lint
 in CI](tfcapi-lint.md#in-ci) for running the linter in your own pipeline.
 
 !!! related "See also"

@@ -52,7 +52,7 @@ flowchart LR
 A module reads infrastructure it does not own with data sources. The
 reference modules do this for the network you bring: the VPC, the subnets and
 their zones are inputs by ID, and the module looks each one up. This is the
-VPC read in [`aws-modules/cluster/data_cluster_vpcs.tf`](https://github.com/captf-io/aws-modules/blob/main/cluster/data_cluster_vpcs.tf):
+VPC read in [`terraform-aws-cluster/data_cluster_vpcs.tf`](https://github.com/captf-io/terraform-aws-cluster/blob/main/data_cluster_vpcs.tf):
 
 ```hcl
 # The VPC named by vpc_id, as a listing: it returns no ID, rather than
@@ -67,12 +67,12 @@ data "aws_vpcs" "cluster_vpcs" {
 ```
 
 The subnets are read the same way, one listing per availability zone, in
-[`data_node_subnets.tf`](https://github.com/captf-io/aws-modules/blob/main/cluster/data_node_subnets.tf).
+[`data_node_subnets.tf`](https://github.com/captf-io/terraform-aws-cluster/blob/main/data_node_subnets.tf).
 The other clouds follow the pattern:
-[`azure-modules/cluster/data_node_virtual_network.tf`](https://github.com/captf-io/azure-modules/blob/main/cluster/data_node_virtual_network.tf),
-[`openstack-modules/cluster/data_node_subnet.tf`](https://github.com/captf-io/openstack-modules/blob/main/cluster/data_node_subnet.tf)
+[`terraform-azure-cluster/data_node_virtual_network.tf`](https://github.com/captf-io/terraform-azure-cluster/blob/main/data_node_virtual_network.tf),
+[`terraform-openstack-cluster/data_node_subnet.tf`](https://github.com/captf-io/terraform-openstack-cluster/blob/main/data_node_subnet.tf)
 and
-[`oci-modules/cluster/data_network_vcns.tf`](https://github.com/captf-io/oci-modules/blob/main/cluster/data_network_vcns.tf).
+[`terraform-oci-cluster/data_network_vcns.tf`](https://github.com/captf-io/terraform-oci-cluster/blob/main/data_network_vcns.tf).
 
 The IDs reach the module as user variables: set `vpc_id` and `subnets` on the
 object, as [Module Variables](../user-guide/variables.md) describes. The
@@ -189,7 +189,7 @@ each of them ([What a cluster hands to its machines and
 pools](../concepts/inputs.md#5-what-a-cluster-hands-to-its-machines-and-pools)).
 Put in it what they need: the network, the failure domains with their
 subnets, security groups, instance profiles. This is the `exports` of
-[`aws-modules/cluster/locals_exports.tf`](https://github.com/captf-io/aws-modules/blob/main/cluster/locals_exports.tf),
+[`terraform-aws-cluster/locals_exports.tf`](https://github.com/captf-io/terraform-aws-cluster/blob/main/locals_exports.tf),
 trimmed:
 
 ```hcl
@@ -354,7 +354,7 @@ Points to check before you run it:
 - **`clusterName`.** The value is `kubernetes_cluster_id` from the exports.
   The AWS README gives it as the `<id>` in the `kubernetes.io/cluster/<id>`
   tag that the reference modules put on the cluster's resources
-  ([`aws-modules/cluster/README.md`](https://github.com/captf-io/aws-modules/blob/main/cluster/README.md#exports)).
+  ([`terraform-aws-cluster/README.md`](https://github.com/captf-io/terraform-aws-cluster/blob/main/README.md#exports)).
   Whether the controller expects exactly this value as `clusterName` is the
   chart's behaviour, not something these docs verify: check the chart's
   documentation, and make `clusterName` match the ID in that tag. It is not
@@ -421,7 +421,7 @@ features.
 
 `ClusterResourceSet` applies a set of manifests to every cluster that
 matches a label selector. The OpenStack reference set uses it in
-[`examples/cloud-controller-manager.yaml`](https://github.com/captf-io/openstack-modules/blob/main/examples/cloud-controller-manager.yaml).
+[`examples/cloud-controller-manager.yaml`](https://github.com/captf-io/terraform-openstack-cluster/blob/main/examples/cloud-controller-manager.yaml).
 
 The Cluster API Add-on Provider for Helm installs Helm charts into clusters
 selected by label, from objects in the management cluster. Choose it if you

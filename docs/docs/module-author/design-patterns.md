@@ -234,7 +234,9 @@ see [Total State Loss and Import](../operator-guide/runbooks/total-state-loss.md
 
 1. **Start from the noop module.** It creates nothing in a cloud, and shows
    the contract end to end: [Your First Module](../getting-started/first-module.md)
-   builds one. The published images and source are in
+   builds one. The module source is in
+   [`terraform-noop-cluster`](https://github.com/captf-io/terraform-noop-cluster) and its
+   siblings; the images are built from
    [`captf-io/noop-modules`](https://github.com/captf-io/noop-modules).
 2. **Lint the module** with `tfcapi-lint`, in strict mode, in CI. It needs
    neither `terraform` nor `tofu`:
