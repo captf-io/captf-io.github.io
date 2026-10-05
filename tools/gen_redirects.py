@@ -44,6 +44,7 @@ SKIP = {
     "tags.md",
     "developer-guide/docs-workflow.md",
     "developer-guide/website.md",
+    "developer-guide/readme-components.md",
     "cloud-modules/noop/README.md",
     "cloud-modules/noop/cluster.md",
     "cloud-modules/noop/machine.md",

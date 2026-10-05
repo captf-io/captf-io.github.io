@@ -123,6 +123,7 @@ page. Its top row switches between Home, Docs and Blog.
 | Contract chip at the end of the tab row | `[project.extra.tabs]` |
 | Hover tooltips for acronyms | `includes/abbreviations.md`, one `*[ABBR]: Expansion` line each |
 | Logo and favicon | `docs/assets/brand/` |
+| README components and their images | `includes/readme/` and `docs/assets/readme/`; see [README Components](readme-components.md) |
 
 ## Generated files
 

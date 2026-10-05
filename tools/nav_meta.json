@@ -547,6 +547,10 @@
     "icon": "lucide/git-merge",
     "subtitle": "Changes that span repositories"
   },
+  "developer-guide/readme-components.md": {
+    "icon": "lucide/puzzle",
+    "subtitle": "Header, badges, status, footer"
+  },
   "developer-guide/testing.md": {
     "icon": "lucide/flask-conical",
     "subtitle": "Run unit and cluster tests"

@@ -45,10 +45,9 @@ Two things depend on the siblings being there:
     Alternatively, set `TFCAPI_LINT` to a binary you built or
     [downloaded](../module-author/tfcapi-lint.md#install).
 
-- The README fragment sync in `.github` works on checkouts: `make readme`
-  there defaults `WORKSPACE` to `..`, so it reads and writes the sibling
-  repositories. See [Community files and README
-  fragments](#community-files-and-readme-fragments).
+- A change to the [README components](readme-components.md) is applied by
+  hand to the README of every checkout; `grep` across the workspace finds
+  them. See [Community files and READMEs](#community-files-and-readmes).
 
 ## Order of a contract change
 
@@ -129,7 +128,7 @@ changes that belong to `CONVENTIONS.md`, the layout check or the lock files.
 Its Makefile has only `help`, `build` and `test`, so it does not run
 `make verify`.
 
-## Community files and README fragments
+## Community files and READMEs
 
 Every repository carries the same copies of these files:
 
@@ -149,27 +148,11 @@ copies them: check with `md5sum` that all repositories have the same file.
 md5sum */CONTRIBUTING.md .github/CONTRIBUTING.md | sort
 ```
 
-The `.github` repository also holds the README fragments: the header, status
-note and footer that every README carries between `<!-- captf:header -->`
-style markers. Never edit inside the markers. Edit the templates in
-[`readme/`](https://github.com/captf-io/.github/tree/main/readme), then, from
-the `.github` checkout with the others beside it:
-
-```sh
-make readme         # render the banners and fill every README's blocks
-make readme-check   # write nothing; fail if a banner or block is out of date
-```
-
-Commit the banners and templates in `.github` and push them first, because
-READMEs load the banners from its `main` branch. Then commit the changed
-README in each repository. To point the sync at another directory, set
-`WORKSPACE=<dir>`.
-
-[`readme/repos.toml`](https://github.com/captf-io/.github/blob/main/readme/repos.toml)
-lists the repositories that carry the fragments. A new repository goes there,
-with its kind, glyph and tagline; the
-[`readme/README.md`](https://github.com/captf-io/.github/blob/main/readme/README.md)
-file has the full steps.
+Every README is composed from the same [README
+components](readme-components.md): a header, a badge row, a status note and
+a footer. Their sources and images are in the website repository, and
+nothing syncs them: change the component there first, then apply the change
+to each README by hand.
 
 ## License headers
 

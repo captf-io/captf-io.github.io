@@ -63,7 +63,7 @@ The module image half of the contract is in [Image Contract](../module-author/im
 | [`openstack-modules`](https://github.com/captf-io/openstack-modules) | Modules | Reference `cluster` and `machine` modules for OpenStack. There is no `machinepool`. | `ghcr.io/captf-io/openstack-<role>`. |
 | [`noop-modules`](https://github.com/captf-io/noop-modules) | Modules | No-op `cluster`, `machine` and `machinepool` modules that create nothing, for trying CAPTF and for end-to-end tests. | `ghcr.io/captf-io/noop-<role>`. |
 | [`captf-io.github.io`](https://github.com/captf-io/captf-io.github.io) | Website | The captf.io site: landing page, this docs book and the blog. | The site, deployed to GitHub Pages from `main` by `pages.yml`. |
-| [`.github`](https://github.com/captf-io/.github) | Organization | The organization profile, the community health files and the shared README fragments synced into every repository's README. | Nothing is built. Its workflow only checks license headers. |
+| [`.github`](https://github.com/captf-io/.github) | Organization | The organization profile and the community health files. | Nothing is built. Its workflow only checks license headers. |
 
 The module repositories are described together in [Cloud
 Modules](../cloud-modules/README.md); their layout is in [Module Repository
@@ -144,9 +144,8 @@ Every repository carries the same `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`,
 `SECURITY.md` and `LICENSE.md`, and every source file is Apache-2.0 licensed
 with a license header that CI checks. The provider also has a
 `SECURITY_CONTACTS` file. The [`.github`](https://github.com/captf-io/.github) repository holds the
-organization's community health files, and its `make
-readme` target keeps the banner, status note and footer of each repository's
-README identical. See [Working Across
+organization's community health files, and every README is composed from the
+same [README components](../developer-guide/readme-components.md). See [Working Across
 Repositories](../developer-guide/cross-repo.md) for changes that span
 repositories, and [Contributing](../developer-guide/contributing.md) for how
 to contribute.
