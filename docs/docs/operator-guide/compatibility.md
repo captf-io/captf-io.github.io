@@ -38,20 +38,20 @@ check them against the tag you install.
 | Terraform in the base image | 1.16.4 | [`terraform-base`](https://github.com/captf-io/terraform-base) `Dockerfile` |
 | OpenTofu in the base image | 1.12.6 (the `-minimal` image) | [`opentofu-base`](https://github.com/captf-io/opentofu-base) `Dockerfile` |
 | State file format | Version 4 only | the state reader |
-| Architectures | CI builds the manager image for `linux/amd64` and `linux/arm64`; `make release` pushes a host-platform image (see [Architectures](#architectures)) | `security.yaml`, the Makefile |
+| Architectures | The manager image is published for `linux/amd64` and `linux/arm64` (see [Architectures](#architectures)) | `publish.yaml`, `security.yaml` |
 
 ### Architectures
 
-The `security` workflow builds the manager image for `linux/amd64` and
-`linux/arm64` on every run, without pushing it, and scans and runs
-the `linux/amd64` build only. The Makefile has a `docker-buildx` target that
-builds `PLATFORMS` (default `linux/amd64,linux/arm64`) into a manifest list,
-but `make release` runs `docker-build` and `docker-push`, which build and
-push an image for the host platform of the machine that runs the release.
-So a release publishes an `arm64` image only if it is run on, or
-cross-built for, `arm64`; the release flow does not do so by itself. The
-`tfcapi-lint` release assets are built per platform by GoReleaser. The base
-images are published as multi-arch indexes, and the module images build
+The `publish` workflow pushes the manager image as a multi-architecture
+image for `linux/amd64` and `linux/arm64`: `:edge` and `:sha-<commit>` on
+every push to `main`, and `:vX.Y.Z` on a release tag. The Dockerfile
+cross-compiles, so the `arm64` image is built without emulation. The
+`security` workflow also builds both platforms on every run, without
+pushing, and scans and runs the `linux/amd64` build only. An image pushed
+by the manual `make release` fallback has the host platform of the machine
+that ran it; see [Releasing](../developer-guide/releasing.md#manual-fallback).
+The `tfcapi-lint` release assets are built per platform by GoReleaser. The
+base images are published as multi-arch indexes, and the module images build
 `linux/amd64` and `linux/arm64` provider mirrors.
 
 ### Kubernetes
@@ -179,7 +179,7 @@ rootless podman, with measurements dated 2026-10-04:
 - **Real Terraform or OpenTofu execution against a cloud.** The noop modules
   run the real runtimes, but only the pinned ones. Other versions are assumed
   to behave.
-- **The `arm64` image.** CI builds it but does not run it.
+- **The `arm64` image.** CI builds and publishes it but does not run it.
 - **KubeadmControlPlane and RKE2ControlPlane integration.** The kubeadm
   providers are installed in the e2e cluster, but the suites create clusters
   with no control plane. The integration is documented against the providers'

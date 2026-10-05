@@ -263,8 +263,9 @@ namespace; the Job pods are a separate matter, covered under
 
 ## Supply chain
 
-CAPTF publishes scanning results and a few build guarantees, but not signed
-artifacts. Plan your own verification on top.
+CAPTF publishes scanning results, signed images with attestations, and
+signed-provenance release assets. It does not verify module images; plan your
+own verification on top.
 
 **Scanning.** The provider's `security` workflow runs on pushes to `main`,
 on pull requests and weekly (Monday 05:17 UTC). The scanners below fail
@@ -290,15 +291,35 @@ pinned by digest, and runs as `65532:65532` with `/manager` as the
 entrypoint. The same image is the runner. Pin the image you install by
 digest as well.
 
-**SBOM.** The `security` workflow produces an SPDX SBOM of the manager
-image, but only as a CI workflow artifact (`manager-image.spdx.json`); it is
-not attached to releases. The base images do publish an SBOM and a maximum-mode provenance
-attestation with each build.
+**Signatures and attestations.** The `publish` workflow pushes the manager
+image on every push to `main` (`:edge`, `:sha-<commit>`) and on every release
+tag (`:vX.Y.Z`), for `linux/amd64` and `linux/arm64`. Every pushed image
+digest gets a keyless cosign signature (GitHub OIDC), a SLSA build-provenance
+attestation and an SPDX SBOM attestation, stored in the registry and in
+GitHub attestations. Every release asset gets a provenance attestation, and
+the bundle is also attached as `provenance.intoto.jsonl`. Verify:
 
-**No signatures.** The manager image and the release assets carry no cosign
-signature and no provenance attestation. The release flow
-(`make release`, GoReleaser for `tfcapi-lint`) produces a checksum file for
-`tfcapi-lint` only. Nothing in CAPTF verifies a module image's signature;
+```sh
+cosign verify ghcr.io/captf-io/cluster-api-provider-terraform:vX.Y.Z \
+  --certificate-identity-regexp '^https://github.com/captf-io/cluster-api-provider-terraform/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+gh attestation verify oci://ghcr.io/captf-io/cluster-api-provider-terraform:vX.Y.Z \
+  -R captf-io/cluster-api-provider-terraform
+gh attestation verify infrastructure-components.yaml \
+  -R captf-io/cluster-api-provider-terraform
+```
+
+Add `--predicate-type https://spdx.dev/Document/v2.3` to the `gh` image
+command to verify the SBOM. `tfcapi-lint` also has a checksum file. An image
+pushed by the manual `make release` fallback is not signed. See
+[Releasing](../developer-guide/releasing.md#signatures-and-attestations).
+
+**SBOM.** The `security` workflow also produces an SPDX SBOM of the manager
+image as a CI workflow artifact (`manager-image.spdx.json`); the signed SBOM
+attestation above is the one published with the image. The base images
+publish an SBOM and a maximum-mode provenance attestation with each build.
+
+**Module images.** Nothing in CAPTF verifies a module image's signature;
 see [Module image signatures](../concepts/security-model.md#pod-security).
 Verify by digest, and admit images through your own policy controller if you
 need signatures.

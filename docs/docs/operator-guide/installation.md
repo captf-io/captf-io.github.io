@@ -147,6 +147,11 @@ keep `POD_NAMESPACE` and `SERVICE_ACCOUNT_NAME`, set from
 `metadata.namespace` and `spec.serviceAccountName` through the downward
 API. See [Manager environment](configuration.md#manager-environment).
 
+The manager image is signed with keyless cosign and carries provenance and
+SBOM attestations, and the release assets carry provenance attestations.
+To verify them before installing, see [Supply
+chain](production-readiness.md#supply-chain).
+
 ## Optional components
 
 `config/prometheus` and `config/network-policy` are kustomize components:

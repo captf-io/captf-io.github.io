@@ -75,7 +75,7 @@ All images are in GitHub Container Registry under `ghcr.io/captf-io/`.
 
 | Image | Published by | Tags | Platforms |
 | --- | --- | --- | --- |
-| `cluster-api-provider-terraform` | A maintainer, with `make release` | `vX.Y.Z` (or `vX.Y.Z-rc.N`). | The host platform of the machine running `make release`; `make docker-buildx` builds `linux/amd64` and `linux/arm64` |
+| `cluster-api-provider-terraform` | The `publish` workflow: every push to `main`, and a `vX.Y.Z` tag push | `edge` and `sha-<commit>` on a push to `main`; `vX.Y.Z` (or `vX.Y.Z-rc.N`) on a tag. Never `latest`. | `linux/amd64`, `linux/arm64` |
 | `opentofu-base`, `terraform-base` | The `build` workflow of each repository: every push to `main`, plus a weekly rebuild | `<version>`, `<major.minor>`, `<version>-YYYYMMDD`, `latest`, where `<version>` is the runtime version. | `linux/amd64`, `linux/arm64` |
 | `aws-<role>`, `azure-<role>`, `gcp-<role>`, `oci-<role>` with `<role>` one of `cluster`, `machine`, `machinepool` | The `build` workflow of each repository | `edge-<runtime>` on a push to `main`; `vX.Y.Z-<runtime>` and `<runtime>` on a `vX.Y.Z` tag. `<runtime>` is `opentofu` or `terraform`. | `linux/amd64`, `linux/arm64` |
 | `openstack-<role>` with `<role>` one of `cluster`, `machine` | The `build` workflow | The same scheme as the other clouds. | `linux/amd64`, `linux/arm64` |
@@ -83,13 +83,14 @@ All images are in GitHub Container Registry under `ghcr.io/captf-io/`.
 
 What exists today follows from those triggers:
 
-- **The provider image is published only by a release**, which is run by a
-  maintainer: `make release` builds it, pushes it and reads back its digest.
-  The provider's CI builds and scans the image but pushes nothing, and no
-  release has been made yet, so no tagged provider image exists. For now,
-  build your own with `make docker-build` and `make docker-push IMG=...`.
-  The release builds a single-architecture image; see
-  [Releasing](../developer-guide/releasing.md).
+- **The provider image is published by the `publish` workflow** on every
+  push to `main` (`:edge` and `:sha-<commit>`) and on every release tag
+  (`:vX.Y.Z`); `workflow_dispatch` republishes `:edge`. No release has been
+  made yet, so no `:vX.Y.Z` tag exists. Until one does, use `:edge` or pin
+  a `:sha-<commit>` tag or a digest. To build your own, use
+  `make docker-build` and `make docker-push IMG=...`. A maintainer can fall
+  back to `make release` when CI cannot run; see
+  [Releasing](../developer-guide/releasing.md#manual-fallback).
 - **The base images are published on every push to `main`** and weekly, so
   they exist now. See [Base Images](../module-author/base-images.md#tags-and-pinning)
   for how to pin them.
@@ -98,13 +99,20 @@ What exists today follows from those triggers:
   tag is pushed, so before the first module release only the `edge-` tags are
   available. Pin a release tag or a digest in anything you keep.
 
-Every pushed image carries an SBOM and provenance attestations
-(`mode=max`) for the module and base images, and the manifests carry the
+Every pushed module and base image carries an SBOM and provenance
+attestations (`mode=max`), and the manifests carry the
 `org.opencontainers.image.*` title, description and licence annotations.
+The provider image has its own scheme: every pushed digest gets a keyless
+cosign signature, a SLSA provenance attestation and an SPDX SBOM attestation,
+and its manifests carry the `org.opencontainers.image.*` source, revision,
+version, licenses and description annotations and labels. See
+[Releasing](../developer-guide/releasing.md#signatures-and-attestations) for
+the verification commands.
 
 ## Release assets
 
-A provider release attaches these files to the GitHub release:
+A provider release, created by the `publish` workflow when a release tag is
+pushed, attaches these files to the GitHub release:
 
 | Asset | Source |
 | --- | --- |
@@ -112,9 +120,10 @@ A provider release attaches these files to the GitHub release:
 | `metadata.yaml` | The file at the repository root: the clusterctl release series. |
 | `cluster-template.yaml`, `cluster-template-clusterclass.yaml`, `clusterclass-noop.yaml`, `identity.yaml` | The [`templates/`](https://github.com/captf-io/cluster-api-provider-terraform/tree/main/templates) directory. |
 | `tfcapi-lint-<os>-<arch>` and `tfcapi-lint-checksums.txt` | GoReleaser, configured in [`.goreleaser.yaml`](https://github.com/captf-io/cluster-api-provider-terraform/blob/main/.goreleaser.yaml). It builds the linter only, not the image. |
+| `provenance.intoto.jsonl` | The provenance attestation bundle for the assets above. Every asset also has a provenance attestation in GitHub. |
 
-The Makefile targets `make release`, `make release-assets` and `make
-release-github` build and publish them. The steps and the checklist are in
+The `publish` workflow runs `make release-assets` and `make release-github`
+on the tag push; `make release` is the manual fallback. The steps and the checklist are in
 [Releasing](../developer-guide/releasing.md#assets). The module and base
 repositories attach no release assets: their output is the images above.
 

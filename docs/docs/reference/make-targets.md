@@ -66,7 +66,7 @@ in its row.
 | `GO_VERSION` | `1.26` | The Go version used by image builds. |
 | `VERSION` | from `hack/version.sh` | The version stamped into binaries, and the tag that release targets use. It is always a valid semantic version: `v0.0.0-dev.g<commit>` before the first release tag. Release targets require `vX.Y.Z` or `vX.Y.Z-rc.N`. |
 | `RELEASE_REPO` | `ghcr.io/captf-io/cluster-api-provider-terraform` | The repository of the release image. |
-| `RELEASE_IMG` | `$(RELEASE_REPO):$(VERSION)` | The image `manifests-release` writes into the components file. `make release` passes the pushed image by digest. |
+| `RELEASE_IMG` | `$(RELEASE_REPO):$(VERSION)` | The image `manifests-release` writes into the components file. `make release` and `publish.yaml` pass the pushed image by digest. |
 | `RELEASE_DIR` | `out` | Where `manifests-release` writes its files. Release assets go to `out/release`. |
 | `SKOPEO` | `skopeo` | The `skopeo` binary that `release-image-digest` runs. |
 | `RUNNER_IMAGE` | `$(IMG)` | The runner image `make run` gives the manager. |
@@ -218,20 +218,22 @@ writes. CI runs the two as separate steps.
 
 ## Release
 
-These targets build and publish a release. They need a clean tree with
-`HEAD` tagged `$(VERSION)`. A tag never moves, so a bad release candidate
-gets a new one. [Releasing](../developer-guide/releasing.md#checklist) has
-the full procedure. Publishing is for maintainers.
+These targets build and publish a release. Pushing a release tag is the
+release: `publish.yaml` runs `release-preflight`, `release-assets` and
+`release-github` for it. The targets need a clean tree with `HEAD` tagged
+`$(VERSION)`. A tag never moves, so a bad release candidate gets a new one.
+[Releasing](../developer-guide/releasing.md#checklist) has the full
+procedure. Publishing is for maintainers.
 
 | Target | Description |
 | --- | --- |
 | `release-preflight` | Check that the tree is clean, `HEAD` carries the tag `$(VERSION)`, and `metadata.yaml` only grows. |
-| `release` | Run the preflight, build and push the manager image, and build every asset into `out/release` with the image pinned by digest. Set `VERSION=vX.Y.Z`. |
+| `release` | The manual fallback for when CI cannot run; never run it for a tag `publish.yaml` publishes. Run the preflight, build and push a host-platform manager image (unsigned), and build every asset into `out/release` with the image pinned by digest. Set `VERSION=vX.Y.Z`. |
 | `release-image-digest` | Print the registry digest of `$(RELEASE_REPO):$(VERSION)`. It needs `skopeo`. |
 | `manifests-release` | Build `out/infrastructure-components.yaml` for `$(RELEASE_IMG)`, and copy `metadata.yaml` and `templates/*.yaml` next to it. |
 | `release-assets` | Build every release asset for `$(VERSION)` into `out/release`. It needs the git tag. |
 | `release-notes` | Write `out/release/notes.md` from the commits since the previous tag. |
-| `release-github` | Create the GitHub release for `$(VERSION)` from `out/release`. This publishes: run it as the maintainer only. |
+| `release-github` | Create the GitHub release for `$(VERSION)` from `out/release`, marked as a pre-release for `vX.Y.Z-rc.N`. This publishes; `publish.yaml` runs it on a tag push. |
 | `release-lint-snapshot` | Build the `tfcapi-lint` release assets and checksums into `dist/` as a GoReleaser snapshot, to try a release without a tag. |
 | `release-lint-binaries` | An alias of `release-lint-snapshot`. |
 | `release-lint` | Build the `tfcapi-lint` release assets from the current git tag. |
@@ -241,6 +243,7 @@ the full procedure. Publishing is for maintainers.
 | Target | Description |
 | --- | --- |
 | `tools` | Install every pinned tool into `hack/tools/bin`. Run it once, and again after a version bump. |
+| `print-%` | A pattern rule: `make print-<VARIABLE>` prints the value of any Makefile variable, with no shell quoting. `publish.yaml` uses `print-GO_VERSION` and `print-LDFLAGS` to stamp the published image exactly as `make docker-build` does. |
 
 ## Cleanup
 

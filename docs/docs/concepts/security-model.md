@@ -172,11 +172,12 @@ approve](approvals/operating.md#who-can-approve).
 
 !!! warning "Module image signatures are not verified"
 
-    CAPTF's own manager image is not signed, and nothing in CAPTF verifies a
+    CAPTF's own manager image is signed, but nothing in CAPTF verifies a
     module image's signature before running it: digest pinning fixes which
     image ran after the fact, it does not check who published it.
 
-    For what is scanned, what is published and what is unsigned, see
+    For what is scanned, signed and attested, and how to verify the manager
+    image, see
     [Supply chain](../operator-guide/production-readiness.md#supply-chain).
 
 ## Pod security
