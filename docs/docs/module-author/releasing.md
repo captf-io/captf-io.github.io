@@ -87,9 +87,11 @@ The release steps in the reference repositories are:
    (not in `noop-modules`) on `ubuntu-24.04`, and `make test` on
    `ubuntu-24.04` and `ubuntu-24.04-arm` for both runtimes; only if those
    pass does the `publish` job push the images. It publishes
-   `vX.Y.Z-<runtime>` and moves `<runtime>` to it, for every role. CI has
-   no provider checkout, so `tfcapi-lint` skips itself there: run it
-   locally, as in step 1, before you tag.
+   `vX.Y.Z-<runtime>` and moves `<runtime>` to it, for every role. In the
+   cloud repositories, `make verify` and `make test` check out the
+   provider's `main` and run `tfcapi-lint` against it; `noop-modules` does
+   not. Run it locally, as in step 1, before you tag, so a contract
+   violation does not first surface on the tag's CI run.
 
 The repositories do not state a semantic-versioning policy, so this page
 does not define one. A provider upgrade is its own commit: bump the pin,

@@ -311,19 +311,22 @@ The reference repositories run these layers in
 [`.github/workflows/build.yml`](https://github.com/captf-io/aws-modules/blob/main/.github/workflows/build.yml),
 on pull requests, pushes to `main` and `v*.*.*` tags. The
 `license-headers`, `verify` and `test` jobs call `make` with
-`ENGINE=docker`:
+`ENGINE=docker`. The `verify` and `test` jobs also check out the provider
+repository's `main` into `.cache/provider` and pass
+`PROVIDER_DIR=.cache/provider`, so the contract lint runs in CI:
 
 | Job | Runs on | What it runs |
 | --- | --- | --- |
 | `license-headers` | `ubuntu-24.04` | `make check-headers` |
-| `verify` | `ubuntu-24.04` | `make verify`: formatting, layout, shell, validate on both runtimes and floors, unit tests, tflint and the trivy scan; `tfcapi-lint` prints `SKIP`, because CI has no provider checkout |
-| `test` | `ubuntu-24.04` and `ubuntu-24.04-arm`, for each runtime | `make test RUNTIMES=<runtime>`: build and smoke-test every role natively on amd64 and arm64; the image lint inside the smoke test skips for the same reason |
+| `verify` | `ubuntu-24.04` | `make verify`: formatting, layout, shell, validate on both runtimes and floors, unit tests, tflint, `tfcapi-lint` and the trivy scan |
+| `test` | `ubuntu-24.04` and `ubuntu-24.04-arm`, for each runtime | `make test RUNTIMES=<runtime>`: build and smoke-test every role natively on amd64 and arm64, including the image lint |
 | `publish` | `ubuntu-24.04` | On push only, after the three jobs above pass: builds each role and runtime for `linux/amd64` and `linux/arm64` with QEMU and buildx, and pushes to GHCR with an SBOM and provenance |
 
 The `test` job runs a matrix of two runners and two runtimes, so each image
-is smoke-tested on both architectures it ships for. Because the contract
-lint skips in CI, run `make tfcapi-lint` and `make test` locally with
-`PROVIDER_DIR` set before you release (see [Lint](#lint)). See [Releasing a
+is smoke-tested on both architectures it ships for. CI lints against the
+provider's `main`, so run `make tfcapi-lint` and `make test` locally with
+`PROVIDER_DIR` set before you push, to catch contract violations first
+(see [Lint](#lint)). See [Releasing a
 Module](releasing.md) for publishing and tags, and [tfcapi-lint
 in CI](tfcapi-lint.md#in-ci) for running the linter in your own pipeline.
 
