@@ -190,7 +190,7 @@ directory's `.meta.yml`, not from the page.
 - Tables use the compact style: `| a | b |` with a `| --- |` separator row.
 - Link to other pages with relative links to the `.md` file, including the
   anchor when you mean a section:
-  `[drift](../concepts/drift-and-health.md#drift)`. Relative links stay
+  `[remediation](../concepts/drift-and-health.md#report-or-remediate)`. Relative links stay
   inside `docs/`.
 - Link to files in the provider repository with a full
   `https://github.com/captf-io/cluster-api-provider-terraform/blob/main/...`

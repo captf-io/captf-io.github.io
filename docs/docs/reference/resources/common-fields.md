@@ -168,7 +168,7 @@ These fields use Kubernetes' own types. This page does not list their keys;
 see the linked Kubernetes API reference for each.
 
 `spec.jobs.env`
-:   A list of [`EnvVar`](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#environment-variables)
+:   A list of [`EnvVar`](https://kubernetes.io/docs/reference/kubernetes-api/core/pod-v1/#EnvVar)
     added to the main container (the one that runs your module). An entry
     whose name starts with `TF_` or `KUBE_` is accepted but silently left
     out of the Job, with no event: the runner and the Job own that
@@ -176,13 +176,13 @@ see the linked Kubernetes API reference for each.
     [Job Environment](../environment.md#specjobsenv-rejected-names).
 
 `spec.jobs.resources`
-:   A [`ResourceRequirements`](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#resources)
+:   A [`ResourceRequirements`](https://kubernetes.io/docs/reference/kubernetes-api/core/pod-v1/#ResourceRequirements)
     applied to the main container as a whole. The init container that copies
     the runner binary is not configurable. See [Default
     resources](../environment.md#default-resources).
 
 `spec.jobs.securityContext`
-:   A [`SecurityContext`](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#security-context-1)
+:   A [`SecurityContext`](https://kubernetes.io/docs/reference/kubernetes-api/core/pod-v1/#SecurityContext)
     for the main container. The controller applies these defaults when it
     builds the Job: `seccompProfile` `RuntimeDefault`, `capabilities` drop
     `ALL`, `allowPrivilegeEscalation` `false` and `readOnlyRootFilesystem`
@@ -194,7 +194,7 @@ see the linked Kubernetes API reference for each.
     explicit `runAsUser: 0` or `runAsNonRoot: false`.
 
 `spec.jobs.podSecurityContext`
-:   A [`PodSecurityContext`](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#security-context)
+:   A [`PodSecurityContext`](https://kubernetes.io/docs/reference/kubernetes-api/core/pod-v1/#PodSecurityContext)
     for the Job pod. The controller defaults `seccompProfile` to
     `RuntimeDefault` and `fsGroup` to the runner's UID (65532), so a
     non-root image user can read the 0440 credential files through the
@@ -202,7 +202,7 @@ see the linked Kubernetes API reference for each.
     rules as for the container.
 
 `spec.jobs.imagePullSecrets`
-:   A list of [`LocalObjectReference`](https://kubernetes.io/docs/reference/kubernetes-api/common-definitions/local-object-reference/)
+:   A list of [`LocalObjectReference`](https://kubernetes.io/docs/reference/kubernetes-api/definitions/local-object-reference-v1/)
     naming Secrets in the object's namespace.
 
 !!! warning "The webhook does not stop an image that runs as root by default"
