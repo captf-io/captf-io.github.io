@@ -27,8 +27,9 @@ published on the Terraform Registry as
 [`captf-io/cluster/oci`](https://registry.terraform.io/modules/captf-io/cluster/oci),
 [`captf-io/machine/oci`](https://registry.terraform.io/modules/captf-io/machine/oci) and
 [`captf-io/machinepool/oci`](https://registry.terraform.io/modules/captf-io/machinepool/oci).
-The images are built from
-[`captf-io/oci-modules`](https://github.com/captf-io/oci-modules). Read the
+The images are built by
+[`captf-io/module-images`](https://github.com/captf-io/module-images),
+which pins a release of these modules for each image. Read the
 status note in [Cloud Modules](../README.md) before you rely on it.
 
 <div class="grid cards" markdown>

@@ -20,8 +20,9 @@ published on the Terraform Registry as
 [`captf-io/cluster/noop`](https://registry.terraform.io/modules/captf-io/cluster/noop),
 [`captf-io/machine/noop`](https://registry.terraform.io/modules/captf-io/machine/noop) and
 [`captf-io/machinepool/noop`](https://registry.terraform.io/modules/captf-io/machinepool/noop).
-The images are built from
-[`captf-io/noop-modules`](https://github.com/captf-io/noop-modules).
+The images are built by
+[`captf-io/module-images`](https://github.com/captf-io/module-images),
+which pins a release of these modules for each image.
 
 <div class="grid cards" markdown>
 

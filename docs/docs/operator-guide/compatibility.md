@@ -82,12 +82,12 @@ Provider versions are pinned exactly in each role's `versions.tf`:
 
 | Module set | Provider | Pinned version |
 | --- | --- | --- |
-| [`aws-modules`](https://github.com/captf-io/aws-modules) | `hashicorp/aws` | 6.67.0 |
-| [`azure-modules`](https://github.com/captf-io/azure-modules) | `hashicorp/azurerm` | 5.7.0 |
-| [`gcp-modules`](https://github.com/captf-io/gcp-modules) | `hashicorp/google` | 8.5.0 |
-| [`oci-modules`](https://github.com/captf-io/oci-modules) | `oracle/oci` | 9.8.0 |
-| [`openstack-modules`](https://github.com/captf-io/openstack-modules) | `terraform-provider-openstack/openstack` | 3.4.0 |
-| [`noop-modules`](https://github.com/captf-io/noop-modules) | none (`terraform_data` only) | n/a |
+| [`terraform-aws-<role>`](../cloud-modules/aws/README.md) | `hashicorp/aws` | 6.67.0 |
+| [`terraform-azure-<role>`](../cloud-modules/azure/README.md) | `hashicorp/azurerm` | 5.7.0 |
+| [`terraform-google-<role>`](../cloud-modules/gcp/README.md) | `hashicorp/google` | 8.5.0 |
+| [`terraform-oci-<role>`](../cloud-modules/oci/README.md) | `oracle/oci` | 9.8.0 |
+| [`terraform-openstack-<role>`](../cloud-modules/openstack/README.md) | `terraform-provider-openstack/openstack` | 3.4.0 |
+| [`terraform-noop-<role>`](../cloud-modules/noop/README.md) | none (`terraform_data` only) | n/a |
 
 OpenStack has no `machinepool` role. The pins move with the module repos, so
 read the `versions.tf` of the tag you use.

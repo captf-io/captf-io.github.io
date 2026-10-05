@@ -107,7 +107,7 @@ revoking credentials, and how they reach a Job.
 ## 3. Choose the no-op module images
 
 The no-op modules are published as images by
-[`captf-io/noop-modules`](https://github.com/captf-io/noop-modules), so
+[`captf-io/module-images`](https://github.com/captf-io/module-images), so
 there is nothing to build. The module code is also on the Terraform Registry
 as `captf-io/<role>/noop`. The cluster and machine roles are:
 
@@ -120,7 +120,8 @@ Each image comes in two tags, one per [base
 image](../module-author/base-images.md):
 `<version>-terraform` and `<version>-opentofu`, such as `vX.Y.Z-terraform`. Either satisfies the
 [image contract](../module-author/image-contract.md). The bare `terraform`
-and `opentofu` tags move to the newest release; pin a release tag, or a
+and `opentofu` tags move to the newest release, and every tag is rebuilt if
+the image changes without a module release; pin a release tag, or a
 digest, in anything you keep. This tutorial uses the `terraform` tag. See
 [No-op](../cloud-modules/noop/README.md) for what the modules return.
 

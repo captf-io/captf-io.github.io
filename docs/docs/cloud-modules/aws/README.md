@@ -25,8 +25,9 @@ published on the Terraform Registry as
 [`captf-io/cluster/aws`](https://registry.terraform.io/modules/captf-io/cluster/aws),
 [`captf-io/machine/aws`](https://registry.terraform.io/modules/captf-io/machine/aws) and
 [`captf-io/machinepool/aws`](https://registry.terraform.io/modules/captf-io/machinepool/aws).
-The images are built from
-[`captf-io/aws-modules`](https://github.com/captf-io/aws-modules). Like
+The images are built by
+[`captf-io/module-images`](https://github.com/captf-io/module-images),
+which pins a release of these modules for each image. Like
 every set, these modules are pre-release; see the status note in
 [Cloud Modules](../README.md).
 

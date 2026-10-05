@@ -24,8 +24,9 @@ published on the Terraform Registry as
 [`captf-io/cluster/google`](https://registry.terraform.io/modules/captf-io/cluster/google),
 [`captf-io/machine/google`](https://registry.terraform.io/modules/captf-io/machine/google) and
 [`captf-io/machinepool/google`](https://registry.terraform.io/modules/captf-io/machinepool/google).
-The images are named `gcp-<role>` and built from
-[`captf-io/gcp-modules`](https://github.com/captf-io/gcp-modules).
+The images are named `gcp-<role>` and built by
+[`captf-io/module-images`](https://github.com/captf-io/module-images),
+which pins a release of these modules for each image.
 They pin the `hashicorp/google` provider at 8.5.0. Like every reference
 module set, they are pre-release: read the status note in
 [Cloud Modules](../README.md) first.

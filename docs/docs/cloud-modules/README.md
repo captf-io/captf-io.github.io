@@ -98,16 +98,18 @@ CAPTF and testing a management cluster.
 
 </div>
 
-| Cloud | Images built from | Roles | Provider |
+| Cloud | Images | Roles | Provider |
 | --- | --- | --- | --- |
-| [AWS](aws/README.md) | [`captf-io/aws-modules`](https://github.com/captf-io/aws-modules) | cluster, machine, machinepool | `hashicorp/aws` 6.67.0 |
-| [Google Cloud](gcp/README.md) | [`captf-io/gcp-modules`](https://github.com/captf-io/gcp-modules) | cluster, machine, machinepool | `hashicorp/google` 8.5.0 |
-| [Azure](azure/README.md) | [`captf-io/azure-modules`](https://github.com/captf-io/azure-modules) | cluster, machine, machinepool | `hashicorp/azurerm` 5.7.0 |
-| [OCI](oci/README.md) | [`captf-io/oci-modules`](https://github.com/captf-io/oci-modules) | cluster, machine, machinepool | `oracle/oci` 9.8.0 |
-| [OpenStack](openstack/README.md) | [`captf-io/openstack-modules`](https://github.com/captf-io/openstack-modules) | cluster, machine | `terraform-provider-openstack/openstack` 3.4.0 |
-| [No-op](noop/README.md) | [`captf-io/noop-modules`](https://github.com/captf-io/noop-modules) | cluster, machine, machinepool | None: `terraform_data` is built in |
+| [AWS](aws/README.md) | [`captf-io/module-images`](https://github.com/captf-io/module-images) | cluster, machine, machinepool | `hashicorp/aws` 6.67.0 |
+| [Google Cloud](gcp/README.md) | [`captf-io/module-images`](https://github.com/captf-io/module-images) | cluster, machine, machinepool | `hashicorp/google` 8.5.0 |
+| [Azure](azure/README.md) | [`captf-io/module-images`](https://github.com/captf-io/module-images) | cluster, machine, machinepool | `hashicorp/azurerm` 5.7.0 |
+| [OCI](oci/README.md) | [`captf-io/module-images`](https://github.com/captf-io/module-images) | cluster, machine, machinepool | `oracle/oci` 9.8.0 |
+| [OpenStack](openstack/README.md) | [`captf-io/module-images`](https://github.com/captf-io/module-images) | cluster, machine | `terraform-provider-openstack/openstack` 3.4.0 |
+| [No-op](noop/README.md) | [`captf-io/module-images`](https://github.com/captf-io/module-images) | cluster, machine, machinepool | None: `terraform_data` is built in |
 
-The code of each role lives in its own repository,
+All the images are built by one repository,
+[`captf-io/module-images`](https://github.com/captf-io/module-images), which
+holds no module code. The code of each role lives in its own repository,
 `captf-io/terraform-<provider>-<role>`, and is published on the Terraform
 Registry as `captf-io/<role>/<provider>`, for example
 [`captf-io/cluster/aws`](https://registry.terraform.io/modules/captf-io/cluster/aws).
@@ -162,14 +164,18 @@ Images](../module-author/base-images.md)). The tags name
 the runtime (`<version>-terraform`, `<version>-opentofu`). Each image carries a mirror of the providers its role needs, so a Job
 never downloads a provider at run time.
 
+The image version is the module release: `vX.Y.Z-<runtime>` contains release
+`vX.Y.Z` of the module, fetched from the Terraform Registry.
+
 | Tag | Meaning |
 | --- | --- |
-| `vX.Y.Z-opentofu`, `vX.Y.Z-terraform` | Release `vX.Y.Z` on that runtime; never moves |
-| `opentofu`, `terraform` | The newest release on that runtime |
-| `edge-opentofu`, `edge-terraform` | The newest build of `main` |
+| `vX.Y.Z-opentofu`, `vX.Y.Z-terraform` | Module release `vX.Y.Z` on that runtime; rebuilt if the image changes |
+| `opentofu`, `terraform` | The newest module release on that runtime |
 
-Pin a release tag, or a digest, in anything you keep. The examples in each
-cloud repository pin `v0.1.0-opentofu`. [Releasing a
+Both forms are rebuilt, with a new digest, when the image changes without a
+module release, for example after a base image bump. Pin a release tag, or a
+digest for an image that must not change, in anything you keep. The examples in each
+cloud's module repository pin `v0.1.0-opentofu`. [Releasing a
 Module](../module-author/releasing.md) covers how these tags are published
 and which reference to pin.
 
@@ -221,9 +227,10 @@ it: the file layout, tags on every resource, `terraform validate` and
 `tofu validate` (including the oldest validated runtimes, Terraform 1.5.7
 and OpenTofu 1.6.3), the unit tests, tflint,
 [`tfcapi-lint`](../module-author/tfcapi-lint.md), shellcheck and a trivy
-scan. To build your own module images, fork the cloud's `<cloud>-modules`
-repository, change the registry and image names in the `Makefile` and the
-workflow, run `make lock`, then `make verify` and `make test`.
+scan. To build your own module images, fork
+[`module-images`](https://github.com/captf-io/module-images), point
+`sources/versions.tf` at your modules, change the registry and image names,
+run `make lock`, then `make verify` and `make test`.
 [Module Repository Layout](../module-author/repository-layout.md#starting-point)
 walks through forking a set or starting from the no-op modules.
 

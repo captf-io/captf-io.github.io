@@ -26,8 +26,9 @@ published on the Terraform Registry as
 [`captf-io/cluster/azure`](https://registry.terraform.io/modules/captf-io/cluster/azure),
 [`captf-io/machine/azure`](https://registry.terraform.io/modules/captf-io/machine/azure) and
 [`captf-io/machinepool/azure`](https://registry.terraform.io/modules/captf-io/machinepool/azure).
-The images are built from
-[`captf-io/azure-modules`](https://github.com/captf-io/azure-modules).
+The images are built by
+[`captf-io/module-images`](https://github.com/captf-io/module-images),
+which pins a release of these modules for each image.
 The modules are pre-release; read the status note in
 [Cloud Modules](../README.md) first.
 
