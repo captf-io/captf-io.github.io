@@ -127,6 +127,7 @@ These end the pass with a requeue, not a failure:
 | Wait | Requeue |
 | --- | --- |
 | A lease (`WaitingForRunLease`, `WaitingForClusterOperation`, `WaitingForMachineOperations`) | 30 s |
+| A Job slot (`WaitingForJobSlot`) | 15 s, plus up to 10% jitter |
 | Credentials, dependencies or an owner not ready | 30 s |
 | An unreadable or lost state | 1 min |
 | A Job still running | 1 min fallback; the Job watch wakes the reconcile sooner |

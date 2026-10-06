@@ -81,6 +81,8 @@ cannot run with: a concurrency below 1, a `--sync-period` or
 | `--state-backups` | `5` | Keep fewer or more state backups, or none. |
 | `--runner-events` | `true` | Turn off runner progress events on a busy cluster. |
 | `--terraformcluster-concurrency` and its three siblings | `10` | Raise a kind's parallelism when its objects queue. |
+| `--max-active-jobs` | `200` | Raise it when the cluster has the capacity and operations wait as `WaitingForJobSlot`. |
+| `--cluster-max-active-jobs` | `20` | Raise the per-cluster default; one cluster can set `spec.maxActiveJobs` instead. |
 | `--cluster-operation-gate` | `true` | Allow a cluster's operation and its machines' to overlap. |
 | `--tls-min-version` | `VersionTLS12` | Raise the TLS floor to `VersionTLS13`. |
 | `-v, --v` | `2` | Raise verbosity while diagnosing, then lower it again. |
@@ -92,6 +94,8 @@ These flags set how the manager runs Jobs and what it keeps around them.
 | Flag | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `--cluster-operation-gate` | `bool` | `true` | Keeps a `TerraformCluster`'s apply, destroy or restore from running at the same time as its machines' operations, through a per-Cluster write Lease. The per-object run Lease that stops two Jobs for one object is always on. Turn the gate off only if you accept those overlapping. |
+| `--max-active-jobs` | `int` | `200` | Jobs that may run at once across all clusters. The operation that would exceed it waits (`WaitingForJobSlot`); drift and refresh start only below 80% of it. Counted from the Job cache, so soft by a few Jobs. `0` is no cap; negative is refused. See [Job limits](../concepts/jobs/README.md#job-limits). |
+| `--cluster-max-active-jobs` | `int` | `20` | Jobs that may run at once for one `TerraformCluster`, counting its machines and pools. `TerraformCluster` `spec.maxActiveJobs` overrides it. `0` is no cap. |
 | `--drift-default-interval` | `duration` | `30m` | The drift check interval an object falls back to when neither it nor its cluster's defaults set one. Must be positive. A machine pool whose own or inherited interval is `0` also uses it, since pool drift cannot be disabled. |
 | `--runner-events` | `bool` | `true` | Has each Job's runner post progress events (`RunStarted`, `Step*`, `PlanSummary`, `ResourcesChanged`, `RunFinished`) on the owning `Terraform*` object. Emission is best effort and never fails a run. Needs `create` on `events` in the runner ClusterRole. Turn it off to cut event volume. |
 | `--runner-image` | `string` | `$CAPTF_MANAGER_IMAGE` | The image of the init container that copies the runner binary into every Job. It must contain `/runner`, which means a CAPTF manager or runner image, never a module image. Unset, it takes the manager's own image. The manager refuses to start when this is empty or not a valid image reference. |

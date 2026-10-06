@@ -148,6 +148,42 @@ Which of these wins when several are possible is [the priority
 order](operations.md). Every op is a Job of the same shape, differing in
 the runner's `--op`.
 
+## Job limits
+
+Every Job is a pod, and a pod the cluster cannot schedule stays `Pending`
+while the Job's `activeDeadlineSeconds` runs. A burst of operations (a
+fleet-wide upgrade, a manager restart that finds many due drift checks)
+could therefore fail operations that never ran. Two limits keep the burst
+within what the cluster can start:
+
+| Limit | Default | Scope |
+| --- | --- | --- |
+| `--max-active-jobs` | `200` | Every Job the manager runs |
+| `--cluster-max-active-jobs`, or `spec.maxActiveJobs` on the `TerraformCluster` | `20` | The Jobs of one cluster: its own, its machines' and its pools' |
+
+`spec.maxActiveJobs` is at least 1; unset means the flag. A flag value of
+`0` removes that cap.
+
+Before it renders anything or takes a lease, the manager counts the
+unfinished Jobs from its Job cache. If either limit is reached, the
+operation does not start: it reports `Unknown`/`WaitingForJobSlot` (on
+`DriftJobSucceeded` for a refresh or drift, on `RestoreJobSucceeded` for a
+restore), emits a `WaitingForJobSlot` event once, counts in
+`captf_lease_waits_total{reason="job_slot"}`, and looks again after about 15
+seconds (plus up to 10% jitter). Nothing counts toward a retry backoff.
+
+**Priority.** Drift checks and refreshes are background work: they start
+only while the running Jobs are below 80% of a limit. Apply, destroy,
+restore and plan start until the limit itself. A destroy waits for a slot
+like any foreground operation, but the headroom means background work rarely
+takes it.
+
+**The limits are soft.** The count comes from a cache and nothing locks it,
+so reconciles that run at the same moment, or a Job the cache has not seen
+yet, can overshoot a limit by a few Jobs. A pass that sees the limit reached
+never creates a Job. Size the limits to the cluster's capacity with that
+margin in mind. `captf_jobs_active` reports the running Jobs by kind and op.
+
 ## Manager flags and where the rest lives
 
 The manager has no flags for backoff or for the failure limit. The retry
@@ -157,6 +193,8 @@ timing is compiled in, and the limit is the per-object
 | Flag | Default | What it does | Page |
 | --- | --- | --- | --- |
 | `--cluster-operation-gate` | `true` | A `TerraformCluster`'s apply, destroy or restore and its machines' operations exclude each other | [Leases](leases.md) |
+| `--max-active-jobs` | `200` | Jobs running at once across the manager; `0` is no cap | [Job limits](#job-limits) |
+| `--cluster-max-active-jobs` | `20` | Jobs running at once for one `TerraformCluster` with its machines and pools; `spec.maxActiveJobs` overrides it | [Job limits](#job-limits) |
 | `--sync-period` | `10m` | The informers' resync, and the orphan sweep's interval | [Schedules](schedules.md) |
 | `--drift-default-interval` | `30m` | Drift interval for objects that set none | [Schedules](schedules.md) |
 | `--terraformcluster-concurrency` and the machine, template and pool counterparts | `10` each | Reconciles in flight per kind | [Leader election](leader-election.md) |

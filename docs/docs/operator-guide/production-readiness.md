@@ -189,7 +189,7 @@ See [Observability](observability.md#enabling-the-prometheus-component).
 Three metrics have no alert and are worth a dashboard: `captf_jobs_active`
 (Jobs in flight), `captf_ready` (objects by readiness) and
 `captf_identity_denied_total` (denied identity use). Also watch
-`captf_lease_waits_total` for contention and `captf_state_backups_total` for
+`captf_lease_waits_total` for contention (reason `job_slot` means the Job limits bind) and `captf_state_backups_total` for
 backups being taken. See [Metrics](../reference/metrics.md).
 
 ## Approver and writer split

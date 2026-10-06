@@ -103,6 +103,7 @@ cluster. These events say what an operation waits for. See
 | Reason | Type | On | Fires when | Action |
 | --- | --- | --- | --- | --- |
 | `WaitingForRunLease` | Normal | any provisioned kind | Another live Job holds the object's run lease. | Wait. If no Job is running, see the [stale lock runbook](../operator-guide/runbooks/stale-lock.md). |
+| `WaitingForJobSlot` | Normal | any provisioned kind | The manager's or the cluster's active Jobs reached their limit. Once per wait. | Wait, or raise `--max-active-jobs`, `--cluster-max-active-jobs` or `spec.maxActiveJobs`. See [Job limits](../concepts/jobs/README.md#job-limits). |
 | `WaitingForClusterOperation` | Normal | `TerraformMachine`, `TerraformMachinePool` | A machine's apply or destroy waits for its `TerraformCluster`'s apply or destroy. | Wait. Check the cluster if it never ends. |
 | `WaitingForMachineOperations` | Normal | `TerraformCluster` | A cluster's apply or destroy waits for its machines' applies and destroys in flight. | Wait. Check the machines if it never ends. |
 

@@ -207,6 +207,20 @@ operation and its machines' operations running concurrently — see
 [Run leases and the cluster operation gate](../concepts/lifecycle.md#run-leases-and-the-cluster-operation-gate)
 for what the gate does and how the two sides wait for each other.
 
+## `--max-active-jobs`
+
+Jobs that may run at once across all clusters. Default `200`; `0` removes the
+cap. The manager starts no Job beyond it: the operation waits as
+`WaitingForJobSlot`. Drift checks and refreshes start only below 80% of it.
+The count comes from the Job cache, so the cap is soft by a few Jobs. See
+[Job limits](../concepts/jobs/README.md#job-limits).
+
+## `--cluster-max-active-jobs`
+
+Jobs that may run at once for one `TerraformCluster`, counting its machines'
+and pools'. Default `20`; `0` removes the cap. A cluster overrides it with
+`spec.maxActiveJobs`. Enforced as `--max-active-jobs` is.
+
 ## `--runner-image`
 
 The image of the init container that copies the runner binary into every

@@ -137,6 +137,7 @@ Job-running kinds are documented on
 | `spec.controlPlaneEndpoint` | object | The API server endpoint. See [Control-plane endpoint](#control-plane-endpoint). |
 | `spec.drift` | object | Drift detection policy. See [Drift](#drift). **Mutable.** |
 | `spec.applyPolicy` | string | When a change is applied. See [Apply policy](#apply-policy). **Default:** `Automatic`. **Mutable.** |
+| `spec.maxActiveJobs` | integer | Jobs of this cluster (its own, its machines' and its pools') that may run at once; operations beyond it wait as `WaitingForJobSlot`, and drift and refresh start only below 80% of it. See [Job limits](../../concepts/jobs/README.md#job-limits). **Default:** the manager's `--cluster-max-active-jobs`. **Range:** 1 or more; unset means the default. **Mutable.** |
 | `spec.defaults` | object | Values this cluster's machines and pools inherit. See [Defaults](#defaults). **Mutable.** |
 
 ### Control-plane endpoint
@@ -401,6 +402,7 @@ reports every violation it finds at once.
 - `spec.controlPlaneEndpoint` must set both `host` and `port`, or neither.
   `host` is 1 to 512 characters and `port` is 1 to 65535.
 - `spec.applyPolicy` must be `Automatic` or `Manual`.
+- `spec.maxActiveJobs`, when set, must be at least 1.
 - `spec.drift.action` and `spec.defaults.drift.action` must be `Report`
   or `Remediate`. `spec.drift.intervalSeconds` and
   `spec.defaults.drift.intervalSeconds` must be 0 or more.

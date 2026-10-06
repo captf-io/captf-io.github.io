@@ -214,6 +214,7 @@ Jobs](../operator-guide/runbooks/job-failures.md).
 | `Unknown` | `WaitingForClusterOperation` | A machine's or pool's apply or destroy waits for its `TerraformCluster`'s to finish. |
 | `Unknown` | `WaitingForMachineOperations` | A `TerraformCluster`'s apply or destroy waits for the applies and destroys of its machines and pools in flight. New ones wait behind it. |
 | `Unknown` | `WaitingForRunLease` | Another live Job, such as one another manager instance started, holds the object's run lease. No Job starts until it finishes. Never delete a Lease by hand. See [leases](../operator-guide/runbooks/slow-jobs.md#waiting-for-a-lease). |
+| `Unknown` | `WaitingForJobSlot` | The manager's active Jobs reached `--max-active-jobs`, or the cluster's reached `spec.maxActiveJobs` (`--cluster-max-active-jobs`). No Job starts until one finishes; the check repeats about every 15 seconds. See [Job limits](../concepts/jobs/README.md#job-limits). |
 
 ## StateReadable
 
@@ -253,6 +254,7 @@ backup, or a restore that waits for a lease, is reported here too. See
 | `Unknown` | `WaitingForClusterOperation` | A machine's or pool's restore waits for its `TerraformCluster`'s operation to finish. |
 | `Unknown` | `WaitingForMachineOperations` | A `TerraformCluster`'s restore waits for the operations of its machines and pools in flight. |
 | `Unknown` | `WaitingForRunLease` | Another live Job holds the object's run lease. No Job starts until it finishes. |
+| `Unknown` | `WaitingForJobSlot` | The restore waits for a Job slot. See [Job limits](../concepts/jobs/README.md#job-limits). |
 
 ## OutputsValid
 
@@ -317,6 +319,7 @@ The outcome of the newest refresh or drift Job. See [Drift](../user-guide/drift.
 | `Unknown` | `DriftNotChecked` | No drift check has completed, or drift checks are disabled. |
 | `Unknown` | `DurableInputsMissing` | A refresh or drift Job is due but has nothing to run against: the durable inputs Secret `captf-inputs-<kindshort>-<name>` is gone, and the object renders no current inputs in its place (a `TerraformMachine`, which is immutable, never does). No refresh or drift check runs until you restore the Secret, so `InfrastructureHealthy` keeps its last reading and drift goes unchecked. |
 | `Unknown` | `WaitingForRunLease` | A refresh or drift Job waits for the object's run lease, which another live Job holds. |
+| `Unknown` | `WaitingForJobSlot` | A refresh or drift Job waits for a Job slot: background Jobs start only below 80% of a limit. See [Job limits](../concepts/jobs/README.md#job-limits). |
 
 ## DriftDetected
 

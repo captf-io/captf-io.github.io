@@ -74,6 +74,7 @@ controller did.
 | `JobCreated` | TerraformCluster, TerraformMachine, TerraformMachinePool | A Job started: op, attempt, image and why. | [Jobs](../../concepts/jobs/README.md) |
 | `JobSucceeded` | TerraformCluster, TerraformMachine, TerraformMachinePool | An apply, destroy, refresh or drift Job succeeded. | [Jobs](../../concepts/jobs/README.md) |
 | `WaitingForRunLease` | TerraformCluster, TerraformMachine, TerraformMachinePool | An operation waits for the run lease. Once per wait. | [Leases](../../concepts/jobs/leases.md) |
+| `WaitingForJobSlot` | TerraformCluster, TerraformMachine, TerraformMachinePool | An operation waits for a Job slot. Once per wait. | [Job limits](../../concepts/jobs/README.md#job-limits) |
 | `WaitingForClusterOperation` | TerraformMachine, TerraformMachinePool | An operation waits for its cluster's. | [Leases](../../concepts/jobs/leases.md) |
 | `WaitingForMachineOperations` | TerraformCluster | An operation waits for its machines' and pools'. | [Leases](../../concepts/jobs/leases.md) |
 | `PlanReady` | TerraformCluster | A `Manual` `TerraformPlan` was created: its name, counts and the approve command. Also when the plan changes nothing and the apply runs without an approval. | [Manual plan approval](../../concepts/approvals/manual-approval.md) |

@@ -71,7 +71,7 @@ object; see [Jobs](../concepts/jobs/README.md).
 | `captf_job_step_duration_seconds` | histogram | `kind`, `op`, `step` | seconds | Wall time of each runner step of a completed Job. |
 | `captf_job_queue_seconds` | histogram | `kind`, `op` | seconds | Time from a Job's creation to its source container's start. |
 | `captf_job_errors_total` | counter | `kind`, `op`, `error_kind`, `step` | Jobs | Jobs that did not succeed, by error kind and failing step. |
-| `captf_jobs_active` | gauge | `kind`, `op` | Jobs | Jobs running now, counted from the Job cache at scrape time. |
+| `captf_jobs_active` | gauge | `kind`, `op` | Jobs | Jobs running now, counted from the Job cache at scrape time. Compare their sum with `--max-active-jobs`. |
 | `captf_job_attempts` | histogram | `kind`, `op` | attempts | Retry number of a Job that succeeded. |
 | `captf_resources_changed_total` | counter | `kind`, `op`, `action` | resources | Resources an apply or destroy Job changed. |
 
@@ -210,7 +210,7 @@ Label values:
 
 | Label | Values |
 | --- | --- |
-| `lease_waits_total{reason}` | `run_lease` (another live Job of the object holds it), `cluster_operation` (a machine's apply or destroy waits for its `TerraformCluster`'s), `machine_operations` (a cluster's apply or destroy waits for its machines'). |
+| `lease_waits_total{reason}` | `run_lease` (another live Job of the object holds it), `cluster_operation` (a machine's apply or destroy waits for its `TerraformCluster`'s), `machine_operations` (a cluster's apply or destroy waits for its machines'), `job_slot` (the manager's or the cluster's Job limit is reached; see [Job limits](../concepts/jobs/README.md#job-limits)). |
 | `plan_approvals_total{result}` | `created` (a `TerraformPlan` was created), `approved` (a plan was approved), `applied` (the apply of an approved plan succeeded), `superseded` (a plan was superseded) and `failed` (the approved apply planned other changes and stopped; the new plan waits for approval). |
 
 See [Leases](../concepts/jobs/leases.md) and
