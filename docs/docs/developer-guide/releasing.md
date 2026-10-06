@@ -16,17 +16,24 @@ This page is for whoever cuts a CAPTF release: what a release consists of,
 the checklist, and installing the assets before or instead of publishing
 them.
 
-A release is a tag `vX.Y.Z` (or `vX.Y.Z-rc.N`) on a clean `main`, the
-manager image `ghcr.io/captf-io/cluster-api-provider-terraform:vX.Y.Z`, and a
-GitHub release with the clusterctl assets and the `tfcapi-lint` binaries.
-The same image is the runner image. The no-op demo module images are not part
+A release is a tag `vX.Y.Z` (or `vX.Y.Z-rc.N`) on a clean `main`, two
+images, and a GitHub release with the clusterctl assets and the
+`tfcapi-lint` binaries. The images are built from the two targets of the
+provider's `Dockerfile`:
+
+- The manager image `ghcr.io/captf-io/cluster-api-provider-terraform:vX.Y.Z`.
+  The same image is the runner image.
+- The linter image `ghcr.io/captf-io/tfcapi-lint:vX.Y.Z`, which the
+  [tfcapi-lint GitHub Action](../module-author/tfcapi-lint.md#github-actions)
+  runs.
+ The no-op demo module images are not part
 of a CAPTF release: they are built and tagged from
 [captf-io/module-images](https://github.com/captf-io/module-images).
 
 **Pushing the tag is the release.** The
 [`publish.yaml`](https://github.com/captf-io/cluster-api-provider-terraform/blob/main/.github/workflows/publish.yaml)
-workflow runs on the tag push: it runs `make release-preflight`, pushes the
-image as `:vX.Y.Z`, builds the release assets and creates the GitHub release.
+workflow runs on the tag push: it runs `make release-preflight`, pushes both
+images as `:vX.Y.Z`, builds the release assets and creates the GitHub release.
 A `vX.Y.Z-rc.N` version is marked as a pre-release. `make release` is the
 manual fallback for when CI cannot run; see [Manual
 fallback](#manual-fallback).
@@ -47,7 +54,8 @@ fallback](#manual-fallback).
 
     - Write access to push a signed tag to `captf-io/cluster-api-provider-terraform`.
     - For the manual fallback only: registry push access for
-      `ghcr.io/captf-io/cluster-api-provider-terraform`, `gh` authenticated
+      `ghcr.io/captf-io/cluster-api-provider-terraform` and
+      `ghcr.io/captf-io/tfcapi-lint`, `gh` authenticated
       against this repository (for `make release-github`) and `skopeo` (for
       `make release` to read the pushed image's registry digest).
 
@@ -65,10 +73,14 @@ Module](../module-author/releasing.md).
 
 ## Images from `main`
 
-Every push to `main` publishes the manager image as `:edge` and
+Every push to `main` publishes both images as `:edge` and
 `:sha-<7-character commit>`, and running the workflow by hand
 (`workflow_dispatch`) republishes `:edge` from `main`. `latest` is never
 published. These images are signed and attested like release images.
+
+The tfcapi-lint GitHub Action depends on these tags: pinned to a commit
+on `main`, it runs that commit's `:sha-<7>` linter image, so a commit that
+was never the head of a push to `main` has no image for it to run.
 
 ## Assets
 
@@ -81,8 +93,8 @@ published. These images are signed and attested like release images.
 | `provenance.intoto.jsonl` | The provenance attestation bundle for the assets above, added by `publish.yaml` for verifiers that cannot reach the attestations API. |
 
 GoReleaser only builds the `tfcapi-lint` binaries and checksums: it does not
-build the image or publish the release. The image is built by `publish.yaml`
-(or by `make release` in the fallback), and the release is created by
+build the images or publish the release. The images are built by
+`publish.yaml` (or by `make release` in the fallback), and the release is created by
 `make release-github`, which `publish.yaml` runs. The manager image is
 pinned by digest in `infrastructure-components.yaml`, which is what ties the
 components to one specific image build.
@@ -97,7 +109,9 @@ and from tags:
 - An SPDX SBOM attestation.
 
 The attestations are stored in the registry and in GitHub attestations. Every
-release asset also gets a provenance attestation. Verify an image with:
+release asset also gets a provenance attestation. Verify an image with the following (the same for
+`ghcr.io/captf-io/tfcapi-lint`, still with
+`-R captf-io/cluster-api-provider-terraform`):
 
 ```sh
 cosign verify ghcr.io/captf-io/cluster-api-provider-terraform:vX.Y.Z \
@@ -158,14 +172,15 @@ Images pushed by the manual fallback are not signed or attested.
 7. Verify the signature and attestations as shown in [Signatures and
     attestations](#signatures-and-attestations).
 
-The first time `publish.yaml` pushes the image, set the visibility of the
-`cluster-api-provider-terraform` package in the `captf-io` organization to
-public once: a new organization package may default to private.
+The first time `publish.yaml` pushes each image, set the visibility of its
+package (`cluster-api-provider-terraform`, `tfcapi-lint`) in the `captf-io`
+organization to public once: a new organization package may default to
+private.
 
 ## Manual fallback
 
 Use this only when CI cannot run, and never for a tag that CI has published
-or will publish. Push the tag, then build and push the image and build the
+or will publish. Push the tag, then build and push the images and build the
 assets:
 
 ```sh
@@ -174,8 +189,9 @@ make release VERSION=vX.Y.Z
 
 `release-preflight` refuses a dirty tree, an untagged HEAD, a malformed
 version, or a metadata change that is not append-only. `release` then
-runs `docker-build` and `docker-push`, which build the image for the
-host platform only and push it, reads its registry digest with
+runs `docker-build` and `docker-push`, which build the manager image for
+the host platform only and push it (and `docker-build-lint` for the
+linter image), reads the manager image's registry digest with
 `skopeo`, and builds the assets with the image pinned by that digest.
 The assets land in `out/release/`. Then publish with
 `make release-github VERSION=vX.Y.Z`, which writes `out/release/notes.md`

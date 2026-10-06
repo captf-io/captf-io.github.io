@@ -61,11 +61,13 @@ in its row.
 | Variable | Default | Effect |
 | --- | --- | --- |
 | `IMG` | `ghcr.io/captf-io/cluster-api-provider-terraform:dev` | The manager and runner image that `docker-build`, `docker-buildx` and `docker-push` build or push. |
+| `LINT_IMG` | `ghcr.io/captf-io/tfcapi-lint:dev` | The tfcapi-lint image that `docker-build-lint` builds. |
 | `CONTAINER_TOOL` | `podman` | The tool that builds and pushes images. `docker` works for `docker-build` and `docker-push`. `docker-buildx` needs `podman`. |
 | `PLATFORMS` | `linux/amd64,linux/arm64` | The platforms of the manifest list that `docker-buildx` builds. |
 | `GO_VERSION` | `1.26` | The Go version used by image builds. |
 | `VERSION` | from `hack/version.sh` | The version stamped into binaries, and the tag that release targets use. It is always a valid semantic version: `v0.0.0-dev.g<commit>` before the first release tag. Release targets require `vX.Y.Z` or `vX.Y.Z-rc.N`. |
 | `RELEASE_REPO` | `ghcr.io/captf-io/cluster-api-provider-terraform` | The repository of the release image. |
+| `RELEASE_LINT_REPO` | `ghcr.io/captf-io/tfcapi-lint` | The repository of the release tfcapi-lint image. |
 | `RELEASE_IMG` | `$(RELEASE_REPO):$(VERSION)` | The image `manifests-release` writes into the components file. `make release` and `publish.yaml` pass the pushed image by digest. |
 | `RELEASE_DIR` | `out` | Where `manifests-release` writes its files. Release assets go to `out/release`. |
 | `SKOPEO` | `skopeo` | The `skopeo` binary that `release-image-digest` runs. |
@@ -174,6 +176,7 @@ them. See
 | `runner` | Build the static Job runner into `bin/runner`, and check that it is statically linked. |
 | `run` | Build the manager and run it out of cluster against your current `kubeconfig`. It turns leader election off and makes a self-signed webhook certificate if needed. |
 | `docker-build` | Build the manager and runner image `$(IMG)` for the host platform. |
+| `docker-build-lint` | Build the tfcapi-lint image `$(LINT_IMG)` for the host platform. |
 | `docker-buildx` | Build a multi-architecture manifest list `$(IMG)` for `$(PLATFORMS)`, with `podman`. |
 | `docker-push` | Push `$(IMG)`. A manifest list from `docker-buildx` is pushed with all its images. |
 
@@ -203,6 +206,7 @@ faster when only one has failed. Several need `python3`, `git` or `podman`.
 | `verify-schemas` | Validate the contract JSON Schemas, their examples and the golden inputs and outputs. It needs `python3` with `jsonschema`. |
 | `verify-components` | Check the clusterctl components built from `config/default`. |
 | `verify-metadata` | Validate `metadata.yaml`, and check that `releaseSeries` only grows compared with the previous tag. |
+| `verify-action` | Check that the tfcapi-lint GitHub Action picks the right image for every input and action ref (`actions/tfcapi-lint/tfcapi-lint_test.sh`). |
 | `verify-version` | Check that `hack/version.sh` prints a valid semantic version for every checkout state. |
 | `verify-templates` | Render `templates/` with the pinned `clusterctl`. |
 | `verify-local-repository` | Generate the provider and both flavors from a clusterctl local repository of the release assets, offline and without a cluster. |
@@ -228,7 +232,7 @@ procedure. Publishing is for maintainers.
 | Target | Description |
 | --- | --- |
 | `release-preflight` | Check that the tree is clean, `HEAD` carries the tag `$(VERSION)`, and `metadata.yaml` only grows. |
-| `release` | The manual fallback for when CI cannot run; never run it for a tag `publish.yaml` publishes. Run the preflight, build and push a host-platform manager image (unsigned), and build every asset into `out/release` with the image pinned by digest. Set `VERSION=vX.Y.Z`. |
+| `release` | The manual fallback for when CI cannot run; never run it for a tag `publish.yaml` publishes. Run the preflight, build and push host-platform manager and tfcapi-lint images (unsigned), and build every asset into `out/release` with the image pinned by digest. Set `VERSION=vX.Y.Z`. |
 | `release-image-digest` | Print the registry digest of `$(RELEASE_REPO):$(VERSION)`. It needs `skopeo`. |
 | `manifests-release` | Build `out/infrastructure-components.yaml` for `$(RELEASE_IMG)`, and copy `metadata.yaml` and `templates/*.yaml` next to it. |
 | `release-assets` | Build every release asset for `$(VERSION)` into `out/release`. It needs the git tag. |

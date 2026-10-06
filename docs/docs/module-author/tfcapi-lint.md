@@ -57,6 +57,31 @@ against, `["v1alpha1"]`.
     only the workspace resolves. Build from source instead (below), or use a
     release binary.
 
+### Container image
+
+The provider also publishes `tfcapi-lint` as a container image,
+`ghcr.io/captf-io/tfcapi-lint`, for `linux/amd64` and `linux/arm64`. It
+holds the static binary alone, on distroless, as its entrypoint, and is
+signed and attested like the manager image (see
+[Releasing](../developer-guide/releasing.md#signatures-and-attestations)).
+
+| Tag | Built from |
+| --- | --- |
+| `vX.Y.Z` | The provider release `vX.Y.Z`; never moves. |
+| `edge` | The newest commit on `main`. |
+| `sha-<7>` | That commit on `main`. |
+
+Mount the module read-only and lint it in place:
+
+```sh
+docker run --rm -v "$PWD:/work:ro" -w /work \
+  ghcr.io/captf-io/tfcapi-lint:<version> module --role machine --strict .
+```
+
+`tfcapi-lint image` inside the container needs the registry credentials
+too: mount the directory of your `config.json` and set `DOCKER_CONFIG` to
+it (the [GitHub Action](#github-actions) does this for you).
+
 ## Roles
 
 Every module implements exactly one role, and `--role` on `module` and
@@ -167,6 +192,65 @@ the local layout:
 
 ```sh
 tfcapi-lint image --role machine --strict --all-platforms "$IMAGE"
+```
+
+### GitHub Actions
+
+The provider repository carries a GitHub Action,
+`captf-io/cluster-api-provider-terraform/actions/tfcapi-lint`, that runs
+the [container image](#container-image) with `docker`, so it needs a Linux
+runner with docker, as GitHub's `ubuntu-*` runners have. Pin it by commit,
+like every other action:
+
+```yaml title=".github/workflows/ci.yml"
+- uses: captf-io/cluster-api-provider-terraform/actions/tfcapi-lint@<commit> # vX.Y.Z
+  with:
+    command: module
+    target: .
+    role: machine
+    strict: true
+```
+
+The linter follows the action's ref: pinned to the commit of release
+`vX.Y.Z` (or to the tag itself), the action runs `tfcapi-lint:vX.Y.Z`; pinned
+to another commit on `main`, that commit's `:sha-<7>` image; and on `main`,
+`:edge`. A Dependabot update of the pin therefore updates the linter too.
+The `version` input picks a tag explicitly, and `image` names any image,
+for example one pinned by digest, or one built in an earlier step.
+
+| Input | Default | Meaning |
+| --- | --- | --- |
+| `command` | (required) | `module` or `image`. |
+| `target` | (required) | The module directory, or the image reference or `oci:<dir>`. |
+| `role` | (required) | `cluster`, `machine` or `machinepool`. |
+| `strict` | `false` | `--strict`: warnings fail the step too. |
+| `allow-warnings` | (none) | Check IDs for `--allow-warning`, separated by spaces or newlines. |
+| `contract` | (the linter's) | `--contract`. |
+| `platform` | `linux/amd64` | `image` only: `--platform`. |
+| `all-platforms` | `false` | `image` only: `--all-platforms`. |
+| `insecure` | `false` | `image` only: `--insecure`, for a plain-HTTP registry. |
+| `json` | `false` | `--json`. |
+| `args` | (none) | Extra flags, separated by spaces. |
+| `version` | (from the ref) | The image tag: `vX.Y.Z`, `edge` or `sha-<7>`. |
+| `image` | (none) | The full image to run; overrides `version`. |
+
+The step fails with the linter's [exit code](#exit-codes). Its `image`
+output names the image that ran. Local paths are mounted read-only and
+must be inside the workspace or `$RUNNER_TEMP`, which keeps an image
+layout saved to `$RUNNER_TEMP` lintable. The action also mounts the
+credentials of an earlier `docker/login-action` step, for a private image:
+
+```yaml title="Lint the built image before pushing it"
+- run: |
+    docker build -t "$IMAGE" .
+    mkdir -p "$RUNNER_TEMP/image"
+    docker save "$IMAGE" | tar -x -C "$RUNNER_TEMP/image"
+- uses: captf-io/cluster-api-provider-terraform/actions/tfcapi-lint@<commit> # vX.Y.Z
+  with:
+    command: image
+    target: oci:${{ runner.temp }}/image
+    role: machine
+    strict: true
 ```
 
 ## Building from source
