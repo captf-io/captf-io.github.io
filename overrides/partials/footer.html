@@ -95,6 +95,13 @@
           {% endif %}
         </p>
         <div class="captf-footer__end">
+          {% if footer and footer.bottom_links %}
+            <div class="captf-footer__files">
+              {% for link in footer.bottom_links %}
+                <a href="{{ href(link.href) }}"{{ external(link.href) }}>{{ link.name }}</a>
+              {% endfor %}
+            </div>
+          {% endif %}
           {% if config.extra.social %}
             <div class="captf-footer__social">
               {% for social in config.extra.social %}

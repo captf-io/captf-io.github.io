@@ -852,7 +852,7 @@
 
 .captf-footer__grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.5fr) repeat(4, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
     gap: 2rem;
     padding: 2.2rem 0 1.6rem;
 }
@@ -969,6 +969,11 @@
     gap: 1.2rem;
 }
 
+.captf-footer__files {
+    display: flex;
+    gap: 0.9rem;
+}
+
 .captf-footer__social {
     display: flex;
     gap: 0.7rem;
@@ -988,7 +993,7 @@
 
 @media screen and (max-width: 59.9375em) {
     .captf-footer__grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 1.4rem;
     }
 
