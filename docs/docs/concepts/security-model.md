@@ -224,7 +224,9 @@ to them means, see [Security considerations](secret-management/security.md).
 far more people, in general, than can read Secrets in the namespace — so it
 never carries raw process output. `status.lastRun.error.summary` is the
 runner's own short description of a failure, at most 512 bytes, never the
-failing step's stderr; the full output stays in the Job's own logs, which
+failing step's stderr, and `status.lastRun.error.resources` lists only
+resource addresses and diagnostic summaries, with secret values redacted;
+the full output stays in the Job's own logs, which
 need `pods/log` access to read. The events the runner emits on the object
 (`RunStarted`, `StepStarted`, …, `RunFinished`; see
 [Observability](../operator-guide/observability.md)) carry step names, exit

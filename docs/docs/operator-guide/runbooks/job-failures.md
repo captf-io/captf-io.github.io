@@ -68,7 +68,12 @@ the full field list in [Last run](../../reference/resources/common-fields.md#las
   `prepare` (the runner's own environment setup, before any runtime
   command ran) — and `error.summary` gives the runner's curated one-line
   reason, at most 512 bytes — the module's or the cloud provider's own
-  error, never raw output. Read the rest from the Job's pod logs (step 4).
+  error, never raw output. For a failed `apply` or `destroy`,
+  `error.resources` lists the failing resources as `<address>: <summary>`
+  (at most 10), and the `ApplyJobSucceeded` condition's message names the
+  first, so `kubectl get -o jsonpath='{.status.lastRun.error.resources}'`
+  often answers which resource failed. Read the rest from the Job's pod
+  logs (step 4).
 - `image-layout`: the image does not follow the module contract; the same
   cause as `ImageInvalid` above. See
   [Image layout errors](#image-layout-errors).

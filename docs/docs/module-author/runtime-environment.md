@@ -168,7 +168,10 @@ whose plan exits 0 (no changes at all, not even to outputs) skips its
 `apply` step entirely: the Job ends successfully without applying
 anything. `show -json`'s output is never written to the Job's log, since a
 plan document carries every input value; every other command's output
-streams to the log as it runs. `validate`'s JSON diagnostics are the
+streams to the log as it runs. `apply` and `destroy` run with `-json`: the
+runner renders each JSON message back to a readable log line, with an error
+diagnostic as the `Error:` block the runtime prints without `-json`, and
+redacts secret values from those lines. `validate`'s JSON diagnostics are the
 exception: they are captured for the failure summary below *and* still
 written to the log, since they carry no input values. `state list`'s
 output (resource addresses only) is logged too. Approving a destructive
@@ -203,8 +206,10 @@ result with no plan creates none). Both are
 covered in [Plan Approval](../user-guide/plan-approval.md).
 
 The failure summary itself is built from the failing step's own output,
-never a raw stderr dump: for `validate`, from its `-json` diagnostics; for
-every other step, from the `Error:` diagnostic header lines in its stderr
+never a raw stderr dump: for `validate`, `apply` and `destroy`, from their
+`-json` diagnostics (an error diagnostic that names a resource also adds
+`<address>: <summary>` to `status.lastRun.error.resources`); for every other
+step, from the `Error:` diagnostic header lines in its stderr
 (ANSI escape codes stripped first, since a provider or a `local-exec`
 child is not bound by `-no-color`). When neither yields a line, it falls
 back to `step <name> exited <code>; see the Job's logs`. The summary is
@@ -221,7 +226,8 @@ contributed to the summary.
 | Limit | Value | Applies to |
 | --- | --- | --- |
 | Failure summary | 512 bytes | `status.lastRun.error.summary`, above |
-| Termination message | 4096 bytes | The whole result document; the kubelet truncates a longer one, so the runner drops fields in stages (resource-change counts, then the error tail, then plan and drift resource lists, then step history) to fit, keeping the plan's hash and counts last |
+| Failing resources listed | 10 | `status.lastRun.error.resources`, each at most 512 bytes |
+| Termination message | 4096 bytes | The whole result document; the kubelet truncates a longer one, so the runner drops fields in stages (resource-change counts, then the error's failing resources, then the error tail, then plan and drift resource lists, then step history) to fit, keeping the plan's hash and counts last |
 | Plan resources listed | 50 | `spec.summary.resources` of the `TerraformPlan`; a plan with more sets `truncated: true` |
 | Drift resources listed | 20 | The drift check's resource address list |
 | Stderr kept in memory per step | 64 KiB | The tail a step's failure summary is built from; the log itself is not truncated |

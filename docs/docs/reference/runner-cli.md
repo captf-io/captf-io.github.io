@@ -207,14 +207,19 @@ parses it, so the field names are fixed. `version` is `1`.
 | `runtime` | `command`, the runtime invocation, and `version`, the runtime version. |
 | `steps` | One entry per command that ran: `name`, `exit` (the command's own exit code; a step killed by a signal or never started is recorded as `1`) and `seconds`. |
 | `drift` | For a drift check: `detected`, the `create`, `update`, `replace` and `delete` counts (a replacement counts only in `replace`), and `resources`, a list of addresses. `null` for other operations. |
-| `error` | `null` on success, otherwise `kind`, `step` (the failing step, or `null`) and `tail`. |
+| `error` | `null` on success, otherwise `kind`, `step` (the failing step, or `null`), `tail` and, optional, `resources`: the failing resources of an apply or destroy, each `<address>: <summary>`, at most 10 of at most 512 bytes. |
 | `changes` | Optional. The `add`, `change`, `destroy` and, when present, `import` counts from the runtime's final summary line of an apply or destroy. Absent when the step printed none. |
 | `plan` | Optional. The plan summary of a plan Job, of a guarded apply that blocked, or of an apply whose plan changed: `hash`, the `create`, `update`, `replace`, `delete`, `import`, `move`, `forget` and `outputChanges` counts, and `resources`. |
 
 `error.tail` is a curated summary, not raw output, and is capped at 512
-bytes. For `validate` it comes from the step's JSON diagnostics; for every
+bytes. For `validate`, `apply` and `destroy` it comes from the step's JSON
+diagnostics (the runner runs `apply` and `destroy` with `-json`); for every
 other step, from the `Error:` lines of its stderr. When there are none, it
-names the step and its exit code. The full output is in the Pod log.
+names the step and its exit code. `error.resources` lists the addresses of
+the diagnostics that name a resource. The full output is in the Pod log: the
+runner renders each JSON message back to a readable line, and an error
+diagnostic as the `Error:` block the runtime prints without `-json`. Secret
+values are redacted from the log lines, the summary and the resources.
 
 When the document is over 4096 bytes, the runner drops fields in a fixed
 order. [Runtime Environment](../module-author/runtime-environment.md#output-size-limits)
