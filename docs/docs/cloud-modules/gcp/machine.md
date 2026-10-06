@@ -23,6 +23,19 @@ The module's source is
 published on the Terraform Registry as
 [`captf-io/machine/google`](https://registry.terraform.io/modules/captf-io/machine/google).
 
+!!! warning "Control-plane bootstrap data can be readable from instance metadata"
+
+    A control-plane payload holds the cluster's CA and service-account
+    private keys. With `cloud-config` and the default
+    `bootstrap_delivery = "secret-manager"` it is staged in Secret Manager
+    and never sits in metadata. It is placed inline, readable through
+    `compute.instances.get` (included in `roles/viewer` and
+    `roles/compute.viewer`) and from the metadata server, when the data is
+    Ignition or you set `bootstrap_delivery = "inline"`. Prefer cloud-config
+    with Secret Manager staging for control planes. Either way, block pod
+    egress to `169.254.169.254` with a NetworkPolicy and limit who holds
+    `compute.instances.get` in the project. See [Bootstrap](#bootstrap).
+
 ## What it creates
 
 | Resource | Purpose | When |

@@ -23,6 +23,15 @@ The module's source is
 published on the Terraform Registry as
 [`captf-io/machine/oci`](https://registry.terraform.io/modules/captf-io/machine/oci).
 
+!!! warning "Control-plane bootstrap data is readable from instance metadata"
+
+    A control-plane payload holds the cluster's CA private keys and is
+    delivered as instance user data. It stays readable from the instance's
+    metadata service and, through the OCI API, by any principal that may read
+    instances in the compartment; the module does not stage it in OCI Vault.
+    Block pod egress to `169.254.169.254` with a NetworkPolicy, and limit who
+    can read instances in the compartment. See [Bootstrap](#bootstrap).
+
 ## What it creates
 
 | Resource | Purpose | When |

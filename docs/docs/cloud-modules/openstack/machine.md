@@ -25,6 +25,17 @@ The module's source is
 published on the Terraform Registry as
 [`captf-io/machine/openstack`](https://registry.terraform.io/modules/captf-io/machine/openstack).
 
+!!! warning "Control-plane bootstrap data is readable from the metadata service"
+
+    A control-plane payload holds the cluster's CA private keys and is
+    delivered as Nova user data. OpenStack has no instance identity to stage
+    it behind, so there is no `bootstrap_delivery`: anything that reaches the
+    metadata service (169.254.169.254) on the node, and anyone who can read
+    the server through the Nova API, can read it. A config drive does not
+    turn the service off. Deny `169.254.169.254/32` to pods with a CNI
+    NetworkPolicy, and limit who can read servers in the project. See
+    [Bootstrap](#bootstrap).
+
 ## What it creates
 
 | Resource | Purpose | When |
