@@ -177,6 +177,7 @@ them. See
 | `run` | Build the manager and run it out of cluster against your current `kubeconfig`. It turns leader election off and makes a self-signed webhook certificate if needed. |
 | `docker-build` | Build the manager and runner image `$(IMG)` for the host platform. |
 | `docker-build-lint` | Build the tfcapi-lint image `$(LINT_IMG)` for the host platform. |
+| `test-lint-image` | Build `$(LINT_IMG)`, then lint a known-good and a known-bad module of every role with it, through the GitHub Action's script; exit codes and JSON must match the fixtures' golden files (`actions/tfcapi-lint/image_test.sh`). Needs the `docker` CLI (on a podman host, talking to the podman socket). |
 | `docker-buildx` | Build a multi-architecture manifest list `$(IMG)` for `$(PLATFORMS)`, with `podman`. |
 | `docker-push` | Push `$(IMG)`. A manifest list from `docker-buildx` is pushed with all its images. |
 
