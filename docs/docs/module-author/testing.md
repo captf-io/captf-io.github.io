@@ -330,15 +330,18 @@ layer for pre-release checks.
 
 A `terraform-*` repository runs one job, `verify`, in
 [`.github/workflows/ci.yml`](https://github.com/captf-io/terraform-aws-cluster/blob/main/.github/workflows/ci.yml),
-on pull requests, pushes to `main` and `v*.*.*` tags. It calls `make verify
-ENGINE=docker` on `ubuntu-24.04`, after checking out the provider repository's
-`main` into `.cache/provider` and passing `PROVIDER_DIR=.cache/provider`, so
-the contract lint runs in CI. `make verify` covers license headers, format,
+on pull requests, pushes to `main` and `v*.*.*` tags, on `ubuntu-24.04`.
+It first lints the module with the provider's [tfcapi-lint GitHub
+Action](tfcapi-lint-ci.md), pinned to a provider release, with the role and
+the allowed warnings read from the Makefile (`make print-ROLE`,
+`make print-TFCAPI_LINT_ALLOW`). Then it calls `make verify ENGINE=docker`,
+even when the lint failed. `make verify` covers license headers, format,
 layout, shell, `validate` and `unit-test` on both runtimes and the floors,
-tflint, `tfcapi-lint` and the trivy scan, with the independent groups side by
-side. The noop repositories run `make verify` too, with its smaller set:
-headers, format, `validate` and the apply and destroy of `test/root`. Nothing
-there builds or smoke-tests an image.
+tflint and the trivy scan, with the independent groups side by side; its own
+`tfcapi-lint` target prints `SKIP`, because CI has no provider checkout to
+build it from. The noop repositories run the same lint, then `make verify`
+with its smaller set: headers, format, `validate` and the apply and destroy
+of `test/root`. Nothing there builds or smoke-tests an image.
 
 `module-images` tests and publishes the images in
 [`.github/workflows/build.yml`](https://github.com/captf-io/module-images/blob/main/.github/workflows/build.yml),
@@ -351,9 +354,10 @@ on pull requests and pushes to `main`; only a push to `main` publishes:
 | `publish` | `ubuntu-24.04` | On a push to `main` only, after the jobs above pass: builds each image and runtime for `linux/amd64` and `linux/arm64` with QEMU and buildx, and pushes to GHCR with an SBOM and provenance |
 
 The `test` job runs a matrix of the clouds and two runners, so each image
-is smoke-tested on both architectures it ships for. CI lints against the
-provider's `main`, so run `make tfcapi-lint` in the module repository, and
-`make test` in `module-images`, locally before
+is smoke-tested on both architectures it ships for. A module repository's
+CI lints with the provider release its workflow pins, and `module-images`
+with the provider's `main`, so run `make tfcapi-lint` in the module
+repository, and `make test` in `module-images`, locally before
 you push, to catch contract violations first (see [Lint](#lint)). See
 [Releasing a Module](releasing.md) for publishing and tags, and [tfcapi-lint
 in CI](tfcapi-lint-ci.md) for running the linter in your own pipeline.

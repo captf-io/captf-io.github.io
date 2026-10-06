@@ -284,8 +284,9 @@ container pinned by digest, as the host user, with the repository mounted at
 `/work`, so nothing in the repository is left owned by root and a gate gives
 the same result on every machine.
 
-`make help` lists the targets. `make verify` runs all the checks, and is the
-only thing CI runs (`.github/workflows/ci.yml`):
+`make help` lists the targets. `make verify` runs all the checks, and is
+what CI runs (`.github/workflows/ci.yml`), after linting the module with the
+[tfcapi-lint GitHub Action](tfcapi-lint-ci.md) itself:
 
 | Target | Enforces |
 | --- | --- |
@@ -296,7 +297,7 @@ only thing CI runs (`.github/workflows/ci.yml`):
 | `validate` | `init` and `validate` on both current runtimes and on the floors Terraform 1.5.7 and OpenTofu 1.6.3. |
 | `unit-test` | `terraform test` and `tofu test`, with mocked providers. |
 | `tflint` | tflint with the terraform ruleset (preset `all`) and the cloud's ruleset, configured in `.tflint.hcl`. |
-| `tfcapi-lint` | `tfcapi-lint module --role <role> --strict`. It is built from the provider repository (`PROVIDER_DIR`), or taken from `TFCAPI_LINT`, and skips when neither is available. |
+| `tfcapi-lint` | `tfcapi-lint module --role <role> --strict`. It is built from the provider repository (`PROVIDER_DIR`), or taken from `TFCAPI_LINT`, and skips when neither is available, as in CI, where the GitHub Action runs the lint instead. |
 | `scan` | `trivy config` over workflows and HCL. Every ignore in `.trivyignore.yaml` needs a path and a statement of why. |
 
 There is no `lock`, `build` or `test` target: a module repository builds no
