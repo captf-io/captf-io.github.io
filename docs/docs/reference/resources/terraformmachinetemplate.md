@@ -66,7 +66,7 @@ spec](terraformmachine.md#spec) and means the same there.
 
 ## Spec
 
-`spec` holds only `spec.template`.
+`spec` holds `spec.template` and the optional `spec.capacity`.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -75,6 +75,7 @@ spec](terraformmachine.md#spec) and means the same there.
 | `spec.template.metadata.labels` | map of string | Labels copied onto each machine. Keys and values must be valid Kubernetes labels. **Optional.** |
 | `spec.template.metadata.annotations` | map of string | Annotations copied onto each machine. Keys must be valid annotation keys. **Optional.** |
 | `spec.template.spec` | object | The spec of each created `TerraformMachine`. **Required.** **Immutable** (see [Validation](#validation)). |
+| `spec.capacity` | map of resource name to quantity | The resources of the node the template creates, for example `cpu: "4"` and `memory: 16Gi`. Overrides the image label `io.captf.capacity` entirely, with no per-resource merge. **Optional.** **Mutable**, and never copied to the machines. See [Override the capacity](#override-the-capacity). |
 
 Each field directly under `spec.template.spec` is the `TerraformMachine`
 field of the same name:
@@ -102,15 +103,17 @@ machines only through a rollout: see [Validation](#validation).
 The controller resolves the status once for each image reference, from the
 image's config labels. Tags are not polled again: a new image is a new
 template. When `spec.template.spec.source.image` differs from
-`status.capacitySource.image`, the controller resolves it again.
+`status.capacitySource.image`, or `spec.capacity` no longer matches
+`status.capacity`, the controller resolves it again.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `status.capacity` | map of resource name to quantity | The resources of the node the template creates, from the image label `io.captf.capacity`, for example `cpu: "4"`. Unset when the image declares none or the label is invalid. |
+| `status.capacity` | map of resource name to quantity | The resources of the node the template creates: `spec.capacity` when set, else the image label `io.captf.capacity`, for example `cpu: "4"`. Unset when neither declares any or the label is invalid. |
 | `status.nodeInfo` | object | The platform of the node, from the image label `io.captf.node-info`. Unset when the image declares none or the label is invalid. Must set at least one property. |
 | `status.nodeInfo.architecture` | string | The node's CPU architecture. **Allowed values:** `amd64`, `arm64`, `s390x`, `ppc64le`. |
 | `status.nodeInfo.operatingSystem` | string | The node's operating system, for example `linux`. **Range:** 1 to 64 characters. |
-| `status.capacitySource` | object | Records which image `capacity` and `nodeInfo` came from. |
+| `status.capacitySource` | object | Records where `capacity` and `nodeInfo` came from. |
+| `status.capacitySource.source` | string | `Spec` when `status.capacity` is `spec.capacity`, `Image` when it comes from the image label. **Allowed values:** `Spec`, `Image`. |
 | `status.capacitySource.image` | string | The `spec.template.spec.source.image` last resolved. **Range:** 1 to 512 characters. |
 | `status.conditions` | list | The `CapacityResolved` condition. **Range:** at most 32. |
 | `status.conditions[].type` | string | The condition type: `CapacityResolved`. |
@@ -144,6 +147,7 @@ status:
     architecture: amd64
     operatingSystem: linux
   capacitySource:
+    source: Image
     image: ghcr.io/captf-io/module-images/aws-machine:v0.1.0-opentofu
   conditions:
     - type: CapacityResolved
@@ -155,9 +159,47 @@ status:
 The Cluster API provider of the Cluster Autoscaler reads `status.capacity` and
 `status.nodeInfo` from the infrastructure template of a MachineDeployment or
 MachineSet that is at zero replicas, to decide whether a pending Pod would fit
-a new node. A module fixes the instance type, so an image describes one node
-size: an image that varies its size by variable needs one image per size to
-use the labels. The labels are optional, and pool images ignore them.
+a new node. The labels are optional, and pool images ignore them.
+
+### Override the capacity
+
+A label describes one node size, so it suits a module that fixes the
+instance type. When the module takes the size as a variable (`instance_type`,
+`vm_size`, `shape`, ...), set `spec.capacity` to the size you chose instead
+of building one image per size, and leave `io.captf.capacity` off the image:
+[`tfcapi-lint`](../tfcapi-lint-cli.md) warns with
+`image/capacity-size-variable` when both exist.
+
+```yaml title="spec.capacity"
+spec:
+  capacity:
+    cpu: "4"
+    memory: 16Gi
+  template:
+    spec:
+      source:
+        image: ghcr.io/captf-io/module-images/aws-machine:v0.1.0-opentofu
+      variables:
+        instance_type: m6i.xlarge
+```
+
+- `spec.capacity` replaces the image's capacity label as a whole: a resource
+  the override omits is not filled in from the label, and an invalid label
+  is then ignored. `status.capacitySource.source` becomes `Spec`.
+- `nodeInfo` still comes from the image's `io.captf.node-info`.
+- It is mutable and stays out of `spec.template`, so changing it does not roll
+  any machine. Keep it equal to the size the variables select: CAPTF does not
+  check that they agree.
+- The Cluster Autoscaler's
+  `capacity.cluster-autoscaler.kubernetes.io/*` annotations (`cpu`, `memory`,
+  `ephemeral-disk`, `maxPods`, GPU keys) on the MachineDeployment or
+  MachineSet take precedence over `status.capacity`, per resource. The order,
+  highest first: those annotations, `spec.capacity`, the image label.
+- Capacity is a set of quantities, never a node count. CAPTF does not write
+  the number of nodes or Machines for a template. The only count it writes is
+  the observed one, copied back to `MachinePool.spec.replicas` for a pool in
+  autoscaling mode (`ReplicasManagedByModule`); an external scaler can change
+  the count freely.
 
 ### Conditions
 

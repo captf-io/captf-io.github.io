@@ -428,14 +428,20 @@ MUST emit the same string the Node will carry:
 Autoscale-from-zero (`InfraMachineTemplate.status.capacity` / `nodeInfo`;
 [`infra-machine.md`](https://github.com/kubernetes-sigs/cluster-api/blob/v1.14.2/docs/book/src/developer/providers/contracts/infra-machine.md)
 "InfraMachineTemplate: support cluster autoscaling from zero") is supported
-through the **image**: instance size is fixed inside the module, so the
-image declares it with the OCI labels `io.captf.capacity` and
-`io.captf.node-info` (see [`image-contract.md`](../../image-contract.md)
+through the **image** or the **template**. When the module fixes the
+instance size, the image declares it with the OCI labels `io.captf.capacity`
+and `io.captf.node-info` (see [`image-contract.md`](../../image-contract.md)
 "OCI labels"), and a `TerraformMachineTemplate` reconciler copies them into
-`status.capacity`/`status.nodeInfo`. An image without the labels leaves
-both fields unset; the Cluster Autoscaler's
-`capacity.cluster-autoscaler.kubernetes.io/*` annotations on the
-MachineDeployment/MachineSet remain the fallback.
+`status.capacity`/`status.nodeInfo`. When the module takes the size as a
+variable (`instance_type`, `vm_size`, `shape`, ...), a label would go stale
+with the first change of that variable; leave the label off and set
+`TerraformMachineTemplate.spec.capacity` instead, which replaces the label
+entirely (the image still supplies `nodeInfo`). An image without the labels,
+on a template without `spec.capacity`, leaves `status.capacity` unset. The
+Cluster Autoscaler's `capacity.cluster-autoscaler.kubernetes.io/*`
+annotations on the MachineDeployment/MachineSet take precedence over
+`status.capacity` and remain the fallback. Capacity is a resource list of
+quantities and never a node count: CAPTF does not write a Machine count.
 
 ## Control-plane machines
 

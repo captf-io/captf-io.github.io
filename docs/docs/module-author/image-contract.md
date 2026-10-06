@@ -111,8 +111,15 @@ URL, the commit, and the tag being built.
 
 **Capacity labels** (machine role only, optional) let
 `TerraformMachineTemplate` support Cluster Autoscaler scale-from-zero: the
-module fixes the instance type, so the image is the only place that knows
-the node's size. Set both identically on every platform of a multi-arch
+module fixes the instance type, the image is the place that knows the
+node's size. If the module takes the size as a variable (`instance_type`,
+`vm_size`, `machine_type`, `shape`, `flavor`, ...), do not set
+`io.captf.capacity`: the label cannot follow a changed variable, and
+[`tfcapi-lint`](../reference/tfcapi-lint-cli.md) warns with
+`image/capacity-size-variable`. Users set
+[`spec.capacity`](../reference/resources/terraformmachinetemplate.md#spec) on
+the `TerraformMachineTemplate` instead, which overrides the label. Set both
+labels identically on every platform of a multi-arch
 index; an image without them leaves `status.capacity`/`status.nodeInfo`
 unset.
 

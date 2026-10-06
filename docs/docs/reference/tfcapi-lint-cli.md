@@ -303,6 +303,7 @@ registry access when the Job runs.
 | `image/label-role` | info or error | `io.captf.role` is not set (info), or names a different role than `--role` (error). | Set the label to the role. |
 | `image/label-contract` | info or warning | `io.captf.contract` is not set (info), or names a different version than `--contract` (warning). | Set the label to the contract version. |
 | `image/label-capacity` | info or error | Machine role. `io.captf.capacity` and `io.captf.node-info` do not parse. Missing labels are info: no scale-from-zero capacity. Other roles get info only. | Make the labels valid JSON of the documented shape. |
+| `image/capacity-size-variable` | warning | Machine role. The image declares `io.captf.capacity` and the module has a size variable: `instance_type`, `vm_size`, `machine_type`, `shape`, `flavor`, `flavor_name`, `ocpus`, `memory_gib` or `memory_in_gbs`. The label cannot follow a changed size. | Drop the label and set `spec.capacity` on the `TerraformMachineTemplate`, or remove the variable. |
 | `image/user-root` | warning | The image runs as root, so the Job cannot run under the restricted Pod Security Standard. | Set a numeric non-root `USER`. |
 | `image/user-unresolved` | warning | The image user is a name the linter cannot resolve, so permission checks are approximated. | Use a numeric uid. |
 

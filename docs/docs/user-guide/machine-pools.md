@@ -252,6 +252,27 @@ scale, the case autoscaling mode exists for:
     also resizes the group. Next to the Cluster Autoscaler it can remove the
     nodes the Cluster Autoscaler added, without a drain.
 
+## Scale a MachineDeployment from zero
+
+The Cluster Autoscaler's `clusterapi` provider can scale a
+MachineDeployment or MachineSet to and from zero only if it knows the node's
+size without a running node. For CAPTF it reads that from
+`TerraformMachineTemplate.status.capacity`, which comes from, in order of
+precedence:
+
+1. the `capacity.cluster-autoscaler.kubernetes.io/*` annotations on the
+   MachineDeployment or MachineSet (the Cluster Autoscaler's own override);
+2. `TerraformMachineTemplate.spec.capacity`, for a module that takes its size
+   as a variable;
+3. the machine image's `io.captf.capacity` label, for a module that fixes it.
+
+Capacity is a set of quantities (`cpu: "4"`, `memory: 16Gi`). CAPTF never
+writes a node count for a MachineDeployment or MachineSet: the Cluster
+Autoscaler, or you, own `spec.replicas`. The one count CAPTF does write is the
+observed count of an autoscaled MachinePool, copied back as described above.
+See [Override the
+capacity](../reference/resources/terraformmachinetemplate.md#override-the-capacity).
+
 ## Add an autoscaled pool to a generated cluster
 
 This walks through adding an autoscaled `MachinePool` to a cluster
