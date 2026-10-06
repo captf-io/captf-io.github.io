@@ -30,13 +30,13 @@ check them against the tag you install.
 | Cluster API contract | `v1beta2` | `metadata.yaml`, the CRD label |
 | controller-runtime | v0.24.1 | `go.mod` |
 | Kubernetes client libraries | v0.36.5 (`k8s.io/api`, `apimachinery`, `client-go`) | `go.mod` |
-| CAPTF release series | 0.1 (none published) | `metadata.yaml` |
+| CAPTF release series | 0.1 (v0.1.0 and v0.1.1 released) | `metadata.yaml` |
 | CAPTF API and module contract | `v1alpha1`, provisional | the CRDs, [contract](../module-author/contract/README.md) |
 | cert-manager | `cert-manager.io/v1` API required; no minimum release stated | [Installation](installation.md) |
 | Terraform | Any 1.x with the CLI surface below; the reference modules require `>= 1.5.0` and are validated on 1.5.7 | [image contract](../module-author/image-contract.md) |
 | OpenTofu | Any 1.x with the same surface; the reference modules are validated on the floor 1.6.3 (OpenTofu has no 1.5) | the same |
-| Terraform in the base image | 1.16.4 | [`terraform-base`](https://github.com/captf-io/terraform-base) `Dockerfile` |
-| OpenTofu in the base image | 1.12.6 (the `-minimal` image) | [`opentofu-base`](https://github.com/captf-io/opentofu-base) `Dockerfile` |
+| Terraform in the base image | 1.16.5 | [`terraform-base`](https://github.com/captf-io/terraform-base) `Dockerfile` |
+| OpenTofu in the base image | 1.12.7 (the `-minimal` image) | [`opentofu-base`](https://github.com/captf-io/opentofu-base) `Dockerfile` |
 | State file format | Version 4 only | the state reader |
 | Architectures | The manager image is published for `linux/amd64` and `linux/arm64` (see [Architectures](#architectures)) | `publish.yaml`, `security.yaml` |
 
@@ -70,8 +70,8 @@ uses are standard (Jobs, Leases, Secrets, validating webhooks,
 
 The reference module images build `FROM` the CAPTF base images
 [`terraform-base`](https://github.com/captf-io/terraform-base) (Terraform
-1.16.4) and [`opentofu-base`](https://github.com/captf-io/opentofu-base)
-(OpenTofu 1.12.6). Each base is Ubuntu 26.04 with `ca-certificates`, `git`
+1.16.5) and [`opentofu-base`](https://github.com/captf-io/opentofu-base)
+(OpenTofu 1.12.7). Each base is Ubuntu 26.04 with `ca-certificates`, `git`
 and `openssh-client`, runs as user `captf` (65532:65532), and exposes the
 runtime at `/captf/runtime`. Each module Dockerfile pins its base by tag and
 digest. The noop images use the same bases; they no longer pin an upstream
@@ -136,7 +136,7 @@ the Makefile of the provider:
 | Cluster API (core, kubeadm bootstrap, kubeadm control plane) | v1.14.2 |
 | cert-manager | v1.21.1 |
 | `clusterctl` (Makefile pin) | v1.14.2 |
-| Runtimes in the noop images | Terraform 1.16.4, OpenTofu 1.12.6 |
+| Runtimes in the noop images | Terraform 1.16.5, OpenTofu 1.12.7 |
 
 This is the only matrix that has run. Use a `clusterctl` whose version
 matches the Cluster API version in `go.mod` (v1.14.2). Anything else is

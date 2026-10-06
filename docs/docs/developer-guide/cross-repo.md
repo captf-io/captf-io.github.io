@@ -160,7 +160,7 @@ Run `make fix-headers` after adding a new source file, then review the diff.
 ## Base image bumps
 
 `module-images` pins each base image by tag and digest, for example
-`opentofu-base:1.12.6@sha256:<digest>`. See [Base
+`opentofu-base:<version>@sha256:<digest>`. See [Base
 Images](../module-author/base-images.md#tags-and-pinning). The base images are
 rebuilt weekly, and the `.github/dependabot.yml` of `module-images` has a
 `docker` stanza that bumps the pin and opens one pull request with the commit

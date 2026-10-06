@@ -100,7 +100,7 @@ base must set every label itself.
 | `io.captf.contract` | Contract version, for example `v1alpha1`. |
 | `io.captf.role` | `cluster`, `machine` or `machinepool`. |
 | `io.captf.runtime` | `tofu` or `terraform`: what `/captf/runtime` is. |
-| `io.captf.runtime.version` | For example `1.12.6`. |
+| `io.captf.runtime.version` | For example `1.12.7`. |
 | `org.opencontainers.image.source`, `.revision`, `.version` | Standard OCI annotations; `.version` should equal the tag. |
 
 The reference Containerfiles on [Base Images](base-images.md#building-a-module-image) take these three as `IMAGE_SOURCE`,

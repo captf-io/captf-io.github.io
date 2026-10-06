@@ -19,7 +19,7 @@
 # Pin BASE by digest for reproducible builds; Dependabot bumps the pin:
 #   ghcr.io/captf-io/opentofu-base:<version>@sha256:<digest>
 
-ARG BASE=ghcr.io/captf-io/opentofu-base:1.12.6
+ARG BASE=ghcr.io/captf-io/opentofu-base:1.12.7
 
 # Optional but recommended: hermetic provider mirror for every platform the
 # image publishes. Needs registry egress at build time; drop this stage (and

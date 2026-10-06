@@ -40,7 +40,7 @@ The runtime versions the bases currently carry are listed in
 | Entrypoint | `/captf/runtime`, with working directory `/captf`. The runner replaces the entrypoint in a Job; this one is for running the image by hand. |
 | `io.captf.contract` | `v1alpha1` |
 | `io.captf.runtime` | `tofu` or `terraform` |
-| `io.captf.runtime.version` | The runtime version, for example `1.12.6`. |
+| `io.captf.runtime.version` | The runtime version, for example `1.12.7`. |
 
 The three `io.captf.*` labels are inherited unchanged by module images. The
 base also sets the `org.opencontainers.image.source`, `.revision` and
@@ -151,20 +151,20 @@ make test IMAGES=aws-machine RUNTIMES=opentofu
 
 | Tag | Moves | Meaning |
 | --- | --- | --- |
-| `<version>`, for example `1.12.6` | yes | The newest build for that runtime release, rebuilt weekly. |
+| `<version>`, for example `1.12.7` | yes, while it is the pinned runtime | The newest build for that runtime release. Only the version pinned in the base repository's Dockerfile is rebuilt, so an older patch tag such as `1.12.6` is frozen and gets no OS updates. |
 | `<major.minor>`, for example `1.12` | yes | The newest build of the newest patch release of that minor. |
-| `<version>-YYYYMMDD` | no | That day's build. |
+| `<version>-YYYYMMDD` | only within a day | The newest build of that day. A second build the same day overwrites it. |
 | `latest` | yes | The newest build. |
 
 Pin the base in a module image by tag and digest, for example
-`opentofu-base:1.12.6@sha256:<digest>`: the tag documents the version, and
+`opentofu-base:<version>@sha256:<digest>`: the tag documents the version, and
 the digest fixes the content. To look up a digest:
 
 ```sh
-skopeo inspect --format '{{.Digest}}' docker://ghcr.io/captf-io/opentofu-base:1.12.6
+skopeo inspect --format '{{.Digest}}' docker://ghcr.io/captf-io/opentofu-base:<version>
 ```
 
-Dependabot's `docker` ecosystem bumps a pin of this form. `module-images` uses this stanza for the base pins:
+Dependabot's `docker` ecosystem bumps a pin of this form. A minimal stanza for the base pins is below; the one in `module-images` also sets a schedule, a pull-request limit and a group:
 
 ```yaml
 version: 2
@@ -180,7 +180,8 @@ updates:
 ## Updates and security fixes
 
 The base is rebuilt every Monday at 05:17 UTC, without the build cache and
-with `apt-get upgrade`, to pick up Ubuntu security fixes. A digest pin does
+with `apt-get upgrade`, to pick up Ubuntu security fixes. Only the runtime
+version currently pinned in the Dockerfile is rebuilt. A digest pin does
 not receive those fixes until you bump it to a newer digest and rebuild your
 module image, so keep Dependabot (or an equivalent) enabled for the `FROM`
 line.
@@ -193,7 +194,7 @@ provenance attestations (`mode=max`).
 To read the labels of a published image:
 
 ```sh
-skopeo inspect docker://ghcr.io/captf-io/opentofu-base:1.12.6 | jq .Labels
+skopeo inspect docker://ghcr.io/captf-io/opentofu-base:<version> | jq .Labels
 ```
 
 ## Platforms
