@@ -112,8 +112,8 @@ there is nothing to build. The module code is also on the Terraform Registry
 as `captf-io/<role>/noop`. The cluster and machine roles are:
 
 ```sh
-export NOOP_CLUSTER_IMAGE=ghcr.io/captf-io/noop-cluster:terraform
-export NOOP_MACHINE_IMAGE=ghcr.io/captf-io/noop-machine:terraform
+export NOOP_CLUSTER_IMAGE=ghcr.io/captf-io/module-images/noop-cluster:terraform
+export NOOP_MACHINE_IMAGE=ghcr.io/captf-io/module-images/noop-machine:terraform
 ```
 
 Each image comes in two tags, one per [base

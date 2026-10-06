@@ -56,9 +56,9 @@ which pins a release of these modules for each image.
 
 | Role | Image | Page |
 | --- | --- | --- |
-| cluster | `ghcr.io/captf-io/noop-cluster` | [Cluster](cluster.md) |
-| machine | `ghcr.io/captf-io/noop-machine` | [Machine](machine.md) |
-| machinepool | `ghcr.io/captf-io/noop-machinepool` | [MachinePool](machinepool.md) |
+| cluster | `ghcr.io/captf-io/module-images/noop-cluster` | [Cluster](cluster.md) |
+| machine | `ghcr.io/captf-io/module-images/noop-machine` | [Machine](machine.md) |
+| machinepool | `ghcr.io/captf-io/module-images/noop-machinepool` | [MachinePool](machinepool.md) |
 
 The images need no Terraform provider: `terraform_data` is built into
 Terraform and OpenTofu. They are built on the
@@ -87,8 +87,8 @@ published images, which its third step selects. When you generate the
 cluster, set:
 
 ```sh
-export TERRAFORM_CLUSTER_IMAGE=ghcr.io/captf-io/noop-cluster:opentofu
-export TERRAFORM_MACHINE_IMAGE=ghcr.io/captf-io/noop-machine:opentofu
+export TERRAFORM_CLUSTER_IMAGE=ghcr.io/captf-io/module-images/noop-cluster:opentofu
+export TERRAFORM_MACHINE_IMAGE=ghcr.io/captf-io/module-images/noop-machine:opentofu
 ```
 
 The `opentofu` tag is the newest release; pin a release tag such as

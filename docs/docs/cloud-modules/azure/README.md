@@ -64,9 +64,9 @@ The modules are pre-release; read the status note in
 
 | Role | Image | Page |
 | --- | --- | --- |
-| cluster | `ghcr.io/captf-io/azure-cluster` | [Cluster](cluster.md) |
-| machine | `ghcr.io/captf-io/azure-machine` | [Machine](machine.md) |
-| machinepool | `ghcr.io/captf-io/azure-machinepool` | [MachinePool](machinepool.md) |
+| cluster | `ghcr.io/captf-io/module-images/azure-cluster` | [Cluster](cluster.md) |
+| machine | `ghcr.io/captf-io/module-images/azure-machine` | [Machine](machine.md) |
+| machinepool | `ghcr.io/captf-io/module-images/azure-machinepool` | [MachinePool](machinepool.md) |
 
 The images carry `hashicorp/azurerm` 5.7.0, pinned exactly.
 

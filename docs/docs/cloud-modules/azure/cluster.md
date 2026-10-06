@@ -12,7 +12,7 @@ subtitle: "VNet, security group, LB"
 
 # Cluster
 
-The `ghcr.io/captf-io/azure-cluster` image implements the
+The `ghcr.io/captf-io/module-images/azure-cluster` image implements the
 [cluster role](../../module-author/contract/v1alpha1/cluster.md) on Azure.
 It creates one resource group for the cluster and, in it, the API server
 load balancer, the nodes' network security groups and application security
@@ -137,7 +137,7 @@ metadata:
   namespace: team-a
 spec:
   source:
-    image: ghcr.io/captf-io/azure-cluster:v0.1.0-opentofu
+    image: ghcr.io/captf-io/module-images/azure-cluster:v0.1.0-opentofu
   identityRef:
     name: azure
   defaults:

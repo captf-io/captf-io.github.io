@@ -12,7 +12,7 @@ subtitle: "Managed instance group"
 
 # MachinePool
 
-The `ghcr.io/captf-io/gcp-machinepool` image implements the
+The `ghcr.io/captf-io/module-images/gcp-machinepool` image implements the
 [machinepool role](../../module-author/contract/v1alpha1/machinepool.md)
 for a `TerraformMachinePool` on Google Cloud. It creates one regional
 managed instance group per `MachinePool`, spread over the pool's zones,
@@ -191,7 +191,7 @@ metadata:
     cluster.x-k8s.io/cluster-name: demo
 spec:
   source:
-    image: ghcr.io/captf-io/gcp-machinepool:v0.1.0-opentofu
+    image: ghcr.io/captf-io/module-images/gcp-machinepool:v0.1.0-opentofu
   variables:
     image: projects/my-images/global/images/capi-ubuntu-2404-{slug}
 ```

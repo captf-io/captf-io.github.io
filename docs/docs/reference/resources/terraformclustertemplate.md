@@ -45,7 +45,7 @@ spec:
         team: platform
     spec:
       source:
-        image: ghcr.io/captf-io/noop-cluster:v0.1.0-opentofu
+        image: ghcr.io/captf-io/module-images/noop-cluster:v0.1.0-opentofu
       identityRef:
         name: aws
       drift:

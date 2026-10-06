@@ -23,17 +23,28 @@ This page covers only how it is named, versioned and published.
 ## Image names
 
 `module-images` publishes one image per role per runtime. The name is
-`<registry>/<set>-<role>`, where `<set>` is the cloud (`aws`, `azure`, `gcp`,
+`<registry>/module-images/<set>-<role>`, where `<set>` is the cloud (`aws`, `azure`, `gcp`,
 `oci`, `openstack` or `noop`) and `<role>` is `cluster`, `machine` or
 `machinepool`. The runtime is part of the tag, not the name:
 
 | Image | Role |
 | --- | --- |
-| `ghcr.io/captf-io/aws-cluster` | `cluster` |
-| `ghcr.io/captf-io/aws-machine` | `machine` |
-| `ghcr.io/captf-io/aws-machinepool` | `machinepool` |
+| `ghcr.io/captf-io/module-images/aws-cluster` | `cluster` |
+| `ghcr.io/captf-io/module-images/aws-machine` | `machine` |
+| `ghcr.io/captf-io/module-images/aws-machinepool` | `machinepool` |
 
-A role with no module is not published. For the full list of sets and
+A role with no module is not published.
+
+Images are published under `module-images/` rather than at the top level
+of `ghcr.io/captf-io/`. The packages under the old names, such as
+`ghcr.io/captf-io/aws-machine`, are owned by the archived `<cloud>-modules`
+repositories, and GitHub has no API to grant another repository's workflow
+write access to a package. So `module-images` publishes new packages under
+its own name, which its workflow creates and owns; adding an image needs no
+package settings. The old images stay pullable with their existing tags and
+digests, but receive no new builds.
+
+For the full list of sets and
 images, see [Cloud Modules](../cloud-modules/README.md#images-and-tags).
 
 ## Tags
@@ -167,7 +178,7 @@ The `module-images` workflow publishes the images:
 
 | Aspect | Value |
 | --- | --- |
-| Registry | GHCR, `ghcr.io/<repository owner>/<set>-<role>`, logged in with the workflow's `GITHUB_TOKEN`. |
+| Registry | GHCR, `ghcr.io/<repository owner>/module-images/<set>-<role>`, logged in with the workflow's `GITHUB_TOKEN`. |
 | Matrix | Three roles by two runtimes, one `publish` job each: six images for each cloud (five for OpenStack, which has no `machinepool`). |
 | Platforms | `linux/amd64` and `linux/arm64`, one multi-arch index per tag, built with QEMU and Buildx. |
 | Attestations | An SBOM (`sbom: true`) and provenance at `mode=max`. |
@@ -185,7 +196,7 @@ The OpenStack machine image has no default shape, so it sets none.
 Put a release tag and its digest in `spec.source.image`:
 
 ```text
-ghcr.io/captf-io/aws-machine:v0.1.0-opentofu@sha256:<digest>
+ghcr.io/captf-io/module-images/aws-machine:v0.1.0-opentofu@sha256:<digest>
 ```
 
 - Use `vX.Y.Z-<runtime>`, not `<runtime>`. The release tag names one module
@@ -203,7 +214,7 @@ ghcr.io/captf-io/aws-machine:v0.1.0-opentofu@sha256:<digest>
 To find the digest of a tag:
 
 ```sh
-skopeo inspect --format '{{.Digest}}' docker://ghcr.io/captf-io/aws-machine:v0.1.0-opentofu
+skopeo inspect --format '{{.Digest}}' docker://ghcr.io/captf-io/module-images/aws-machine:v0.1.0-opentofu
 ```
 
 See [`spec.source.image`](../reference/resources/common-fields.md) for the

@@ -52,7 +52,7 @@ spec:
         team: platform
     spec:
       source:
-        image: ghcr.io/captf-io/aws-machine:v0.1.0-opentofu
+        image: ghcr.io/captf-io/module-images/aws-machine:v0.1.0-opentofu
       identityRef:
         name: aws-prod
       remediation:
@@ -141,7 +141,7 @@ status:
     architecture: amd64
     operatingSystem: linux
   capacitySource:
-    image: ghcr.io/captf-io/aws-machine:v0.1.0-opentofu
+    image: ghcr.io/captf-io/module-images/aws-machine:v0.1.0-opentofu
   conditions:
     - type: CapacityResolved
       status: "True"

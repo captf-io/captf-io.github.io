@@ -12,7 +12,7 @@ subtitle: "One Compute Engine VM"
 
 # Machine
 
-The `ghcr.io/captf-io/gcp-machine` image implements the
+The `ghcr.io/captf-io/module-images/gcp-machine` image implements the
 [machine role](../../module-author/contract/v1alpha1/machine.md) for a
 `TerraformMachine`, cloned from a `TerraformMachineTemplate`. It creates one
 Compute Engine instance per `Machine`, control plane or worker, and joins
@@ -192,7 +192,7 @@ spec:
   template:
     spec:
       source:
-        image: ghcr.io/captf-io/gcp-machine:v0.1.0-opentofu
+        image: ghcr.io/captf-io/module-images/gcp-machine:v0.1.0-opentofu
       variables:
         image: projects/my-images/global/images/capi-ubuntu-2404-{slug}
         machine_type: n2-standard-4

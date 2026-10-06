@@ -12,7 +12,7 @@ subtitle: "One Nova server"
 
 # Machine
 
-The `ghcr.io/captf-io/openstack-machine` image implements the
+The `ghcr.io/captf-io/module-images/openstack-machine` image implements the
 [machine role](../../module-author/contract/v1alpha1/machine.md) for a
 `TerraformMachine` on OpenStack. It creates one Nova server on a Neutron
 port of the cluster's subnet and boots it with the bootstrap payload; for a
@@ -195,7 +195,7 @@ spec:
   template:
     spec:
       source:
-        image: ghcr.io/captf-io/openstack-machine:v0.1.0-opentofu
+        image: ghcr.io/captf-io/module-images/openstack-machine:v0.1.0-opentofu
       variables:
         flavor_name: m1.large
         image_name: ubuntu-2404-kube-{version}

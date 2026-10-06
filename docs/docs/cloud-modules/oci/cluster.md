@@ -12,7 +12,7 @@ subtitle: "VCN, subnets, load balancer"
 
 # Cluster
 
-The `ghcr.io/captf-io/oci-cluster` image implements the
+The `ghcr.io/captf-io/module-images/oci-cluster` image implements the
 [cluster role](../../module-author/contract/v1alpha1/cluster.md) for a
 `TerraformCluster` on OCI. It creates the nodes' network security groups,
 the API network load balancer and the control-plane nodes' instance
@@ -162,7 +162,7 @@ metadata:
   name: demo
 spec:
   source:
-    image: ghcr.io/captf-io/oci-cluster:v0.1.0-opentofu
+    image: ghcr.io/captf-io/module-images/oci-cluster:v0.1.0-opentofu
   identityRef:
     name: oci
   defaults:

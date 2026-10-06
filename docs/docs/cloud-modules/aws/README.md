@@ -63,9 +63,9 @@ every set, these modules are pre-release; see the status note in
 
 | Role | Image | Page |
 | --- | --- | --- |
-| cluster | `ghcr.io/captf-io/aws-cluster` | [Cluster](cluster.md) |
-| machine | `ghcr.io/captf-io/aws-machine` | [Machine](machine.md) |
-| machinepool | `ghcr.io/captf-io/aws-machinepool` | [MachinePool](machinepool.md) |
+| cluster | `ghcr.io/captf-io/module-images/aws-cluster` | [Cluster](cluster.md) |
+| machine | `ghcr.io/captf-io/module-images/aws-machine` | [Machine](machine.md) |
+| machinepool | `ghcr.io/captf-io/module-images/aws-machinepool` | [MachinePool](machinepool.md) |
 
 The images pin the `hashicorp/aws` provider at 6.67.0.
 

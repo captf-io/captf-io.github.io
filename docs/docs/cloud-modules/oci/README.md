@@ -64,9 +64,9 @@ status note in [Cloud Modules](../README.md) before you rely on it.
 
 | Role | Image | Page |
 | --- | --- | --- |
-| cluster | `ghcr.io/captf-io/oci-cluster` | [Cluster](cluster.md) |
-| machine | `ghcr.io/captf-io/oci-machine` | [Machine](machine.md) |
-| machinepool | `ghcr.io/captf-io/oci-machinepool` | [MachinePool](machinepool.md) |
+| cluster | `ghcr.io/captf-io/module-images/oci-cluster` | [Cluster](cluster.md) |
+| machine | `ghcr.io/captf-io/module-images/oci-machine` | [Machine](machine.md) |
+| machinepool | `ghcr.io/captf-io/module-images/oci-machinepool` | [MachinePool](machinepool.md) |
 
 The images pin the `oracle/oci` provider at 9.8.0.
 

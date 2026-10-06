@@ -12,7 +12,7 @@ subtitle: "One EC2 instance"
 
 # Machine
 
-The `ghcr.io/captf-io/aws-machine` image implements the
+The `ghcr.io/captf-io/module-images/aws-machine` image implements the
 [machine role](../../module-author/contract/v1alpha1/machine.md): one EC2
 instance per `Machine`, control plane or worker. It takes the subnets,
 security groups, instance profiles, API target groups and bootstrap bucket
@@ -138,7 +138,7 @@ spec:
   template:
     spec:
       source:
-        image: ghcr.io/captf-io/aws-machine:v0.1.0-opentofu
+        image: ghcr.io/captf-io/module-images/aws-machine:v0.1.0-opentofu
       variables:
         instance_type: m6i.large
 ```

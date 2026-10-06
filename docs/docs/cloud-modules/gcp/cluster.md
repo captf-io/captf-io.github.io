@@ -12,7 +12,7 @@ subtitle: "VPC, firewall, load balancer"
 
 # Cluster
 
-The `ghcr.io/captf-io/gcp-cluster` image implements the
+The `ghcr.io/captf-io/module-images/gcp-cluster` image implements the
 [cluster role](../../module-author/contract/v1alpha1/cluster.md) for a
 `TerraformCluster` on Google Cloud. It creates the API load balancer, the
 firewall rules and the node service accounts in the network you bring, and
@@ -169,7 +169,7 @@ metadata:
   namespace: team-a
 spec:
   source:
-    image: ghcr.io/captf-io/gcp-cluster:v0.1.0-opentofu
+    image: ghcr.io/captf-io/module-images/gcp-cluster:v0.1.0-opentofu
   identityRef:
     name: gcp
   defaults:

@@ -44,7 +44,7 @@ metadata:
   namespace: team-a
 spec:
   source:
-    image: ghcr.io/captf-io/noop-cluster:v0.1.0-opentofu
+    image: ghcr.io/captf-io/module-images/noop-cluster:v0.1.0-opentofu
   identityRef:
     name: aws
 ```
@@ -76,7 +76,7 @@ metadata:
   namespace: team-a
 spec:
   source:
-    image: ghcr.io/captf-io/aws-cluster:v0.1.0-opentofu
+    image: ghcr.io/captf-io/module-images/aws-cluster:v0.1.0-opentofu
     imagePullPolicy: IfNotPresent
   identityRef:
     name: aws
@@ -302,7 +302,7 @@ list, and `clusterctl move` does not carry status over.
         operation: plan
       lastRefresh: "2026-10-02T11:30:01Z"
       source:
-        image: ghcr.io/captf-io/aws-cluster:v0.1.0-opentofu
+        image: ghcr.io/captf-io/module-images/aws-cluster:v0.1.0-opentofu
       plan:
         inputsHash: 9a1c0f3e6d5b
         job: demo-plan-4f7c2

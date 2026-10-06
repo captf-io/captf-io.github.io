@@ -12,7 +12,7 @@ subtitle: "One virtual machine"
 
 # Machine
 
-The `ghcr.io/captf-io/azure-machine` image implements the
+The `ghcr.io/captf-io/module-images/azure-machine` image implements the
 [machine role](../../module-author/contract/v1alpha1/machine.md) on Azure:
 one Linux VM per `Machine`, control plane or worker, in the cluster's
 resource group. `control_plane` picks the subnet, identity and security
@@ -158,7 +158,7 @@ spec:
   template:
     spec:
       source:
-        image: ghcr.io/captf-io/azure-machine:v0.1.0-opentofu
+        image: ghcr.io/captf-io/module-images/azure-machine:v0.1.0-opentofu
       variables:
         image_id: /communityGalleries/ClusterAPI-f72ceb4f-5159-4c26-a0fe-2ea738f0d019/images/capi-ubun2-2404/versions/{semver}
         vm_size: Standard_D8s_v5

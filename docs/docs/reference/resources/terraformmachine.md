@@ -49,7 +49,7 @@ metadata:
     cluster.x-k8s.io/cluster-name: demo
 spec:
   source:
-    image: ghcr.io/captf-io/noop-machine:v0.1.0-opentofu
+    image: ghcr.io/captf-io/module-images/noop-machine:v0.1.0-opentofu
 ```
 
 The `cluster.x-k8s.io/cluster-name` label and the owner reference to the
@@ -73,7 +73,7 @@ metadata:
 spec:
   providerID: aws:///us-east-1a/i-0abc123def4567890 # (1)!
   source:
-    image: ghcr.io/captf-io/aws-machine:v0.1.0-opentofu # (2)!
+    image: ghcr.io/captf-io/module-images/aws-machine:v0.1.0-opentofu # (2)!
   identityRef:
     name: aws-prod # (3)!
   jobs:

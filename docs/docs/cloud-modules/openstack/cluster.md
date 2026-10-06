@@ -12,7 +12,7 @@ subtitle: "Network, router, Octavia LB"
 
 # Cluster
 
-The `ghcr.io/captf-io/openstack-cluster` image implements the
+The `ghcr.io/captf-io/module-images/openstack-cluster` image implements the
 [cluster role](../../module-author/contract/v1alpha1/cluster.md) for a
 `TerraformCluster` on OpenStack. On the subnet you bring, it creates the
 security groups of the nodes, the Octavia load balancer behind the
@@ -155,7 +155,7 @@ metadata:
   name: demo
 spec:
   source:
-    image: ghcr.io/captf-io/openstack-cluster:v0.1.0-opentofu
+    image: ghcr.io/captf-io/module-images/openstack-cluster:v0.1.0-opentofu
   identityRef:
     name: openstack
   defaults:

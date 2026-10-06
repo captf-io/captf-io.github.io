@@ -63,9 +63,9 @@ module set, they are pre-release: read the status note in
 
 | Role | Image | Page |
 | --- | --- | --- |
-| cluster | `ghcr.io/captf-io/gcp-cluster` | [Cluster](cluster.md) |
-| machine | `ghcr.io/captf-io/gcp-machine` | [Machine](machine.md) |
-| machinepool | `ghcr.io/captf-io/gcp-machinepool` | [MachinePool](machinepool.md) |
+| cluster | `ghcr.io/captf-io/module-images/gcp-cluster` | [Cluster](cluster.md) |
+| machine | `ghcr.io/captf-io/module-images/gcp-machine` | [Machine](machine.md) |
+| machinepool | `ghcr.io/captf-io/module-images/gcp-machinepool` | [MachinePool](machinepool.md) |
 
 The machine image's capacity labels describe its default machine type,
 `n2-standard-4`: 4 vCPU and 16 GiB on `amd64`.

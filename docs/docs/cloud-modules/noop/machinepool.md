@@ -7,7 +7,7 @@ subtitle: "A stand-in group per MachinePool"
 # MachinePool
 
 The no-op machinepool module stands in for one native scaling group per
-`MachinePool`. Its image is `ghcr.io/captf-io/noop-machinepool`.
+`MachinePool`. Its image is `ghcr.io/captf-io/module-images/noop-machinepool`.
 
 The module's source is
 [`captf-io/terraform-noop-machinepool`](https://github.com/captf-io/terraform-noop-machinepool),
@@ -68,5 +68,5 @@ metadata:
     cluster.x-k8s.io/cluster-name: demo
 spec:
   source:
-    image: ghcr.io/captf-io/noop-machinepool:opentofu
+    image: ghcr.io/captf-io/module-images/noop-machinepool:opentofu
 ```

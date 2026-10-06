@@ -57,8 +57,8 @@ OpenStack has no machinepool role: it has no native scaling group, so use a
 
 | Role | Image | Page |
 | --- | --- | --- |
-| cluster | `ghcr.io/captf-io/openstack-cluster` | [Cluster](cluster.md) |
-| machine | `ghcr.io/captf-io/openstack-machine` | [Machine](machine.md) |
+| cluster | `ghcr.io/captf-io/module-images/openstack-cluster` | [Cluster](cluster.md) |
+| machine | `ghcr.io/captf-io/module-images/openstack-machine` | [Machine](machine.md) |
 
 The machine image carries no `io.captf.capacity` or `io.captf.node-info`
 label: `flavor_name` has no default, so there is no default node size to

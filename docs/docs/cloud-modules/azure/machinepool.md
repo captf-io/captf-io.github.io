@@ -12,7 +12,7 @@ subtitle: "Virtual machine scale set"
 
 # MachinePool
 
-The `ghcr.io/captf-io/azure-machinepool` image implements the
+The `ghcr.io/captf-io/module-images/azure-machinepool` image implements the
 [machinepool role](../../module-author/contract/v1alpha1/machinepool.md) on
 Azure: one uniform Linux virtual machine scale set of worker nodes per
 `MachinePool`, in the cluster's resource group, with an Azure Autoscale
@@ -184,7 +184,7 @@ metadata:
     cluster.x-k8s.io/cluster-name: demo
 spec:
   source:
-    image: ghcr.io/captf-io/azure-machinepool:v0.1.0-opentofu
+    image: ghcr.io/captf-io/module-images/azure-machinepool:v0.1.0-opentofu
   variables:
     image_id: /communityGalleries/ClusterAPI-f72ceb4f-5159-4c26-a0fe-2ea738f0d019/images/capi-ubun2-2404/versions/{semver}
     autoscaling_scale_out_cpu_percent: 70

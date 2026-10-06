@@ -12,7 +12,7 @@ subtitle: "Auto Scaling group of nodes"
 
 # MachinePool
 
-The `ghcr.io/captf-io/aws-machinepool` image implements the
+The `ghcr.io/captf-io/module-images/aws-machinepool` image implements the
 [machinepool role](../../module-author/contract/v1alpha1/machinepool.md):
 one Auto Scaling group of worker instances per `MachinePool`. It takes the
 subnets, the worker security group and instance profile, and the bootstrap
@@ -154,7 +154,7 @@ metadata:
     cluster.x-k8s.io/cluster-name: demo
 spec:
   source:
-    image: ghcr.io/captf-io/aws-machinepool:v0.1.0-opentofu
+    image: ghcr.io/captf-io/module-images/aws-machinepool:v0.1.0-opentofu
   variables:
     instance_type: m6i.large
 ```

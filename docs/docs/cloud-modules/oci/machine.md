@@ -12,7 +12,7 @@ subtitle: "One compute instance"
 
 # Machine
 
-The `ghcr.io/captf-io/oci-machine` image implements the
+The `ghcr.io/captf-io/module-images/oci-machine` image implements the
 [machine role](../../module-author/contract/v1alpha1/machine.md) for a
 `TerraformMachine` on OCI: one compute instance per `Machine`, placed in the
 Machine's failure domain on the cluster's subnet and network security group
@@ -152,7 +152,7 @@ spec:
   template:
     spec:
       source:
-        image: ghcr.io/captf-io/oci-machine:v0.1.0-opentofu
+        image: ghcr.io/captf-io/module-images/oci-machine:v0.1.0-opentofu
       variables:
         image_id: ocid1.image.oc1.iad.<id>
         boot_volume_size_gib: 200

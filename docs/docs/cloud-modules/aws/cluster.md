@@ -12,7 +12,7 @@ subtitle: "VPC, load balancer, IAM"
 
 # Cluster
 
-The `ghcr.io/captf-io/aws-cluster` image implements the
+The `ghcr.io/captf-io/module-images/aws-cluster` image implements the
 [cluster role](../../module-author/contract/v1alpha1/cluster.md). In the
 VPC and subnets you bring, it creates the API endpoint (a Network Load
 Balancer), the security groups, the node identities and the S3 bucket the
@@ -135,7 +135,7 @@ metadata:
   name: demo
 spec:
   source:
-    image: ghcr.io/captf-io/aws-cluster:v0.1.0-opentofu
+    image: ghcr.io/captf-io/module-images/aws-cluster:v0.1.0-opentofu
   identityRef:
     name: aws
   defaults:

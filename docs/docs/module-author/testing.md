@@ -217,7 +217,7 @@ For a standalone install, see [Install](tfcapi-lint.md#install).
 The image tests run in `module-images`, which builds the images; the
 `terraform-*` repositories have no `build` or `test` target. `make build`
 fetches the module release that `sources/versions.tf` pins for each image and
-builds `ghcr.io/captf-io/<image>:<module tag>-<runtime>` for every image and
+builds `ghcr.io/captf-io/module-images/<image>:<module tag>-<runtime>` for every image and
 runtime on the host platform. `make test` builds, then runs
 [`test/smoke.sh`](https://github.com/captf-io/module-images/blob/main/test/smoke.sh)
 on every image. Narrow a run with `CLOUDS=aws`, `RUNTIMES=opentofu` or

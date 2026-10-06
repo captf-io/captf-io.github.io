@@ -56,7 +56,7 @@ The module image half of the contract is in [Image Contract](../module-author/im
 | [`cluster-api-provider-terraform`](https://github.com/captf-io/cluster-api-provider-terraform) | Provider | The `manager` (controllers and webhooks), the `runner` (the in-Job driver) and the `tfcapi-lint` linter, with the API types, CRDs, kustomize bases and clusterctl templates. | The manager and runner image, and the clusterctl components, templates and `tfcapi-lint` binaries as release assets. |
 | [`opentofu-base`](https://github.com/captf-io/opentofu-base) | Base image | The Dockerfile for the OpenTofu runtime layer of the [image contract](../module-author/image-contract.md). | `ghcr.io/captf-io/opentofu-base`. |
 | [`terraform-base`](https://github.com/captf-io/terraform-base) | Base image | The same layer for the Terraform runtime. | `ghcr.io/captf-io/terraform-base`. |
-| [`module-images`](https://github.com/captf-io/module-images) | Images | No module code. `sources/versions.tf` pins the release of each module, `images.json` holds the per-image build values and `locks/` the provider lock files. It builds, smoke-tests, lints and publishes the reference module images for every cloud and for no-op. | `ghcr.io/captf-io/<cloud>-<role>`, with `<cloud>` one of `aws`, `azure`, `gcp`, `noop`, `oci`, `openstack`. |
+| [`module-images`](https://github.com/captf-io/module-images) | Images | No module code. `sources/versions.tf` pins the release of each module, `images.json` holds the per-image build values and `locks/` the provider lock files. It builds, smoke-tests, lints and publishes the reference module images for every cloud and for no-op. | `ghcr.io/captf-io/module-images/<cloud>-<role>`, with `<cloud>` one of `aws`, `azure`, `gcp`, `noop`, `oci`, `openstack`. |
 | [`captf-io.github.io`](https://github.com/captf-io/captf-io.github.io) | Website | The captf.io site: landing page, this docs book and the blog. | The site, deployed to GitHub Pages from `main` by `pages.yml`. |
 | [`.github`](https://github.com/captf-io/.github) | Organization | The organization profile and the community health files. | Nothing is built. Its workflow only checks license headers. |
 
@@ -109,8 +109,8 @@ All images are in GitHub Container Registry under `ghcr.io/captf-io/`.
 | --- | --- | --- | --- |
 | `cluster-api-provider-terraform` | The `publish` workflow: every push to `main`, and a `vX.Y.Z` tag push | `edge` and `sha-<commit>` on a push to `main`; `vX.Y.Z` (or `vX.Y.Z-rc.N`) on a tag. Never `latest`. | `linux/amd64`, `linux/arm64` |
 | `opentofu-base`, `terraform-base` | The `build` workflow of each repository: every push to `main`, plus a weekly rebuild | `<version>`, `<major.minor>`, `<version>-YYYYMMDD`, `latest`, where `<version>` is the runtime version. | `linux/amd64`, `linux/arm64` |
-| `aws-<role>`, `azure-<role>`, `gcp-<role>`, `oci-<role>`, `noop-<role>` with `<role>` one of `cluster`, `machine`, `machinepool` | The `build` workflow of `module-images`, on a merge to `main` | `vX.Y.Z-<runtime>` for module release `vX.Y.Z`, and `<runtime>` for the newest release. `<runtime>` is `opentofu` or `terraform`. | `linux/amd64`, `linux/arm64` |
-| `openstack-<role>` with `<role>` one of `cluster`, `machine` | The `build` workflow of `module-images` | The same scheme as the other clouds. | `linux/amd64`, `linux/arm64` |
+| `module-images/aws-<role>`, `module-images/azure-<role>`, `module-images/gcp-<role>`, `module-images/oci-<role>`, `module-images/noop-<role>` with `<role>` one of `cluster`, `machine`, `machinepool` | The `build` workflow of `module-images`, on a merge to `main` | `vX.Y.Z-<runtime>` for module release `vX.Y.Z`, and `<runtime>` for the newest release. `<runtime>` is `opentofu` or `terraform`. | `linux/amd64`, `linux/arm64` |
+| `module-images/openstack-<role>` with `<role>` one of `cluster`, `machine` | The `build` workflow of `module-images` | The same scheme as the other clouds. | `linux/amd64`, `linux/arm64` |
 
 What exists today follows from those triggers:
 
@@ -130,7 +130,7 @@ What exists today follows from those triggers:
   `vX.Y.Z`, and `<runtime>` is the newest release. Both tags are rebuilt, with
   a new digest, when the image changes without a module release, for example
   after a base image bump, so pin a digest in anything that must not change.
-  There are no `edge-` tags.
+  There are no `edge-` tags. The names carry the `module-images/` prefix because the old `ghcr.io/captf-io/<cloud>-<role>` packages belong to the archived `<cloud>-modules` repositories and GitHub cannot grant another repository's workflow write access to them; those images stay pullable but get no new builds.
 
 Every pushed module and base image carries an SBOM and provenance
 attestations (`mode=max`), and the manifests carry the

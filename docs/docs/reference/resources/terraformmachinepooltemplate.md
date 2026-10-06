@@ -45,7 +45,7 @@ spec:
         node-role.kubernetes.io/worker: "" # (1)!
     spec:
       source:
-        image: ghcr.io/captf-io/aws-machinepool:v0.1.0-opentofu
+        image: ghcr.io/captf-io/module-images/aws-machinepool:v0.1.0-opentofu
       identityRef:
         name: aws-prod
       variables:

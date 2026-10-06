@@ -51,7 +51,7 @@ metadata:
     cluster.x-k8s.io/cluster-name: my-cluster # (1)!
 spec:
   source:
-    image: ghcr.io/captf-io/aws-machinepool:v0.1.0-opentofu
+    image: ghcr.io/captf-io/module-images/aws-machinepool:v0.1.0-opentofu
   identityRef:
     name: aws-prod
 ```
@@ -76,7 +76,7 @@ metadata:
     cluster.x-k8s.io/cluster-name: my-cluster
 spec:
   source:
-    image: ghcr.io/captf-io/aws-machinepool:v0.1.0-opentofu
+    image: ghcr.io/captf-io/module-images/aws-machinepool:v0.1.0-opentofu
     imagePullPolicy: IfNotPresent
   identityRef:
     name: aws-prod # (1)!

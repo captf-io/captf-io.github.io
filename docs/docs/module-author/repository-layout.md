@@ -20,7 +20,7 @@ repositories share one layout and one rulebook, and the three
 [`terraform-noop-*`](https://github.com/captf-io/terraform-noop-cluster)
 repositories are the smallest working version of it.
 
-The module images (`ghcr.io/captf-io/<cloud>-<role>`) are built from a
+The module images (`ghcr.io/captf-io/module-images/<cloud>-<role>`) are built from a
 separate repository,
 [`module-images`](https://github.com/captf-io/module-images), which holds no
 module code: it holds the Dockerfiles, the lock files and the image smoke

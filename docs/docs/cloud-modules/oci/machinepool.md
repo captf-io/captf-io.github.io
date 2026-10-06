@@ -12,7 +12,7 @@ subtitle: "Instance pool of nodes"
 
 # MachinePool
 
-The `ghcr.io/captf-io/oci-machinepool` image implements the
+The `ghcr.io/captf-io/module-images/oci-machinepool` image implements the
 [machinepool role](../../module-author/contract/v1alpha1/machinepool.md)
 for a `TerraformMachinePool` on OCI: one instance pool, launched from an
 instance configuration and spread over the `MachinePool`'s failure domains,
@@ -165,7 +165,7 @@ metadata:
     cluster.x-k8s.io/cluster-name: demo
 spec:
   source:
-    image: ghcr.io/captf-io/oci-machinepool:v0.1.0-opentofu
+    image: ghcr.io/captf-io/module-images/oci-machinepool:v0.1.0-opentofu
   variables:
     image_id: ocid1.image.oc1.iad.<id>
 ```

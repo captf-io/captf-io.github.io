@@ -8,7 +8,7 @@ subtitle: "A stand-in load balancer"
 
 The no-op cluster module stands in for what a real cluster module creates
 around a workload cluster's nodes. Its image is
-`ghcr.io/captf-io/noop-cluster`.
+`ghcr.io/captf-io/module-images/noop-cluster`.
 
 The module's source is
 [`captf-io/terraform-noop-cluster`](https://github.com/captf-io/terraform-noop-cluster),
@@ -66,7 +66,7 @@ metadata:
   name: demo
 spec:
   source:
-    image: ghcr.io/captf-io/noop-cluster:opentofu
+    image: ghcr.io/captf-io/module-images/noop-cluster:opentofu
   identityRef:
     name: noop
   defaults:
