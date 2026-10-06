@@ -2,7 +2,9 @@
 # module-author/base-images.md). Run from your module's root
 # directory:
 #
-#   podman build -f Containerfile.terraform --build-arg ROLE=cluster \
+#   podman build -f Containerfile.terraform \
+#     --build-arg BASE=ghcr.io/captf-io/terraform-base:1.16.5@sha256:<digest> \
+#     --build-arg ROLE=cluster \
 #     --build-arg IMAGE_SOURCE=https://github.com/<org>/<repo> \
 #     --build-arg IMAGE_REVISION="$(git rev-parse HEAD)" \
 #     --build-arg IMAGE_VERSION=<tag> -t <registry>/<repo>:<tag> .
@@ -16,10 +18,12 @@
 # `*.tfstate*` and the Containerfile itself, so none of them lands in
 # /captf/module.
 #
-# Pin BASE by digest for reproducible builds; Dependabot bumps the pin:
-#   ghcr.io/captf-io/terraform-base:<version>@sha256:<digest>
-
-ARG BASE=ghcr.io/captf-io/terraform-base:1.16.5
+# BASE has no default, so a build never silently uses a stale base: pass it,
+# pinned by digest for reproducible builds (find the digest with
+# `skopeo inspect --format '{{.Digest}}' docker://<image>:<version>`):
+#   --build-arg BASE=ghcr.io/captf-io/terraform-base:1.16.5@sha256:<digest>
+# Dependabot bumps a pin of this form.
+ARG BASE
 
 # Optional but recommended: hermetic provider mirror for every platform the
 # image publishes. Needs registry egress at build time; drop this stage (and

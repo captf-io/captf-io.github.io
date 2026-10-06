@@ -69,7 +69,8 @@ Label values and rules are in [OCI labels](image-contract.md#oci-labels).
 ## Building a module image
 
 The reference Containerfiles are two-stage builds, one per runtime. Each
-takes `ARG ROLE`, and `ARG BASE` selects the base tag.
+takes `ARG ROLE` and `ARG BASE`. `BASE` has no default, so a build never
+silently uses a stale base: pass the tag and digest you have tested.
 
 === "OpenTofu"
 
@@ -109,7 +110,9 @@ Lint the module, build, then lint the image
 
 ```sh
 tfcapi-lint module . --role cluster --strict
-podman build -f Containerfile.opentofu --build-arg ROLE=cluster \
+podman build -f Containerfile.opentofu \
+  --build-arg BASE=ghcr.io/captf-io/opentofu-base:<version>@sha256:<digest> \
+  --build-arg ROLE=cluster \
   --build-arg IMAGE_SOURCE=https://github.com/<org>/<repo> \
   --build-arg IMAGE_REVISION="$(git rev-parse HEAD)" \
   --build-arg IMAGE_VERSION=<tag> -t <registry>/<repo>:<tag> .
@@ -149,12 +152,19 @@ make test IMAGES=aws-machine RUNTIMES=opentofu
 
 ## Tags and pinning
 
-| Tag | Moves | Meaning |
-| --- | --- | --- |
-| `<version>`, for example `1.12.7` | yes, while it is the pinned runtime | The newest build for that runtime release. Only the version pinned in the base repository's Dockerfile is rebuilt, so an older patch tag such as `1.12.6` is frozen and gets no OS updates. |
-| `<major.minor>`, for example `1.12` | yes | The newest build of the newest patch release of that minor. |
-| `<version>-YYYYMMDD` | only within a day | The newest build of that day. A second build the same day overwrites it. |
-| `latest` | yes | The newest build. |
+Each build is of the runtime version pinned in the base repository's
+Dockerfile, and it sets all four tags:
+
+| Tag | Meaning |
+| --- | --- |
+| `<version>`, for example `1.12.7` | Newest build of that runtime release. |
+| `<major.minor>`, for example `1.12` | Newest build of the newest patch release of that minor. |
+| `<version>-YYYYMMDD` | The last build on that UTC day; a later build the same day overwrites it. |
+| `latest` | Newest build. |
+
+The weekly rebuild, for Ubuntu security updates, rebuilds only the version in
+the Dockerfile. When Dependabot bumps it, the older version's tags are not
+rebuilt again: `1.12.6` stays at its last build while `1.12.7` is current.
 
 Pin the base in a module image by tag and digest, for example
 `opentofu-base:<version>@sha256:<digest>`: the tag documents the version, and
@@ -196,6 +206,22 @@ To read the labels of a published image:
 ```sh
 skopeo inspect docker://ghcr.io/captf-io/opentofu-base:<version> | jq .Labels
 ```
+
+## Verifying a signature
+
+Every digest the base repositories publish is signed keylessly with cosign
+(GitHub OIDC), so the signature covers every tag that points at it. Verify
+before you pin:
+
+```sh
+cosign verify ghcr.io/captf-io/opentofu-base:<version>@sha256:<digest> \
+  --certificate-identity-regexp '^https://github.com/captf-io/opentofu-base/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+For `terraform-base`, use `terraform-base` in both places. Signing applies to
+images built after it was added to the workflow: a tag that was last built
+before then stays unsigned until the image is rebuilt.
 
 ## Platforms
 

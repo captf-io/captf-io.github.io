@@ -147,10 +147,14 @@ Build from inside `machine/`:
 
 ```sh
 export IMAGE=registry.example.com/acme/machine:v1.0.0
-podman build -f Containerfile.terraform --build-arg ROLE=machine -t "$IMAGE" .
+podman build -f Containerfile.terraform \
+  --build-arg BASE=ghcr.io/captf-io/terraform-base:<version>@sha256:<digest> \
+  --build-arg ROLE=machine -t "$IMAGE" .
 ```
 
-`IMAGE` is the registry, repository and tag you push to; `ROLE=machine`
+`IMAGE` is the registry, repository and tag you push to; `BASE` is the base image
+pinned by digest (see [Tags and pinning](../module-author/base-images.md#tags-and-pinning));
+`ROLE=machine`
 tags the image with the role it implements. See the [image
 contract](../module-author/image-contract.md) for the fixed paths, OCI
 labels and execution environment every image must satisfy.
