@@ -124,13 +124,16 @@ what has and has not been tested, see [Compatibility](compatibility.md).
 
 ## Machine pools
 
-- **The Kubernetes Cluster Autoscaler is unsupported on pools.** The
-  controller supports **cloud-native** autoscaling in the module, driven by
-  the pool's min and max annotations, and writes the observed replicas back to
-  `MachinePool.spec.replicas`. The Cluster Autoscaler's `clusterapi` provider
-  needs MachinePool Machines and drains nodes before it scales down, and
-  neither exists. Its changes to `spec.replicas` are overwritten by the
-  write-back. See [Machine Pools](../user-guide/machine-pools.md#choose-fixed-replicas-or-autoscaling).
+- **The Cluster Autoscaler's `clusterapi` provider is unsupported on
+  pools.** The controller supports autoscaling **in the cloud**, driven by
+  the pool's min and max annotations, and writes the observed replicas back
+  to `MachinePool.spec.replicas`. The `clusterapi` provider needs
+  MachinePool Machines and drains nodes before it scales down, and neither
+  exists; its changes to `spec.replicas` are overwritten by the write-back.
+  The Cluster Autoscaler's cloud providers resize the scaling group
+  directly and work with the AWS, Azure and OCI reference modules, but not
+  GCP's regional group. See
+  [Autoscale with the Kubernetes Cluster Autoscaler](../user-guide/machine-pools.md#autoscale-with-the-kubernetes-cluster-autoscaler).
 - **MachinePool Machines are unsupported, by design.** Every MachinePool
   Machine deletion ends with terminating one chosen instance in the cloud's
   scaling group, and Terraform cannot do that. Pool instances have no

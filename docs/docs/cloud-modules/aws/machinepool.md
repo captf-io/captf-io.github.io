@@ -29,7 +29,7 @@ published on the Terraform Registry as
 | --- | --- | --- |
 | `aws_autoscaling_group.pool_autoscaling_group` | The group across the pool's zones, launching the newest launch template version | Always |
 | `aws_launch_template.pool_launch_template` | Image, instance type, worker identity and security groups, IMDSv2, encrypted root volume, tags, and the user-data stub | Always; replaced only to roll |
-| `aws_autoscaling_policy.pool_scaling_policy` | Target tracking on average CPU | With autoscaling enabled |
+| `aws_autoscaling_policy.pool_scaling_policy` | Target tracking on average CPU | With autoscaling enabled and `autoscaler` `native` |
 | `aws_s3_object.bootstrap_object` | The bootstrap data as `pool/<machinepool_name>`, rewritten in place on every rotation | With complete exports |
 | `terraform_data.kubernetes_version_roll` | The Kubernetes version and an explicit `machine_image.id`; replacing it replaces the launch template | Always |
 | `terraform_data.inherited_zones` | The cluster's zones at the pool's first apply | Always; used without `failure_domains` |
@@ -53,7 +53,8 @@ User variables, from
 | --- | --- | --- | --- |
 | `additional_security_group_ids` | `list(string)` | `[]` | Extra security groups for the instances. |
 | `additional_tags` | `map(string)` | `{}` | Extra tags for every taggable resource; at most 40; keys 1 to 128 characters, values at most 256; letters, numbers, spaces and `_ . : / = + - @` only; no `aws:`, `captf.io/` or `kubernetes.io/cluster/` keys. |
-| `autoscaling_target_cpu_percent` | `number` | `60` | Average CPU the scaling policy holds the group at while autoscaling is enabled; greater than 0 and at most 100. |
+| `autoscaler` | `string` | `"native"` | `native` or `external`: while autoscaling is enabled, what sets the desired capacity: this module's CPU target-tracking policy, or no policy, for a scaler outside the module ([see below](#use-with-the-kubernetes-cluster-autoscaler)). No effect while autoscaling is disabled. |
+| `autoscaling_target_cpu_percent` | `number` | `60` | Average CPU the scaling policy holds the group at while autoscaling is enabled; greater than 0 and at most 100. Ignored when `autoscaler` is `external`. |
 | `external_cluster_exports` | `any` | `null` | The exports of an externally managed `TerraformCluster`, used when `captf_cluster_outputs` is empty. |
 | `instance_metadata_hop_limit` | `number` | `1` | IMDSv2 hop limit, a whole number from 1 to 64; 2 lets pods without host networking reach the metadata service. |
 | `instance_type` | `string` | `"m6i.large"` | EC2 instance type; applies to instances launched afterwards. |
@@ -98,13 +99,17 @@ User variables, from
 | `node_labels`, `instance_type`, a looked-up image, `spot`, root volume, security groups | New version under `$Latest` | Kept; new instances get it |
 | `kubernetes_version`, its `+rke2rN` suffix included, or an explicit `machine_image.id` | Replaced, create before destroy | Replaced by a rolling instance refresh that launches each replacement first |
 | `replicas`, with autoscaling off | Unchanged | The group grows or shrinks |
+| `autoscaler` | Unchanged | Kept: the policy is created or deleted; the group and its capacity stay |
 | A zone the cluster adds or removes, for a pool without `failure_domains` | Unchanged | Kept: the pool keeps the cluster's zones of its first apply |
 | A zone added to `failure_domains` | Unchanged | Kept: new instances go there over time (zone rebalancing is suspended) |
 | A zone removed from `failure_domains` | Unchanged | The instances in it are replaced elsewhere, undrained |
 
 With autoscaling enabled, the group's minimum and maximum come from the
 `MachinePool` annotations and an apply never resets the desired capacity;
-with it off, the minimum and maximum equal `replicas`.
+with it off, the minimum and maximum equal `replicas`. With `autoscaler`
+set to `external`, the group keeps those bounds and the ignored desired
+capacity, but no policy exists, so a scaler outside the module sets the
+capacity.
 
 ## Bootstrap
 
@@ -127,8 +132,11 @@ that replaces itself with the object, and node labels are refused.
     aws-node-termination-handler with an Auto Scaling lifecycle hook if your
     workloads need it.
 
-- CPU target tracking is a proxy: pods waiting for capacity do not raise
-  CPU. The Kubernetes Cluster Autoscaler cannot drive these pools.
+- CPU target tracking is a proxy: with the native policy, pods waiting for
+  capacity do not raise CPU. The Cluster Autoscaler's `clusterapi` provider
+  cannot drive these pools (it needs MachinePool Machines, which CAPTF does
+  not implement), but its aws cloud provider can, with
+  `autoscaler = "external"` ([see below](#use-with-the-kubernetes-cluster-autoscaler)).
 - Running members keep the labels they registered with until they are
   replaced.
 - Membership is read in every cluster zone on every refresh: one
@@ -158,3 +166,28 @@ spec:
   variables:
     instance_type: m6i.large
 ```
+
+### Use with the Kubernetes Cluster Autoscaler
+
+To let the Kubernetes Cluster Autoscaler's aws cloud provider
+(`--cloud-provider=aws`, Auto Scaling group auto-discovery by tag) size a
+pool, set the `MachinePool`'s min and max annotations (as in
+[Machine Pools](../../user-guide/machine-pools.md#autoscale-with-the-kubernetes-cluster-autoscaler),
+which turns autoscaling on), set `autoscaler = "external"` so the module
+creates no scaling policy for the autoscaler to fight, and tag the group for
+discovery through `additional_tags` (these keys pass its validation and land
+on the group):
+
+```yaml
+spec:
+  variables:
+    autoscaler: external
+    additional_tags:
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/demo: "owned"
+```
+
+`demo` is the cluster's name. The autoscaler reads the group's min and max,
+which come from the annotations, and sets its desired capacity; the module
+ignores that capacity afterwards. Running the Cluster Autoscaler against a
+CAPTF pool has not been tried on a live cluster.

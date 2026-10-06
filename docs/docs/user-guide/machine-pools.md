@@ -42,17 +42,15 @@ replaces failed ones and rolls out new launch configuration. Anything that
 works by deleting a specific `Machine` needs a MachineDeployment of
 `TerraformMachine`s instead:
 
-| You need | Use |
-| --- | --- |
-| A native scaling group that the cloud manages | `MachinePool` with a `TerraformMachinePool` |
-| Cluster API to drain a node before its instance goes | MachineDeployment with `TerraformMachine`s |
-| MachineHealthCheck remediation | MachineDeployment with `TerraformMachine`s |
-| The Kubernetes Cluster Autoscaler | MachineDeployment with `TerraformMachine`s |
-| To delete one specific node, by deleting its `Machine` or with `cluster.x-k8s.io/delete-machine` | MachineDeployment with `TerraformMachine`s |
+| You need | `MachinePool` with a `TerraformMachinePool` | MachineDeployment with `TerraformMachine`s |
+| --- | --- | --- |
+| A native scaling group that the cloud manages | Yes | No |
+| Autoscaling | Yes: the module's own cloud autoscaler, or the Kubernetes Cluster Autoscaler's provider for that cloud (see [Autoscale with the Kubernetes Cluster Autoscaler](#autoscale-with-the-kubernetes-cluster-autoscaler)) | Yes: the Kubernetes Cluster Autoscaler's `clusterapi` provider |
+| A drain before an instance goes | Only from the Kubernetes Cluster Autoscaler for the nodes it removes, or from the cloud's lifecycle hooks or a termination handler, if the module sets one up | Yes: Cluster API drains every `Machine` it deletes |
+| MachineHealthCheck remediation | No | Yes |
+| To delete one specific node, by deleting its `Machine` or with `cluster.x-k8s.io/delete-machine` | No | Yes |
 
-A pool can still drain nodes through the cloud's own lifecycle hooks or a
-termination handler, if its module sets one up. The reasons pools stop
-here are in
+The reasons pools stop here are in
 [MachinePool Machines](../module-author/contract/v1alpha1/machinepool.md#machinepool-machines).
 
 ## Create a MachinePool
@@ -152,8 +150,10 @@ source of desired capacity, exactly as in the example above: change it to
 resize the group.
 
 To let the module's own native autoscaling policy own the desired count
-instead, set both annotations Cluster API's autoscaler contract defines,
-on the `MachinePool`:
+instead (or the Kubernetes Cluster Autoscaler; see
+[Autoscale with the Kubernetes Cluster Autoscaler](#autoscale-with-the-kubernetes-cluster-autoscaler)),
+set both annotations Cluster API's autoscaler contract defines, on the
+`MachinePool`:
 
 ```yaml
 apiVersion: cluster.x-k8s.io/v1beta2
@@ -209,13 +209,47 @@ replicas back. The pool reports
 event, and `spec.replicas` stays under that other controller's control.
 See [`AutoscalingActive`](../reference/conditions.md#autoscalingactive).
 
-!!! warning "The Kubernetes Cluster Autoscaler does not drive these pools"
+!!! warning "The Cluster Autoscaler's `clusterapi` provider does not drive these pools"
 
-    Its `clusterapi` cloud provider requires MachinePool Machines, which
-    CAPTF does not implement (see
+    It requires MachinePool Machines, which CAPTF does not implement (see
     [Pool or MachineDeployment](#pool-or-machinedeployment)). Running it
     against a CAPTF pool is unsupported, since its `spec.replicas` patches
-    would be overwritten by the write-back above.
+    would be overwritten by the write-back above. Its cloud providers work:
+    see the next section.
+
+## Autoscale with the Kubernetes Cluster Autoscaler
+
+The Kubernetes Cluster Autoscaler's cloud providers (`--cloud-provider=aws`,
+`azure` or `oci`) resize a scaling group directly through the cloud's API,
+draining each node they remove first. To CAPTF that is one more cloud-side
+scale, the case autoscaling mode exists for:
+
+1. Set the `MachinePool`'s min and max annotations, as in
+   [Choose fixed replicas or autoscaling](#choose-fixed-replicas-or-autoscaling).
+   The module puts the bounds on the group and leaves its desired count
+   alone, and the controller writes the observed count back to
+   `MachinePool.spec.replicas`.
+2. Set the module's `autoscaler` variable to `external` in the
+   `TerraformMachinePool`'s `spec.variables`, so the module creates no
+   autoscaler of its own.
+3. Make the group discoverable by the Cluster Autoscaler, as the module's
+   page describes (tags on the group, or its ID).
+4. Run the Cluster Autoscaler in the workload cluster with the cloud's
+   provider and credentials allowed to resize the group. Keep its bounds for
+   the group equal to the annotations.
+
+| Reference module | `autoscaler: external` |
+| --- | --- |
+| [AWS](../cloud-modules/aws/machinepool.md) | Yes: an Auto Scaling group |
+| [Azure](../cloud-modules/azure/machinepool.md) | Yes: a uniform virtual machine scale set |
+| [OCI](../cloud-modules/oci/machinepool.md) | Yes: an instance pool |
+| [GCP](../cloud-modules/gcp/machinepool.md) | No: the module's managed instance group is regional, and the Cluster Autoscaler's `gce` provider resizes zonal groups only ([`autoscaling_gce_client.go`](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/gce/autoscaling_gce_client.go) calls the zonal `InstanceGroupManagers` API) |
+
+!!! warning "Run one autoscaler per group"
+
+    With the default `autoscaler: native`, the module's own cloud autoscaler
+    also resizes the group. Next to the Cluster Autoscaler it can remove the
+    nodes the Cluster Autoscaler added, without a drain.
 
 ## Add an autoscaled pool to a generated cluster
 

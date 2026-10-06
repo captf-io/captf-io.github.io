@@ -159,6 +159,10 @@ the project and by anything on the node that reaches the metadata server.
   returns; a precondition checks `replicas` or the autoscaler's maximum.
 - The group keeps zones balanced and may delete an instance to rebalance;
   nothing drains it.
+- The Kubernetes Cluster Autoscaler cannot resize the group: its `gce`
+  provider drives zonal managed instance groups only, and this group is
+  regional. Autoscale with the module's own autoscaler. See
+  [Autoscale with the Kubernetes Cluster Autoscaler](../../user-guide/machine-pools.md#autoscale-with-the-kubernetes-cluster-autoscaler).
 - Ignition pools cannot register `node_labels`.
 - The template and its boot disks keep the labels of the template's
   creation: their labels force replacement, so they are not updated.

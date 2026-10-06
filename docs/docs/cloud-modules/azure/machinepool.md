@@ -16,7 +16,8 @@ The `ghcr.io/captf-io/module-images/azure-machinepool` image implements the
 [machinepool role](../../module-author/contract/v1alpha1/machinepool.md) on
 Azure: one uniform Linux virtual machine scale set of worker nodes per
 `MachinePool`, in the cluster's resource group, with an Azure Autoscale
-setting that holds its capacity. See [Machine Pools](../../user-guide/machine-pools.md)
+setting that holds its capacity (or, with `autoscaler` set to `external`, no
+setting). See [Machine Pools](../../user-guide/machine-pools.md)
 for the objects to create.
 
 The module's source is
@@ -29,12 +30,15 @@ published on the Terraform Registry as
 | Resource | Purpose | When |
 | --- | --- | --- |
 | `azurerm_linux_virtual_machine_scale_set.pool_scale_set` | The workers: manual upgrades, no overprovisioning, no single placement group, in the worker subnet, security groups and identity, with termination notifications | Always |
-| `azurerm_monitor_autoscale_setting.pool_autoscale_setting` | Holds the scale set's capacity: pinned to `replicas`, or between the autoscaling bounds with CPU rules | Always |
+| `azurerm_monitor_autoscale_setting.pool_autoscale_setting` | Holds the scale set's capacity: pinned to `replicas`, or between the autoscaling bounds with CPU rules | Always, except with autoscaling enabled and `autoscaler` `external` |
 | `terraform_data.pool_default_zones` | The cluster's zones as of the first apply, kept for a pool without its own failure domains | Always (used without `failure_domains`) |
 
 Without exports (an externally managed cluster and no
 `external_cluster_exports`) the scale set and autoscale setting are not
 created and a precondition fails.
+
+The `Microsoft.Insights` resource provider is needed for the autoscale
+setting, so not while autoscaling is enabled with `autoscaler` `external`.
 
 ## Inputs
 
@@ -50,9 +54,10 @@ User variables, set with `spec.variables` on the `TerraformMachinePool`
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | `accelerated_networking` | `bool` | `true` | Accelerated networking on the instances' NICs |
-| `additional_tags` | `map(string)` | `{}` | Extra Azure tags on the scale set and autoscale setting. Keys starting with `captf.io_` or `captf.io/` (any case) are rejected; at most 44. Keys 1 to 512 characters without `< > % & \ ? /`, values at most 256. |
-| `autoscaling_scale_in_cpu_percent` | `number` | `25` | With autoscaling, scale in by one instance below this average CPU over 10 minutes; a whole number from 1 to 100, and must be below the scale-out threshold |
-| `autoscaling_scale_out_cpu_percent` | `number` | `75` | With autoscaling, scale out by one instance above this average CPU over 10 minutes; a whole number from 1 to 100 |
+| `additional_tags` | `map(string)` | `{}` | Extra Azure tags on the scale set and autoscale setting (when it exists). Keys starting with `captf.io_` or `captf.io/` (any case) are rejected; at most 44. Keys 1 to 512 characters without `< > % & \ ? /`, values at most 256. |
+| `autoscaler` | `string` | `"native"` | With autoscaling enabled, what sets the capacity: `native` (this module's Azure Autoscale setting) or `external` (no autoscale setting; a scaler outside the module, such as the Kubernetes Cluster Autoscaler, sets it within `autoscaling.min` and `max`). No effect while autoscaling is disabled |
+| `autoscaling_scale_in_cpu_percent` | `number` | `25` | With autoscaling and `autoscaler` `native`, scale in by one instance below this average CPU over 10 minutes; a whole number from 1 to 100, and must be below the scale-out threshold. Ignored when `autoscaler` is `external` |
+| `autoscaling_scale_out_cpu_percent` | `number` | `75` | With autoscaling and `autoscaler` `native`, scale out by one instance above this average CPU over 10 minutes; a whole number from 1 to 100. Ignored when `autoscaler` is `external` |
 | `boot_diagnostics` | `bool` | `true` | Keep the serial console logs in Azure-managed storage |
 | `encryption_at_host` | `bool` | `false` | Encrypt temporary disks and caches on the host too; needs the `EncryptionAtHost` feature |
 | `external_cluster_exports` | `any` | `null` | Exports (schema `captf.io/azure-cluster/v1`) for an externally managed `TerraformCluster` |
@@ -70,10 +75,10 @@ User variables, set with `spec.variables` on the `TerraformMachinePool`
 | --- | --- |
 | `provider_id` | `azure:///subscriptions/<subscription>/resourceGroups/<group, lowercase>/providers/Microsoft.Compute/virtualMachineScaleSets/<scale set>`; changes when a new generation replaces the scale set |
 | `provider_id_list` | Every instance the scale set lists, whatever its power state, as `<provider_id>/virtualMachines/<instance ID>`, the format cloud-provider-azure writes to the Node |
-| `replicas` | The scale set's capacity as last refreshed, which Azure Autoscale sets; `null` once the scale set is gone |
+| `replicas` | The scale set's capacity as last refreshed, whichever scaler set it; `null` once the scale set is gone |
 | `instances` | Per instance: `provider_id`, `instance_id`, `addresses` (`InternalIP`, `Hostname`), `failure_domain` (its zone) and `state` |
 | `health` | See Health |
-| `autoscale_setting_id` | Extra: the autoscale setting's ARM ID |
+| `autoscale_setting_id` | Extra: the autoscale setting's ARM ID; `null` while autoscaling is enabled with `autoscaler` `external` |
 | `dropped_node_labels` | Extra: `node_labels` keys left out because the kubelet may not set them on itself |
 | `scale_set_id`, `scale_set_name` | Extra: the current scale set's ARM ID and name |
 
@@ -108,7 +113,8 @@ Azure lists an instance until it is deleted, so no instance maps to
 | --- | --- |
 | `bootstrap_data` (a token rotation, about every 7.5 minutes), `node_labels`, `image_id`, `vm_size`, `os_disk_size_gib`, `accelerated_networking`, `ip_forwarding`, `boot_diagnostics`, `encryption_at_host`, the exports, tags | The scale set's model updates in place; new instances use it, running ones are left alone |
 | `replicas`, autoscaling disabled | The autoscale setting pins the new capacity; Azure Autoscale applies it within about a minute |
-| `autoscaling`, `autoscaling_scale_*_cpu_percent` | The autoscale setting gets the new bounds and rules |
+| `autoscaling`, `autoscaling_scale_*_cpu_percent` | The autoscale setting gets the new bounds and rules (with `autoscaler` `external`, no setting exists and nothing changes in Azure) |
+| `autoscaler`, with autoscaling enabled | The autoscale setting is created or deleted; the scale set and its capacity stay |
 | `kubernetes_version`, compared verbatim (a `+rke2rN` bump included) | A new scale set at the current capacity, then the old one is deleted |
 | `failure_domains`, `spot`, `trusted_launch`, `os_disk_storage_account_type` | A new scale set, as for a version change: Azure cannot change these on a scale set |
 | `cluster_failure_domains` | Nothing: a pool without its own `failure_domains` keeps the cluster's zones as of its first apply |
@@ -147,8 +153,9 @@ handler that drains.
 - Workers only: the control plane uses the [machine role](machine.md).
 - Changes reach new instances only; a version change is the way to roll the
   pool.
-- Capacity changes go through Azure Autoscale and take about a minute to
-  reach the scale set; `replicas` follows at the next refresh.
+- Capacity changes go through Azure Autoscale (or, with `autoscaler`
+  `external`, the outside scaler) and take about a minute to reach the scale
+  set; `replicas` follows at the next refresh.
 - The scale set read fails if an instance disappears between listing it and
   reading its NICs; the next refresh succeeds.
 - Azure public cloud only.
@@ -157,8 +164,9 @@ handler that drains.
 
 - **`pool/autoscaling-ignore-changes`**, a `tfcapi-lint` warning, is allowed:
   the scale set ignores changes to `instances`, its desired count, which the
-  check's pattern does not know, and Azure Autoscale holds the capacity in
-  both modes.
+  check's pattern does not know, and the capacity is held outside the scale
+  set: by Azure Autoscale in fixed mode and with `autoscaler` `native`, by an
+  outside scaler with `autoscaler` `external`.
 - **Version rolls by generation.** The roll is a new scale set name with
   `create_before_destroy`, not `terraform_data.kubernetes_version_roll`: a
   replacement under the same name would collide with the old scale set.
@@ -189,3 +197,29 @@ spec:
     image_id: /communityGalleries/ClusterAPI-f72ceb4f-5159-4c26-a0fe-2ea738f0d019/images/capi-ubun2-2404/versions/{semver}
     autoscaling_scale_out_cpu_percent: 70
 ```
+
+### Use with the Kubernetes Cluster Autoscaler
+
+To let the Cluster Autoscaler's azure cloud provider scale the pool instead
+of Azure Autoscale (two scalers on one scale set would fight):
+
+- Keep the `MachinePool`'s autoscaler min and max annotations, as in
+  [Machine Pools](../../user-guide/machine-pools.md#autoscale-with-the-kubernetes-cluster-autoscaler):
+  they put the module in autoscaling mode and bound `replicas`.
+- Set `autoscaler: external` in `spec.variables`: the module then creates no
+  autoscale setting and never resets the capacity (the scale set ignores
+  `instances`), and `replicas` follows what the scaler sets.
+- Tag the scale set for the Cluster Autoscaler's auto-discovery through
+  `additional_tags`, for example `k8s.io_cluster-autoscaler_enabled`,
+  `k8s.io_cluster-autoscaler_<cluster name>`, and `min` and `max` tags
+  matching the annotations. These keys pass the `additional_tags` validation
+  (no reserved prefix, no `/`; at most 44 tags). The tag names are the
+  Cluster Autoscaler's, not verified in the module repository.
+- Prefer tag-based discovery to a static scale set name: the scale set's
+  name changes with each generation (a Kubernetes version change creates a
+  new scale set), and the tags move with it.
+
+Switching `autoscaler` from `native` to `external` deletes the autoscale
+setting; whether the scale set's capacity then stays at its last value is
+not verified. The Cluster Autoscaler driving a pool has not been run against
+a live cluster.

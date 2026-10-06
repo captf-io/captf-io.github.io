@@ -72,9 +72,11 @@ CAPTF cannot do:
   only mirror the group's members would accept a delete they cannot carry
   out: the `Machine` would either hang on the InfraMachine's finalizer or
   come back at the next membership refresh. Drain before scale-down,
-  MachineHealthCheck remediation, the Cluster Autoscaler and
-  `cluster.x-k8s.io/delete-machine` all act by deleting a `Machine`, so
-  none of them would work.
+  MachineHealthCheck remediation, the Cluster Autoscaler's `clusterapi`
+  provider and `cluster.x-k8s.io/delete-machine` all act by deleting a
+  `Machine`, so none of them would work. The Cluster Autoscaler's cloud
+  providers do not need Machines: they resize the scaling group through the
+  cloud's API (see the `autoscaling` input).
 
 MachinePool Machines alone would not bring remediation either: the CAPI
 v1.14 MachinePool controller does not act on a pool `Machine`'s
@@ -304,10 +306,12 @@ rather than rejecting anything.
 
 **`enabled` means the module owns the desired count and its scaling
 policy:** it sets the group's min/max to these values, configures whatever
-native scaling policy it wants (target tracking, scheduled, and so on),
-and MUST put the group's desired-count attribute under
+native scaling policy it wants (target tracking, scheduled, and so on), or
+none, leaving the desired count to a scaler outside the module such as the
+Kubernetes Cluster Autoscaler's provider for that cloud, and MUST put the
+group's desired-count attribute under
 `lifecycle { ignore_changes = [...] }` so an apply never resets what the
-cloud autoscaler decided.
+autoscaler decided.
 
 On the CAPI side the controller then claims
 `cluster.x-k8s.io/replicas-managed-by: captf` on the MachinePool when the
@@ -327,14 +331,17 @@ rules. With the annotation set, the MachinePool controller reports phase
 `Scaling` instead of `ScalingUp`/`ScalingDown`
 ([`machinepool_controller_phases.go`](https://github.com/kubernetes-sigs/cluster-api/blob/v1.14.2/core/reconcilers/machinepool/machinepool_controller_phases.go)).
 
-!!! warning "The Kubernetes Cluster Autoscaler does not act on these pools"
+!!! warning "The Cluster Autoscaler's `clusterapi` provider does not act on these pools"
 
-    Its `clusterapi` provider requires MachinePool Machines
+    It requires MachinePool Machines
     ([`README.md`](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/clusterapi/README.md)),
     which this role excludes (see
     [MachinePool Machines](#machinepool-machines)). Running it against a
     CAPTF pool anyway is unsupported, because its `spec.replicas` patches
-    would be overwritten by the write-back.
+    would be overwritten by the write-back. The Cluster Autoscaler's cloud
+    providers resize the group itself, which this mode already handles; a
+    module that supports them needs a way to leave out its own scaling
+    policy, since two scalers on one group work against each other.
 
 ## Outputs
 

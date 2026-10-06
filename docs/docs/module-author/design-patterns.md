@@ -147,7 +147,11 @@ When it is on:
   already owns that annotation with a truthy value, CAPTF leaves
   `spec.replicas` alone and reports `ReplicasManagedExternally`. Choose one
   owner.
-- The Kubernetes Cluster Autoscaler is **not** supported on pools.
+- The Kubernetes Cluster Autoscaler's `clusterapi` provider is **not**
+  supported on pools. Its cloud providers resize the scaling group
+  themselves, which this mode already handles, but they must be the
+  group's only scaler: give the module a way to leave its own scaling
+  policy out, as the reference modules' `autoscaler` variable does.
 
 See [Machine Pools](../user-guide/machine-pools.md#choose-fixed-replicas-or-autoscaling)
 and the [`autoscaling` input](contract/v1alpha1/machinepool.md#autoscaling-input).
