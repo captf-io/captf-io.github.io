@@ -131,8 +131,13 @@ what has and has not been tested, see [Compatibility](compatibility.md).
   needs MachinePool Machines and drains nodes before it scales down, and
   neither exists. Its changes to `spec.replicas` are overwritten by the
   write-back. See [Machine Pools](../user-guide/machine-pools.md#choose-fixed-replicas-or-autoscaling).
-- **MachinePool Machines are unsupported.** Pool instances have no `Machine`
-  objects, so a `MachineHealthCheck` never selects them.
+- **MachinePool Machines are unsupported, by design.** Every MachinePool
+  Machine deletion ends with terminating one chosen instance in the cloud's
+  scaling group, and Terraform cannot do that. Pool instances have no
+  `Machine` objects, so a `MachineHealthCheck` never selects them, and
+  Cluster API never drains them. Use a MachineDeployment of
+  `TerraformMachine`s for per-node lifecycle. See
+  [MachinePool Machines](../module-author/contract/v1alpha1/machinepool.md#machinepool-machines).
 - **The bootstrap Secret is not watched.** A rotated token reaches the pool at
   its next reconcile, at the latest one membership-refresh interval later.
 

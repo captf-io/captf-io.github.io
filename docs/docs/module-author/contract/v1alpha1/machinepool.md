@@ -36,10 +36,59 @@ membership-refresh interval later (see "Bootstrap rotation" below).
     attribute under `lifecycle { ignore_changes = [...] }` (see Lifecycle
     and the `autoscaling` input) or a cloud-side scale reports as drift.
 
+## MachinePool Machines
+
 MachinePool Machines
 (`status.infrastructureMachineKind`; optional,
 [`infra-machinepool.md`](https://github.com/kubernetes-sigs/cluster-api/blob/v1.14.2/docs/book/src/developer/providers/contracts/infra-machinepool.md)
-"MachinePoolMachines support") are out of scope. Two consequences follow:
+"MachinePoolMachines support") are out of scope, by design: the role rests
+on a constraint that rules them out.
+
+With MachinePool Machines, the infrastructure provider creates one
+InfraMachine per replica and CAPI creates a `Machine` for each, but every
+deletion is the provider's job
+([`20220209-machinepool-machines.md`](https://github.com/kubernetes-sigs/cluster-api/blob/v1.14.2/docs/proposals/20220209-machinepool-machines.md)
+"InfraMachinePoolMachine deletion"). To scale down, the provider picks a
+replica, preferring one whose `Machine` carries
+`cluster.x-k8s.io/delete-machine`, and deletes that `Machine`. The Machine
+controller drains the Node and deletes the InfraMachine, whose finalizer
+must then terminate *that* instance and lower the group's capacity by one.
+A `Machine` deleted by hand takes the same path. That last step is what
+CAPTF cannot do:
+
+- **Terraform cannot remove a chosen member from a scaling group.** The
+  group launches its members itself. They are not declared in the module,
+  so no resource stands for one member and no plan can remove one. Clouds
+  do offer imperative calls for it (the Auto Scaling
+  `TerminateInstanceInAutoScalingGroup` API, for example), but CAPTF
+  reaches a cloud only through the module's Terraform or OpenTofu run.
+- **Calling the cloud from the controller is ruled out.** It would need
+  cloud-specific code in the controller for every cloud, which the module
+  contract exists to avoid.
+- **Declaring each member as its own resource is not a pool.** It gives up
+  the native scaling group the role exists for. Per-member lifecycle is
+  what a `TerraformMachine` already provides: one workspace per `Machine`.
+- **Partial support would break the contract.** `Machine` objects that
+  only mirror the group's members would accept a delete they cannot carry
+  out: the `Machine` would either hang on the InfraMachine's finalizer or
+  come back at the next membership refresh. Drain before scale-down,
+  MachineHealthCheck remediation, the Cluster Autoscaler and
+  `cluster.x-k8s.io/delete-machine` all act by deleting a `Machine`, so
+  none of them would work.
+
+MachinePool Machines alone would not bring remediation either: the CAPI
+v1.14 MachinePool controller does not act on a pool `Machine`'s
+`OwnerRemediated` condition
+([`machinepool`](https://github.com/kubernetes-sigs/cluster-api/tree/v1.14.2/core/reconcilers/machinepool)
+reconciler), so a MachineHealthCheck could only mark such a `Machine`
+unhealthy.
+
+A pool's lifecycle therefore belongs to the cloud: the group picks
+scale-in victims, replaces failed instances and rolls out new launch
+configuration. A workload that needs per-node lifecycle uses a
+MachineDeployment of `TerraformMachine`s instead (see
+[Pool or MachineDeployment](../../../user-guide/machine-pools.md#pool-or-machinedeployment)).
+Two consequences follow:
 
 !!! warning "Pools have no drain and no MachineHealthCheck"
 
@@ -282,9 +331,10 @@ rules. With the annotation set, the MachinePool controller reports phase
 
     Its `clusterapi` provider requires MachinePool Machines
     ([`README.md`](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/clusterapi/README.md)),
-    which this role excludes. Running it against a CAPTF pool anyway is
-    unsupported, because its `spec.replicas` patches would be overwritten
-    by the write-back.
+    which this role excludes (see
+    [MachinePool Machines](#machinepool-machines)). Running it against a
+    CAPTF pool anyway is unsupported, because its `spec.replicas` patches
+    would be overwritten by the write-back.
 
 ## Outputs
 
@@ -519,10 +569,11 @@ does not reflect it.
     disabled — so the same `ignore_changes` block still lets the group track
     `replicas` exactly.
 - **Health.** `health` feeds conditions only; there is no remediation for
-  pools in v1 (MHC selects Machines, and pool replicas only have Machines
+  pools (MHC selects Machines, and pool replicas only have Machines
   under MachinePool Machines, which this role excludes;
   [`infra-machinepool.md`](https://github.com/kubernetes-sigs/cluster-api/blob/v1.14.2/docs/book/src/developer/providers/contracts/infra-machinepool.md)
-  "MachinePoolMachines support"). Instances terminated by the cloud simply
+  "MachinePoolMachines support"; see
+  [MachinePool Machines](#machinepool-machines)). Instances terminated by the cloud simply
   leave `provider_id_list` at the next refresh, and CAPI deletes their
   Nodes.
 - **Delete.** A `destroy` Job renders from the object-owned

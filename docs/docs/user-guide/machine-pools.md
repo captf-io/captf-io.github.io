@@ -33,6 +33,28 @@ for everything the module role must implement.
       managing one scaling group and reporting its provider IDs, desired
       capacity and members.
 
+## Pool or MachineDeployment
+
+A pool's members are the cloud's, not Cluster API's: they have no
+`Machine` objects, and CAPTF cannot remove one chosen member from the
+group. The cloud's scaling group picks which instances go on scale-in,
+replaces failed ones and rolls out new launch configuration. Anything that
+works by deleting a specific `Machine` needs a MachineDeployment of
+`TerraformMachine`s instead:
+
+| You need | Use |
+| --- | --- |
+| A native scaling group that the cloud manages | `MachinePool` with a `TerraformMachinePool` |
+| Cluster API to drain a node before its instance goes | MachineDeployment with `TerraformMachine`s |
+| MachineHealthCheck remediation | MachineDeployment with `TerraformMachine`s |
+| The Kubernetes Cluster Autoscaler | MachineDeployment with `TerraformMachine`s |
+| To delete one specific node, by deleting its `Machine` or with `cluster.x-k8s.io/delete-machine` | MachineDeployment with `TerraformMachine`s |
+
+A pool can still drain nodes through the cloud's own lifecycle hooks or a
+termination handler, if its module sets one up. The reasons pools stop
+here are in
+[MachinePool Machines](../module-author/contract/v1alpha1/machinepool.md#machinepool-machines).
+
 ## Create a MachinePool
 
 A `MachinePool` has a single infrastructure object for its whole group,
@@ -190,9 +212,10 @@ See [`AutoscalingActive`](../reference/conditions.md#autoscalingactive).
 !!! warning "The Kubernetes Cluster Autoscaler does not drive these pools"
 
     Its `clusterapi` cloud provider requires MachinePool Machines, which
-    CAPTF does not implement. Running it against a CAPTF pool is
-    unsupported, since its `spec.replicas` patches would be overwritten by
-    the write-back above.
+    CAPTF does not implement (see
+    [Pool or MachineDeployment](#pool-or-machinedeployment)). Running it
+    against a CAPTF pool is unsupported, since its `spec.replicas` patches
+    would be overwritten by the write-back above.
 
 ## Add an autoscaled pool to a generated cluster
 

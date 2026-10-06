@@ -88,7 +88,10 @@ at a directly created `TerraformCluster` or `TerraformMachinePool`.
   [the guard](approvals/destructive-guard.md#machine-pools)). With
   autoscaling enabled, it also writes the group's observed replica count back
   to `MachinePool.spec.replicas`; see
-  [machine pools](../user-guide/machine-pools.md).
+  [machine pools](../user-guide/machine-pools.md). It is one object for the
+  whole group: its members get no `Machine` or per-member object of their
+  own (see
+  [MachinePool Machines](../module-author/contract/v1alpha1/machinepool.md#machinepool-machines)).
 
 ## Templates
 
