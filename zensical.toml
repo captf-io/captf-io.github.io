@@ -198,6 +198,7 @@ nav = [
     { "Secret Management" = [
       "docs/concepts/secret-management/README.md",
       { "Terraform State Secrets" = "docs/concepts/secret-management/state.md" },
+      { "Terraform vs OpenTofu Storage" = "docs/concepts/secret-management/runtimes.md" },
       { "Backups and Restore" = "docs/concepts/secret-management/backups.md" },
       { "Credentials" = "docs/concepts/secret-management/credentials.md" },
       { "Run Inputs and the Plan Key" = "docs/concepts/secret-management/run-inputs.md" },
@@ -630,6 +631,7 @@ https://captf.io/llms-full.txt is the whole site in one file. News: https://capt
   { "docs/concepts/state.md" = "Learn where CAPTF keeps Terraform state, how it names, reads, locks and backs it up, and what happens to it on deletion." },
   { "docs/concepts/secret-management/README.md" = "Inventory every Secret and Lease CAPTF keeps between Jobs, see how they connect, and find the page for each part." },
   { "docs/concepts/secret-management/state.md" = "See how state Secrets are named, labeled, chunked, read, checked and attached to the object by the manager." },
+  { "docs/concepts/secret-management/runtimes.md" = "Compare how Terraform and OpenTofu store state in Secrets: Terraform chunks past 1 MiB, OpenTofu is capped at one Secret." },
   { "docs/concepts/secret-management/backups.md" = "Learn when the manager backs up state, how backups are named and pruned, and how a restore Job pushes one back." },
   { "docs/concepts/secret-management/credentials.md" = "Follow a credential from the source Secret through the per-namespace mirror to the Job, including rotation and revocation." },
   { "docs/concepts/secret-management/run-inputs.md" = "Learn where rendered inputs are kept, how long, and what the plan key is for." },

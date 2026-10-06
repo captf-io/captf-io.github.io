@@ -431,6 +431,10 @@
     "icon": "lucide/file-lock",
     "subtitle": "How state Secrets are stored"
   },
+  "concepts/secret-management/runtimes.md": {
+    "icon": "lucide/scale",
+    "subtitle": "Chunked state vs one Secret"
+  },
   "concepts/secret-management/backups.md": {
     "icon": "lucide/database-backup",
     "subtitle": "Back up and restore state"

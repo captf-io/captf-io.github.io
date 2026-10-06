@@ -34,7 +34,10 @@ across additional `-part-N` Secrets instead, up to the reader's own cap of
 900 KiB fires the alert — for OpenTofu that is a warning before a hard
 failure, for Terraform a warning about growth. See
 [Chunking and size caps](../../concepts/state.md#chunking-and-size-caps)
-for the exact numbers and how CAPTF reads a chunked state.
+for the exact numbers and how CAPTF reads a chunked state, and [State
+Storage: Terraform and
+OpenTofu](../../concepts/secret-management/runtimes.md) for what an
+OpenTofu apply that crosses the cap loses.
 
 **Find it.**
 
@@ -138,6 +141,7 @@ and user variables:
 !!! related "See also"
 
     - [Terraform State](../../concepts/state.md)
+    - [State Storage: Terraform and OpenTofu](../../concepts/secret-management/runtimes.md)
     - [Job Inputs](../../concepts/inputs.md)
     - [Module Variables](../../user-guide/variables.md)
     - [Conditions reference](../../reference/conditions.md#applyjobsucceeded)

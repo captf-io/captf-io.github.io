@@ -109,7 +109,10 @@ push`/`state list`. It does not check a minimum version. The reference
 modules declare `required_version = ">= 1.5.0"`, because they use
 `terraform_data` and `plantimestamp()`. CAPTF reads the state through
 the Kubernetes backend and only accepts state file version 4. OpenTofu
-client-side state encryption is unsupported. See [Image
+client-side state encryption is unsupported. Terraform 1.6 and later split
+a large state across several Secrets; OpenTofu and older Terraform cap it
+at one Secret, about 1 MiB compressed (see [State Storage: Terraform and
+OpenTofu](../concepts/secret-management/runtimes.md)). See [Image
 Contract](../module-author/image-contract.md) and [Runtime
 Environment](../module-author/runtime-environment.md).
 

@@ -58,6 +58,8 @@ additional Secrets named `tfstate-default-<suffix>-part-1`,
 writes a single Secret. CAPTF reads whichever shape is present: it lists
 every Secret carrying the backend's own labels for the suffix, orders them
 by chunk index, and concatenates their payloads before decompressing.
+[State Storage: Terraform and OpenTofu](secret-management/runtimes.md)
+compares the two backends and what each does at its limit.
 
 CAPTF caps what it is willing to read: at most 32 chunks and 64 MiB of
 decompressed state. Real state compresses 10-20x, so these limits are far

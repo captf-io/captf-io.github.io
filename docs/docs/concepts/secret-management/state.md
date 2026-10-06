@@ -79,7 +79,9 @@ on every chunk and on the lock Lease, next to its own `tfstate=true`,
 Each Secret holds the state gzip-compressed under the data key `tfstate`.
 Terraform splits a state that compresses past about 1 MiB into further
 Secrets; OpenTofu 1.12 writes a single Secret and does not chunk. The reader
-accepts either shape.
+accepts either shape. See [State Storage: Terraform and
+OpenTofu](runtimes.md) for the two backends side by side, what happens
+when an OpenTofu state outgrows its Secret, and switching runtimes.
 
 ## How the manager reads state
 
@@ -151,6 +153,7 @@ destroy finds every chunk by the label selector, not by ownership.
 !!! related "See also"
 
     - [Terraform State](../state.md) for caps, locks and what is read.
+    - [State Storage: Terraform and OpenTofu](runtimes.md).
     - [Backups and restore](backups.md).
     - [Size limits runbook](../../operator-guide/runbooks/size-limits.md).
     - [Stale state lock runbook](../../operator-guide/runbooks/stale-lock.md).

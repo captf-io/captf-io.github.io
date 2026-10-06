@@ -35,6 +35,15 @@ The chapter has these pages:
 
     [:octicons-arrow-right-24: Terraform State Secrets](state.md)
 
+-   :material-scale-balance:{ .lg .middle } __Terraform vs OpenTofu Storage__
+
+    ---
+
+    Why Terraform state can grow past 1 MiB and OpenTofu state cannot,
+    and switching runtimes.
+
+    [:octicons-arrow-right-24: Terraform vs OpenTofu Storage](runtimes.md)
+
 -   :material-backup-restore:{ .lg .middle } __Backups and Restore__
 
     ---
