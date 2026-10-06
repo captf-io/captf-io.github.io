@@ -66,7 +66,6 @@ fails. See [Stale State Lock](../../operator-guide/runbooks/stale-lock.md).
 ## What ends a hold
 
 ```mermaid
-%%{init: {"themeVariables": {"fontSize": "13px"}, "flowchart": {"nodeSpacing": 28, "rankSpacing": 34, "padding": 10}}}%%
 flowchart TD
     A[Deleting, state lost or unreadable] --> B{abandon annotation<br/>equals the UID?}
     B -- yes --> X[Abandon: cleanup, finalizer off,<br/>InfrastructureAbandoned Warning]

@@ -105,7 +105,6 @@ This page covers the life of a Job, the operations and the flags.
 ## The life of a Job
 
 ```mermaid
-%%{init: {"themeVariables": {"fontSize": "13px"}, "flowchart": {"nodeSpacing": 28, "rankSpacing": 34, "padding": 10}}}%%
 flowchart TD
     A[Reconcile: bookkeeping,<br/>no active Job] --> B[DecideOp picks an operation]
     B --> C{Backoff,<br/>approval or gate?}

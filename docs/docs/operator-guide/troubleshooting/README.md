@@ -123,7 +123,6 @@ Work from the top level down. Each step narrows the search.
    each `Warning`.
 
 ```mermaid
-%%{init: {"themeVariables": {"fontSize": "13px"}, "flowchart": {"nodeSpacing": 28, "rankSpacing": 34, "padding": 10}}}%%
 flowchart TD
     A[Ready] --> B{Status?}
     B -- True --> C[Healthy: check DriftDetected<br/>and ApplyJobSucceeded if unsure]

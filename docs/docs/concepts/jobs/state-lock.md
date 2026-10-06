@@ -62,7 +62,6 @@ The lock ID to release is `ID` from the lock info, else the Lease's holder
 identity.
 
 ```mermaid
-%%{init: {"themeVariables": {"fontSize": "13px"}, "flowchart": {"nodeSpacing": 28, "rankSpacing": 34, "padding": 10}}}%%
 flowchart TD
     A["Lock held, no Job active"] --> B{"Holder is a pod of this<br/>object's own Jobs?"}
     B -->|no| F["Foreign: report StateLocked,<br/>never unlock"]

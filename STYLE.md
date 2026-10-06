@@ -118,11 +118,13 @@ falls out of its step. `tools/reindent_lists.py` fixes this (dry run
 prints a diff; `--write` applies it).
 
 **Diagrams.** The theme draws Mermaid inside a closed shadow root, so
-page CSS cannot size it. A top-down flowchart starts with the compact
-settings, on the line after the opening fence:
-`%%{init: {"themeVariables": {"fontSize": "13px"}, "flowchart": {"nodeSpacing": 28, "rankSpacing": 34, "padding": 10}}}%%`.
-Prefer `flowchart LR` when the chart is a pipeline rather than a decision
-tree.
+page CSS cannot size it. The site's type size and spacing are set once,
+in `overrides/assets/javascripts/mermaid.js`; don't add a `%%{init}%%`
+line to a diagram. Each diagram sits in a panel and fits the column; one
+the column shrinks gets an expand button that opens it full size. Keep
+diagrams near the column's width (about 690px) so they read without it:
+prefer `flowchart LR` for a short pipeline, and `flowchart TD` for a
+decision tree or a chain of more than four or five steps.
 
 **Wide tables.** A page built around tables of five or more columns with
 sentence-length cells (inventories, reference lookups) hides the

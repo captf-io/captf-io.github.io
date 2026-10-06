@@ -35,7 +35,6 @@ in the order to try it, and how `import` blocks in a module fit in.
 ## Which case is it
 
 ```mermaid
-%%{init: {"themeVariables": {"fontSize": "13px"}, "flowchart": {"nodeSpacing": 28, "rankSpacing": 34, "padding": 10}}}%%
 flowchart TD
     A[State is gone] --> B{An in-cluster or<br/>external copy?}
     B -- yes --> R[Restore it: State Restore]

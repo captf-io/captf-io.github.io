@@ -278,7 +278,6 @@ decided:
 ## One pass, visually
 
 ```mermaid
-%%{init: {"themeVariables": {"fontSize": "13px"}, "flowchart": {"nodeSpacing": 28, "rankSpacing": 34, "padding": 10}}}%%
 flowchart TD
     A["Preamble: externally managed?<br/>owner lookup, finalizer, pause"]
     A -->|paused| P["Paused branch:<br/>bookkeeping, delete a stuck Job,<br/>clear the move block"]

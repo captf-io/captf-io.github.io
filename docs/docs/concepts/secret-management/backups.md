@@ -93,7 +93,6 @@ compressed size summed over the chunks.
 A restore pushes a backup into the backend through a Job.
 
 ```mermaid
-%%{init: {"themeVariables": {"fontSize": "13px"}, "flowchart": {"nodeSpacing": 28, "rankSpacing": 34, "padding": 10}}}%%
 flowchart TD
     A["Annotation captf.io/restore-state=serial"] --> B{"Names a complete backup,<br/>not already restored?"}
     B -->|no| X["RestoreBackupNotFound,<br/>or skipped"]

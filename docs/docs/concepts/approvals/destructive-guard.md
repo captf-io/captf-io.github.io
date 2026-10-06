@@ -25,7 +25,6 @@ Approval](../../user-guide/plan-approval.md#the-destructive-plan-guard).
 ## The flow
 
 ```mermaid
-%%{init: {"themeVariables": {"fontSize": "13px"}, "flowchart": {"nodeSpacing": 28, "rankSpacing": 34, "padding": 10}}}%%
 flowchart TD
     A["Apply Job starts<br/>(guard on)"] --> B["init, validate,<br/>plan, show"]
     B -->|no changes| S["Skip the apply step,<br/>Job succeeds"]

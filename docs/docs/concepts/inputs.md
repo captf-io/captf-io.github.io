@@ -30,7 +30,6 @@ kind of input structure, so this page covers all three side by side.
 ## 1. The pipeline
 
 ```mermaid
-%%{init: {"themeVariables": {"fontSize": "13px"}, "flowchart": {"nodeSpacing": 28, "rankSpacing": 34, "padding": 10}}}%%
 flowchart TD
     subgraph capi[CAPI objects]
         Cluster["Cluster<br/>spec.topology.version<br/>spec.clusterNetwork<br/>spec.controlPlaneEndpoint<br/>status.initialization.controlPlaneInitialized"]

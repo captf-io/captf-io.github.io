@@ -58,7 +58,6 @@ object, is no lag: that wait is the lease gate's own, and starting a Job is
 refused there.
 
 ```mermaid
-%%{init: {"themeVariables": {"fontSize": "13px"}, "flowchart": {"nodeSpacing": 28, "rankSpacing": 34, "padding": 10}}}%%
 flowchart TD
     A["No active Job in the cached list"] --> B{"status.activeJob names<br/>a Job the list lacks?"}
     B -->|"found on the API server"| W["Cache lag: wait"]

@@ -26,7 +26,6 @@ Look at `metadata.finalizers` (CAPTF's must be the one holding it), the
 `ApplyJobSucceeded`, then follow the chart.
 
 ```mermaid
-%%{init: {"themeVariables": {"fontSize": "13px"}, "flowchart": {"nodeSpacing": 28, "rankSpacing": 34, "padding": 10}}}%%
 flowchart TD
     S[Object has a deletionTimestamp<br/>and the finalizer stays] --> P{Paused=True?}
     P -- yes --> P1[Unpause the Cluster or remove<br/>the paused annotation]

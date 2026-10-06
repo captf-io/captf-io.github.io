@@ -1616,3 +1616,109 @@
     text-decoration: none;
     border-bottom: none;
 }
+
+/* 14. Diagrams --------------------------------------------------------------
+ * The theme draws each Mermaid diagram in a closed shadow root, so CSS here
+ * styles only the box around it and the --md-mermaid-* colours (custom
+ * properties inherit into the shadow root). Type size and spacing are
+ * Mermaid settings, in javascripts/mermaid.js. Each diagram sits in a quiet
+ * panel set apart from the prose and fits the column; one the column
+ * shrinks gets an expand button (drawn by mermaid.js inside the shadow
+ * root) that opens it at natural size in the dialog below.
+ */
+.md-typeset .mermaid {
+    --md-mermaid-node-bg-color: rgba(169, 116, 255, 0.09);
+    --md-mermaid-node-fg-color: rgba(169, 116, 255, 0.62);
+    --md-mermaid-edge-color: #A3A9C7;
+    --md-mermaid-label-fg-color: #E7E9F5;
+    --md-mermaid-label-bg-color: #0F1330;
+    --md-mermaid-sequence-actor-bg-color: #161B3A;
+    --md-mermaid-sequence-actor-line-color: rgba(163, 169, 199, 0.35);
+    --md-mermaid-sequence-loop-bg-color: rgba(91, 140, 255, 0.05);
+    --md-mermaid-sequence-loop-border-color: rgba(91, 140, 255, 0.4);
+    --md-mermaid-sequence-label-bg-color: rgba(91, 140, 255, 0.18);
+    --md-mermaid-sequence-label-fg-color: #E7E9F5;
+    --md-mermaid-sequence-note-bg-color: #161B3A;
+    --md-mermaid-sequence-note-border-color: rgba(163, 169, 199, 0.35);
+    position: relative;
+    margin: 2em 0;
+    padding: 1.6rem 1.4rem;
+    overflow-x: auto;
+    border: 1px solid rgba(163, 169, 199, 0.12);
+    border-radius: 0.6rem;
+    background:
+        radial-gradient(ellipse at top, rgba(91, 140, 255, 0.05), transparent 70%),
+        #0F1330;
+    text-align: center;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(163, 169, 199, 0.3) transparent;
+}
+
+@media screen and (max-width: 44.984375em) {
+    .md-typeset .mermaid {
+        padding: 1rem 0.8rem;
+    }
+}
+
+/* The full-size view: the diagram's own box, moved into a window-sized
+ * dialog, at natural size and scrolling both ways when it is larger. */
+.captf-diagram-dialog {
+    width: calc(100vw - 2rem);
+    max-width: none;
+    height: calc(100vh - 2rem);
+    max-height: none;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid rgba(163, 169, 199, 0.16);
+    border-radius: 0.8rem;
+    background: var(--captf-navy);
+    color: #E7E9F5;
+}
+
+.captf-diagram-dialog::backdrop {
+    background: rgba(5, 6, 14, 0.78);
+    backdrop-filter: blur(3px);
+}
+
+.captf-diagram-dialog__body {
+    display: flex;
+    box-sizing: border-box;
+    height: 100%;
+    padding: 3rem 1.5rem 1.5rem;
+    overflow: auto;
+}
+
+/* margin: auto centres the diagram when it is smaller than the window,
+ * and (unlike centring the flex container) still lets a larger one scroll
+ * to its left and top edges. */
+.captf-diagram-dialog__body .mermaid {
+    flex: none;
+    margin: auto;
+}
+
+.captf-diagram-dialog__close {
+    position: absolute;
+    z-index: 1;
+    top: 0.6rem;
+    right: 0.6rem;
+    display: flex;
+    padding: 0.4rem;
+    border: 1px solid rgba(163, 169, 199, 0.18);
+    border-radius: 0.4rem;
+    background: rgba(15, 19, 48, 0.9);
+    color: #A3A9C7;
+    cursor: pointer;
+    transition: color 125ms, border-color 125ms;
+}
+
+.captf-diagram-dialog__close:hover,
+.captf-diagram-dialog__close:focus-visible {
+    border-color: rgba(169, 116, 255, 0.6);
+    color: #FFFFFF;
+    outline: none;
+}
+
+.captf-diagram-dialog__close svg {
+    width: 1.1rem;
+    height: 1.1rem;
+}
