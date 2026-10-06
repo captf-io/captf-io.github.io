@@ -33,7 +33,7 @@ published on the Terraform Registry as
 | `azurerm_user_assigned_identity.node_identities` | Managed identities of control-plane and worker nodes | Per role, unless you bring one (`control_plane_identity_id`, `worker_identity_id`) |
 | `azurerm_role_assignment.node_role_assignments` | Contributor on the group and Network Contributor on the node subnets for the control-plane identity; AcrPull on each of `container_registry_ids` | For the identities the module creates |
 | `azurerm_network_security_group.node_security_groups` | One per role, attached to each node's NIC | Always |
-| `azurerm_network_security_rule.node_security_rules` | SSH denied unless from `ssh_allowed_cidrs`; all traffic between nodes; the API server ports and a final deny of the virtual network on the control plane | Always; the SSH allow only with `ssh_allowed_cidrs`, the CIDR allow only with `api_allowed_cidrs` |
+| `azurerm_network_security_rule.node_security_rules` | SSH denied unless from `ssh_allowed_cidrs`; all traffic between nodes; the API server ports and a final deny of the virtual network on the control plane; the kubelet ports (TCP 10250, 10255) denied from the rest of the virtual network on workers | Always; the SSH allow only with `ssh_allowed_cidrs`, the CIDR allow only with `api_allowed_cidrs` |
 | `azurerm_application_security_group.node_application_security_groups` | Name control-plane and worker NICs in the rules | Always |
 | `azurerm_availability_set.control_plane_availability_set` | Spreads control-plane VMs over fault domains | In a region without availability zones |
 | `azurerm_public_ip.api_public_ip` | Static Standard public IP of the endpoint | With `api_load_balancer_public` |
@@ -65,7 +65,7 @@ User variables, set with `spec.variables` on the `TerraformCluster`
 | --- | --- | --- | --- |
 | `additional_tags` | `map(string)` | `{}` | Extra Azure tags on every taggable resource. Keys starting with `captf.io_` or `captf.io/` (any case) are rejected; at most 44. Keys 1 to 512 characters without `< > % & \ ? /`, values at most 256. |
 | `admin_ssh_public_key` | `string` | `null` | Required. OpenSSH public key (`ssh-rsa` or `ssh-ed25519`) of every node's admin user: Azure Linux VMs need a key or a password, and the module invents neither. SSH stays closed unless `ssh_allowed_cidrs` opens it |
-| `api_allowed_cidrs` | `list(string)` | `[]` | IPv4 CIDRs, besides the virtual network, allowed to reach the API server ports. Required with `api_load_balancer_public`: include the management cluster's egress and the nodes' NAT gateway addresses |
+| `api_allowed_cidrs` | `list(string)` | `[]` | IPv4 CIDRs, besides the virtual network, allowed to reach the API server ports. Required with `api_load_balancer_public`: include the management cluster's egress and the nodes' NAT gateway addresses. A `/0` such as `0.0.0.0/0` is rejected: it would open the API server to the whole internet |
 | `api_load_balancer_private_ip` | `string` | `null` | Static private IPv4 address of the internal frontend, in the control-plane subnet. `null` takes a dynamic address, stable for the load balancer's life |
 | `api_load_balancer_public` | `bool` | `false` | Put the API load balancer on a public IP |
 | `api_server_hairpin_workaround` | `bool` | `true` | Control-plane nodes send their own traffic for the frontend to their local API server while it is ready ([API endpoint](README.md#api-endpoint)) |
@@ -116,6 +116,14 @@ control-plane nodes behind the load balancer.
     left by hand.
 
 - The network, its egress, DNS and peering are yours.
+- Workers deny the kubelet ports (TCP 10250 and 10255) from the rest of the
+  virtual network with the rule `worker/deny-kubelet-from-virtual-network`
+  (priority 150, after `allow-cluster-inbound` at 120), but otherwise keep
+  Azure's default AllowVnetInBound, because cloud-provider-azure relies on it
+  for internal Service load balancers. NodePorts and Service ports on
+  workers are therefore reachable from the virtual network and from networks
+  peered or connected to it: put a network policy or your own NSG rule in
+  front of anything that must not be.
 - Azure public cloud only.
 - The endpoint is an IP address; there is no DNS name.
 - With `distribution = "rke2"` the endpoint port cannot be 9345, the

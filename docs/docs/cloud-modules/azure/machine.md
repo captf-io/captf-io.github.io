@@ -55,7 +55,7 @@ User variables, set with `spec.template.spec.variables` on the
 | --- | --- | --- | --- |
 | `accelerated_networking` | `bool` | `true` | Accelerated networking on the NIC; turn it off for a `vm_size` without it |
 | `additional_tags` | `map(string)` | `{}` | Extra Azure tags on the VM and NIC. Keys starting with `captf.io_` or `captf.io/` (any case) are rejected; at most 44. Keys 1 to 512 characters without `< > % & \ ? /`, values at most 256. |
-| `boot_diagnostics` | `bool` | `true` | Keep the serial console log in Azure-managed storage. It shows boot output, which may include kubeadm's join command |
+| `boot_diagnostics` | `bool` | `false` | Keep the serial console log in Azure-managed storage, for debugging a node that never joins. It shows boot output, which may include kubeadm's join command, so it is off by default |
 | `encryption_at_host` | `bool` | `false` | Encrypt temporary disks and caches on the host too; needs the `EncryptionAtHost` feature on the subscription. Managed disks are encrypted at rest either way |
 | `external_cluster_exports` | `any` | `null` | Exports (schema `captf.io/azure-cluster/v1`) for an externally managed `TerraformCluster` |
 | `image_id` | `string` | `null` | Required. A managed image, Compute Gallery image (version), or community or shared gallery image (version) ID. `{version}` and `{semver}` become the Machine's version, `v1.31.4` and `1.31.4`, without any `+suffix` |
@@ -126,22 +126,38 @@ reports `stopped`, and a `MachineHealthCheck` replaces it.
 - **Who can read it.** Azure keeps custom data out of the instance metadata
   service and does not return it when the VM is read; on the node it sits in
   files only root reads. Like every input, it is also stored in the
-  machine's state Secret on the management cluster. With `boot_diagnostics`
-  on, the serial console log, readable by anyone who may read the VM's boot
-  diagnostics, shows boot output.
+  machine's state Secret on the management cluster, and it stays on the node's
+  disk (`/var/lib/cloud`) for as long as the node lives. On a control-plane
+  node it holds the cluster CA keys, so protect read access to that Secret
+  like the keys themselves. `boot_diagnostics` is off by default: turned on,
+  the serial console log, readable by anyone who may read the VM's boot
+  diagnostics, shows boot output that may include kubeadm's join command.
 
 ## Limitations
 
 - One NIC, one OS disk and no data disk: etcd shares the OS disk.
 - No public IP; nodes reach the internet through the subnet's egress.
+- No customer-managed key for the OS disk: the disk is encrypted at rest
+  with a platform-managed key.
 - Azure public cloud only.
 - An image for `{semver}` must exist in the gallery for every version you
   roll to.
 
 ## Exceptions
 
-None: `tfcapi-lint module --strict` passes without allowed warnings. One
-trivy finding is ignored with its reason: AZU-0068 on the NIC, whose
+`tfcapi-lint module --strict` passes without allowed warnings. Two
+deliberate deviations from the "defaults are secure" rule:
+
+- **`encryption_at_host` defaults to `false`.** Turning it on needs the
+  `EncryptionAtHost` feature registered on the subscription, and a VM create
+  fails without it. Managed disks are encrypted at rest either way; set it to
+  `true` once the feature is registered.
+- **The bootstrap payload travels as `custom_data`.** Azure offers no other
+  channel that cloud-init reads at first boot, so the payload, with the CA
+  keys on a control-plane node, is stored in the state Secret and on the
+  node's disk. See [Bootstrap](#bootstrap).
+
+One trivy finding is ignored with its reason: AZU-0068 on the NIC, whose
 security group is attached by a separate association resource. The tests
 cannot cover the `terminated` reading, because a mock provider never drops
 a resource on refresh.

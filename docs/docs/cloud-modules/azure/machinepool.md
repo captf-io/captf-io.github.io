@@ -58,7 +58,7 @@ User variables, set with `spec.variables` on the `TerraformMachinePool`
 | `autoscaler` | `string` | `"native"` | With autoscaling enabled, what sets the capacity: `native` (this module's Azure Autoscale setting) or `external` (no autoscale setting; a scaler outside the module, such as the Kubernetes Cluster Autoscaler, sets it within `autoscaling.min` and `max`). No effect while autoscaling is disabled |
 | `autoscaling_scale_in_cpu_percent` | `number` | `25` | With autoscaling and `autoscaler` `native`, scale in by one instance below this average CPU over 10 minutes; a whole number from 1 to 100, and must be below the scale-out threshold. Ignored when `autoscaler` is `external` |
 | `autoscaling_scale_out_cpu_percent` | `number` | `75` | With autoscaling and `autoscaler` `native`, scale out by one instance above this average CPU over 10 minutes; a whole number from 1 to 100. Ignored when `autoscaler` is `external` |
-| `boot_diagnostics` | `bool` | `true` | Keep the serial console logs in Azure-managed storage |
+| `boot_diagnostics` | `bool` | `false` | Keep the serial console logs in Azure-managed storage, for debugging a node that never joins. They may show kubeadm's join command, so they are off by default |
 | `encryption_at_host` | `bool` | `false` | Encrypt temporary disks and caches on the host too; needs the `EncryptionAtHost` feature |
 | `external_cluster_exports` | `any` | `null` | Exports (schema `captf.io/azure-cluster/v1`) for an externally managed `TerraformCluster` |
 | `image_id` | `string` | `null` | Required. A managed image, Compute Gallery image (version), or community or shared gallery image (version) ID. `{version}` and `{semver}` become the pool's version, `v1.31.4` and `1.31.4`, without any `+suffix` |
@@ -140,7 +140,12 @@ handler that drains.
   precondition stops a larger message.
 - **Who can read it.** As for the machine role: not through the instance
   metadata service or a read of the scale set; on the node only root; and
-  the pool's state Secret on the management cluster.
+  the pool's state Secret on the management cluster. The data holds the
+  worker join credentials (a bootstrap token) and stays on each instance's
+  disk for as long as the instance lives, so protect read access to that
+  Secret accordingly. `boot_diagnostics` is off by default: turned on, the
+  serial console log, readable by anyone who may read the scale set's boot
+  diagnostics, shows boot output that may include kubeadm's join command.
 
 ## Limitations
 
@@ -158,10 +163,21 @@ handler that drains.
   set; `replicas` follows at the next refresh.
 - The scale set read fails if an instance disappears between listing it and
   reading its NICs; the next refresh succeeds.
+- No customer-managed key for the OS disk: the disk is encrypted at rest
+  with a platform-managed key.
 - Azure public cloud only.
 
 ## Exceptions
 
+- **`encryption_at_host` defaults to `false`**, against the "defaults are
+  secure" rule: turning it on needs the `EncryptionAtHost` feature registered
+  on the subscription, and the scale set create fails without it. Managed
+  disks are encrypted at rest either way; set it to `true` once the feature
+  is registered.
+- **The bootstrap data travels as `custom_data`.** Azure offers no other
+  channel that cloud-init reads at first boot, so the join credentials are
+  stored in the state Secret and on each instance's disk. See
+  [Bootstrap](#bootstrap).
 - **`pool/autoscaling-ignore-changes`**, a `tfcapi-lint` warning, is allowed:
   the scale set ignores changes to `instances`, its desired count, which the
   check's pattern does not know, and the capacity is held outside the scale
