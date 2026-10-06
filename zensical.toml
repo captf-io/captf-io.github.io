@@ -418,7 +418,7 @@ title = "Images"
 links = [
   { name = "terraform-base", href = "https://github.com/captf-io/terraform-base" },
   { name = "opentofu-base", href = "https://github.com/captf-io/opentofu-base" },
-  { name = "noop-modules", href = "https://github.com/captf-io/noop-modules" },
+  { name = "module-images", href = "https://github.com/captf-io/module-images" },
 ]
 
 [[project.extra.footer.columns]]

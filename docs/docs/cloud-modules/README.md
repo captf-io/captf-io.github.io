@@ -165,13 +165,12 @@ the runtime (`<version>-terraform`, `<version>-opentofu`). Each image carries a 
 never downloads a provider at run time.
 
 Images are published under `module-images/` rather than at the top level
-of `ghcr.io/captf-io/`. The packages under the old names, such as
-`ghcr.io/captf-io/aws-machine`, are owned by the archived `<cloud>-modules`
-repositories, and GitHub has no API to grant another repository's workflow
-write access to a package. So `module-images` publishes new packages under
-its own name, which its workflow creates and owns; adding an image needs no
-package settings. The old images stay pullable with their existing tags and
-digests, but receive no new builds.
+of `ghcr.io/captf-io/`. GitHub has no API to grant a repository's workflow
+write access to a package it did not create, so `module-images` publishes
+packages under its own name, which its workflow creates and owns; adding an
+image needs no package settings. The earlier top-level images, such as
+`ghcr.io/captf-io/aws-machine`, and the `<cloud>-modules` repositories that
+built them have been deleted.
 
 The image version is the module release: `vX.Y.Z-<runtime>` contains release
 `vX.Y.Z` of the module, fetched from the Terraform Registry.

@@ -24,11 +24,16 @@ point for your own.
 
 | Cloud | Repository | Roles |
 | --- | --- | --- |
-| [AWS](../../docs/cloud-modules/aws/README.md) | [`captf-io/aws-modules`](https://github.com/captf-io/aws-modules) | cluster, machine, machinepool |
-| [Google Cloud](../../docs/cloud-modules/gcp/README.md) | [`captf-io/gcp-modules`](https://github.com/captf-io/gcp-modules) | cluster, machine, machinepool |
-| [Azure](../../docs/cloud-modules/azure/README.md) | [`captf-io/azure-modules`](https://github.com/captf-io/azure-modules) | cluster, machine, machinepool |
-| [OCI](../../docs/cloud-modules/oci/README.md) | [`captf-io/oci-modules`](https://github.com/captf-io/oci-modules) | cluster, machine, machinepool |
-| [OpenStack](../../docs/cloud-modules/openstack/README.md) | [`captf-io/openstack-modules`](https://github.com/captf-io/openstack-modules) | cluster, machine |
+| [AWS](../../docs/cloud-modules/aws/README.md) | `captf-io/aws-modules` | cluster, machine, machinepool |
+| [Google Cloud](../../docs/cloud-modules/gcp/README.md) | `captf-io/gcp-modules` | cluster, machine, machinepool |
+| [Azure](../../docs/cloud-modules/azure/README.md) | `captf-io/azure-modules` | cluster, machine, machinepool |
+| [OCI](../../docs/cloud-modules/oci/README.md) | `captf-io/oci-modules` | cluster, machine, machinepool |
+| [OpenStack](../../docs/cloud-modules/openstack/README.md) | `captf-io/openstack-modules` | cluster, machine |
+
+*Update, 2026-10-06: these repositories have since been replaced by one
+`terraform-<provider>-<role>` repository per module and
+[`captf-io/module-images`](https://github.com/captf-io/module-images), which
+builds every image, and then deleted.*
 
 All five follow one set of conventions, so they behave the same way wherever
 the cloud allows it: an internal API endpoint by default, the same traffic

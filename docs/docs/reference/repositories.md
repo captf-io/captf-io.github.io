@@ -130,7 +130,7 @@ What exists today follows from those triggers:
   `vX.Y.Z`, and `<runtime>` is the newest release. Both tags are rebuilt, with
   a new digest, when the image changes without a module release, for example
   after a base image bump, so pin a digest in anything that must not change.
-  There are no `edge-` tags. The names carry the `module-images/` prefix because the old `ghcr.io/captf-io/<cloud>-<role>` packages belong to the archived `<cloud>-modules` repositories and GitHub cannot grant another repository's workflow write access to them; those images stay pullable but get no new builds.
+  There are no `edge-` tags. The names carry the `module-images/` prefix because GitHub cannot grant a repository's workflow write access to a package it did not create; the earlier `ghcr.io/captf-io/<cloud>-<role>` images and the `<cloud>-modules` repositories that built them have been deleted.
 
 Every pushed module and base image carries an SBOM and provenance
 attestations (`mode=max`), and the manifests carry the

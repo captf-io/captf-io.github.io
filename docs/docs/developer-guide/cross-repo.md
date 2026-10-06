@@ -83,9 +83,9 @@ still breaks every module written against it.
 
 The six image repositories that once held a copy of the modules (`aws-modules`,
 `azure-modules`, `gcp-modules`, `oci-modules`, `openstack-modules` and
-`noop-modules`) are replaced by one repository,
-[`module-images`](https://github.com/captf-io/module-images), and are
-archived. It holds no module code, so there is no skeleton to keep identical
+`noop-modules`) were replaced by one repository,
+[`module-images`](https://github.com/captf-io/module-images), and deleted,
+along with the images they published. It holds no module code, so there is no skeleton to keep identical
 across repositories. What it holds:
 
 | Path | Holds |
