@@ -413,12 +413,16 @@ links = [
   { name = "Security", href = "https://github.com/captf-io/.github/blob/main/SECURITY.md" },
 ]
 
+# Where CAPTF is distributed: the provider's releases and which versions go
+# together, the reference modules on the Terraform Registry, and every
+# container image (provider, module images, base images) on GHCR.
 [[project.extra.footer.columns]]
-title = "Images"
+title = "Get CAPTF"
 links = [
-  { name = "terraform-base", href = "https://github.com/captf-io/terraform-base" },
-  { name = "opentofu-base", href = "https://github.com/captf-io/opentofu-base" },
-  { name = "module-images", href = "https://github.com/captf-io/module-images" },
+  { name = "Provider releases", href = "https://github.com/captf-io/cluster-api-provider-terraform/releases" },
+  { name = "Compatibility", href = "docs/operator-guide/compatibility/" },
+  { name = "Terraform Registry", href = "https://registry.terraform.io/namespaces/captf-io" },
+  { name = "Container images", href = "https://github.com/orgs/captf-io/packages" },
 ]
 
 [[project.extra.footer.columns]]
