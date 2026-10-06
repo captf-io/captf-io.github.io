@@ -33,7 +33,8 @@ point for your own.
 *Update, 2026-10-06: these repositories have since been replaced by one
 `terraform-<provider>-<role>` repository per module and
 [`captf-io/module-images`](https://github.com/captf-io/module-images), which
-builds every image, and then deleted.*
+builds every image, and then deleted. See
+[Repositories](../../docs/reference/repositories.md) for the current list.*
 
 All five follow one set of conventions, so they behave the same way wherever
 the cloud allows it: an internal API endpoint by default, the same traffic

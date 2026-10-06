@@ -45,3 +45,8 @@ Every kind and the module contract are `v1alpha1` and pre-release: the
 contract is frozen for implementation but may still change. CAPTF has no
 end-to-end tests yet. The [Known Limitations](../../docs/operator-guide/limitations.md)
 page lists everything it does not do.
+
+*Update, 2026-10-06: v0.1.0 and v0.1.1 have since been released, and
+end-to-end suites now run on a kind cluster, including the no-op modules.
+Nothing has been applied to a real cloud, and the project is still
+pre-alpha.*

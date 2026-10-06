@@ -313,7 +313,7 @@
       <ul class="limits">
         <li>Approval gates cluster applies only; machines and pools apply without a gate.</li>
         <li>A gate is a review step, not a sandbox for a module you don't trust.</li>
-        <li>Pre-alpha: no release yet, and no end-to-end tests.</li>
+        <li>Pre-alpha: released, but never run end to end against a real cloud.</li>
       </ul>
       <a class="more" href="{{ 'docs/concepts/approvals/limits/' | url }}">Read the limits</a>
     </article>
@@ -412,7 +412,7 @@
     </details>
     <details>
       <summary>Is it ready for production?</summary>
-      <p>Not yet. CAPTF is pre-alpha: no release is published, and nothing has created a real cluster end to end. The <a href="{{ 'docs/operator-guide/production-readiness/' | url }}">production-readiness checklist</a> covers what a trial you intend to keep needs.</p>
+      <p>Not yet. CAPTF is pre-alpha: v0.1.0 and v0.1.1 are released, but nothing has been applied to a real cloud and no real cluster has been created end to end. The <a href="{{ 'docs/operator-guide/production-readiness/' | url }}">production-readiness checklist</a> covers what a trial you intend to keep needs.</p>
     </details>
   </div>
 </section>
@@ -423,7 +423,7 @@
       <p class="status-pill"><span class="live" aria-hidden="true"></span>v1alpha1 · pre-alpha</p>
       <h2 id="early">Get in <span class="grad">early.</span></h2>
       <p>
-        CAPTF is pre-alpha: nothing is released yet, and its module contract is still open to change. If you have
+        CAPTF is pre-alpha: v0.1.0 and v0.1.1 are released, nothing has run on a real cloud, and the module contract is still open to change. If you have
         Terraform that builds clusters, this is the moment to shape how CAPTF runs it.
       </p>
       <p class="actions">
@@ -435,10 +435,10 @@
       <ul class="checklist">
         <li class="done"><b>Module contract <code>v1alpha1</code></b><span>Frozen for implementation, still open to change. <a href="{{ 'docs/module-author/contract/v1alpha1/CHANGELOG/' | url }}">Changelog</a></span></li>
         <li class="done"><b>Base images</b><span><code>terraform-base</code> 1.16 and <code>opentofu-base</code> 1.12, multi-arch, on GHCR.</span></li>
-        <li class="done"><b>No-op module images</b><span>Edge builds of all three roles, on GHCR.</span></li>
+        <li class="done"><b>No-op module images</b><span>Release builds of all three roles, on GHCR.</span></li>
         <li class="done"><b>The provider</b><span>Manager, webhooks and every kind, built and unit-tested.</span></li>
-        <li class="todo"><b>First release</b><span>Not published yet.</span></li>
-        <li class="todo"><b>End-to-end tests</b><span>No run has created a real cluster yet.</span></li>
+        <li class="done"><b>First release</b><span>v0.1.0 and v0.1.1 are published.</span></li>
+        <li class="todo"><b>A real-cloud run</b><span>The kind end-to-end suites pass; no run has created a real cluster yet.</span></li>
         <li class="todo"><b>A real cloud module</b><span>The first one to provision a cluster settles the contract.</span></li>
       </ul>
     </div>
