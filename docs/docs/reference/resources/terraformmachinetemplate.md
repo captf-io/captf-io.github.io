@@ -114,7 +114,7 @@ template. When `spec.template.spec.source.image` differs from
 | `status.nodeInfo.operatingSystem` | string | The node's operating system, for example `linux`. **Range:** 1 to 64 characters. |
 | `status.capacitySource` | object | Records where `capacity` and `nodeInfo` came from. |
 | `status.capacitySource.source` | string | `Spec` when `status.capacity` is `spec.capacity`, `Image` when it comes from the image label. **Allowed values:** `Spec`, `Image`. |
-| `status.capacitySource.image` | string | The `spec.template.spec.source.image` last resolved. **Range:** 1 to 512 characters. |
+| `status.capacitySource.image` | string | The `spec.template.spec.source.image` last resolved. **Range:** 1 to 512 characters. Required when `source` is `Image`; unset when `source` is `Spec` and the image could not be inspected. |
 | `status.conditions` | list | The `CapacityResolved` condition. **Range:** at most 32. |
 | `status.conditions[].type` | string | The condition type: `CapacityResolved`. |
 | `status.conditions[].status` | string | `True`, `False` or `Unknown`. |
@@ -186,6 +186,11 @@ spec:
 - `spec.capacity` replaces the image's capacity label as a whole: a resource
   the override omits is not filled in from the label, and an invalid label
   is then ignored. `status.capacitySource.source` becomes `Spec`.
+- The override does not need the registry. If the image cannot be
+  inspected, `status.capacity` is still set from `spec.capacity`,
+  `capacitySource.image` stays unset, the last known `nodeInfo` is kept (unset
+  if never resolved), and `CapacityResolved` stays `True` with a message that
+  starts "image not inspected". The manager keeps retrying for `nodeInfo`.
 - `nodeInfo` still comes from the image's `io.captf.node-info`.
 - It is mutable and stays out of `spec.template`, so changing it does not roll
   any machine. Keep it equal to the size the variables select: CAPTF does not
@@ -209,6 +214,7 @@ condition.
 | Status | Reasons | Meaning |
 | --- | --- | --- |
 | `True` | [`CapacityResolved`](../conditions.md#capacityresolved) | Every label the image carries parsed; `capacity` and `nodeInfo` are set from them. |
+| `True` | [`CapacityResolved`](../conditions.md#capacityresolved) | With `spec.capacity` set and the image unreadable: the message starts "image not inspected" and names the failure class. `capacity` is set from the spec. |
 | `True` | [`CapacityNotDeclared`](../conditions.md#capacityresolved) | The image carries neither label. Both fields stay unset. This is not an error. |
 | `False` | [`ImageInspectFailed`](../conditions.md#capacityresolved) | The registry could not be read: authentication failed, the image was not found, or the registry was unreachable. The previous values stay. The message names the class of failure, never the registry's own text. The manager retries, doubling the delay from 30 seconds to at most 10 minutes. |
 | `False` | [`CapacityLabelInvalid`](../conditions.md#capacityresolved) | A label is present but invalid. That field is unset; a valid other label is still applied. The manager does not retry the same image, because the tag is not polled again. |
