@@ -50,7 +50,9 @@ cross-compiles, so the `arm64` image is built without emulation. The
 pushing, and scans and runs the `linux/amd64` build only. An image pushed
 by the manual `make release` fallback has the host platform of the machine
 that ran it; see [Releasing](../developer-guide/releasing.md#manual-fallback).
-The `tfcapi-lint` release assets are built per platform by GoReleaser. The
+The `tfcapi-lint` image (`ghcr.io/captf-io/tfcapi-lint`) is published
+the same way, for the same two platforms, with the same tags. The
+`tfcapi-lint` release assets are built per platform by GoReleaser. The
 base images are published as multi-arch indexes, and the module images build
 `linux/amd64` and `linux/arm64` provider mirrors.
 

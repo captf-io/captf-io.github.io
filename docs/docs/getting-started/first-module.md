@@ -24,7 +24,9 @@ and the [image contract](../module-author/image-contract.md).
 
 !!! info "Before you begin"
 
-    - `tfcapi-lint`, installed as in [tfcapi-lint](../module-author/tfcapi-lint.md#install).
+    - `tfcapi-lint`, installed as in [tfcapi-lint](../module-author/tfcapi-lint.md#install),
+      or run from its [container
+      image](../module-author/tfcapi-lint.md#container-image).
     - `podman` or `docker`, to build the image.
     - A directory to work in. This tutorial calls it `machine/`.
 

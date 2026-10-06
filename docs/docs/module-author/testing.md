@@ -210,7 +210,10 @@ make verify PROVIDER_DIR=/path/to/cluster-api-provider-terraform
     from the default, the contract lint does not run unless you set
     `PROVIDER_DIR` or `TFCAPI_LINT`.
 
-For a standalone install, see [Install](tfcapi-lint.md#install).
+For a standalone install, see [Install](tfcapi-lint.md#install). A
+module repository of your own does not need the provider checkout: on
+GitHub, the tfcapi-lint GitHub Action runs the linter's container image in
+one step; see [tfcapi-lint in CI](tfcapi-lint-ci.md).
 
 ## Image tests
 
@@ -353,7 +356,7 @@ provider's `main`, so run `make tfcapi-lint` in the module repository, and
 `make test` in `module-images`, locally before
 you push, to catch contract violations first (see [Lint](#lint)). See
 [Releasing a Module](releasing.md) for publishing and tags, and [tfcapi-lint
-in CI](tfcapi-lint.md#in-ci) for running the linter in your own pipeline.
+in CI](tfcapi-lint-ci.md) for running the linter in your own pipeline.
 
 !!! related "See also"
 

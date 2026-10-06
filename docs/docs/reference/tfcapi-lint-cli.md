@@ -18,8 +18,9 @@ module's files and the image's layers. It never runs `init`, `plan` or
 `apply`, and it needs neither `terraform` nor `tofu`.
 
 This page is the reference: every command, flag, exit code and check. For a
-walkthrough, registry credentials and CI patterns, see
-[tfcapi-lint](../module-author/tfcapi-lint.md).
+walkthrough and registry credentials, see
+[tfcapi-lint](../module-author/tfcapi-lint.md); for the GitHub Action and
+CI patterns, see [tfcapi-lint in CI](../module-author/tfcapi-lint-ci.md).
 
 ## Install
 
@@ -42,6 +43,11 @@ tfcapi-lint version
 
 The [tfcapi-lint](../module-author/tfcapi-lint.md#install) guide shows
 how to verify the checksum.
+
+The same version is also published as a container image,
+`ghcr.io/captf-io/tfcapi-lint:<version>`, for `linux/amd64` and
+`linux/arm64`, with `tfcapi-lint` as its entrypoint; see [Container
+image](../module-author/tfcapi-lint.md#container-image).
 
 ## Synopsis
 

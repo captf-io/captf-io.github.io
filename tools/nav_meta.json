@@ -255,6 +255,10 @@
     "icon": "lucide/spell-check",
     "subtitle": "Check a module for contract errors"
   },
+  "module-author/tfcapi-lint-ci.md": {
+    "icon": "lucide/workflow",
+    "subtitle": "Lint modules in a pipeline"
+  },
   "module-author/repository-layout.md": {
     "icon": "lucide/folder-tree",
     "subtitle": "Structure a repo of modules"

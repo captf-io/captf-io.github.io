@@ -242,7 +242,8 @@ see [Total State Loss and Import](../operator-guide/runbooks/total-state-loss.md
    [`terraform-noop-cluster`](https://github.com/captf-io/terraform-noop-cluster) and its
    siblings; the images are built from
    [`captf-io/module-images`](https://github.com/captf-io/module-images).
-2. **Lint the module** with `tfcapi-lint`, in strict mode, in CI. It needs
+2. **Lint the module** with `tfcapi-lint`, in strict mode, in CI (on
+   GitHub, with the [GitHub Action](tfcapi-lint-ci.md)). It needs
    neither `terraform` nor `tofu`:
 
     ```sh

@@ -176,7 +176,9 @@ for the full list. In short:
 
 Lint the module before building the image, then lint the built image
 before pushing it: the source is checked before the build, and the built
-layout after it.
+layout after it. On GitHub, the [GitHub Action](#github-actions) runs both
+steps; [tfcapi-lint in CI](tfcapi-lint-ci.md) has complete workflows. Any
+other CI runs the binary:
 
 ```sh title="CI step"
 tfcapi-lint module --role machine --strict ./module
@@ -238,20 +240,13 @@ The step fails with the linter's [exit code](#exit-codes). Its `image`
 output names the image that ran. Local paths are mounted read-only and
 must be inside the workspace or `$RUNNER_TEMP`, which keeps an image
 layout saved to `$RUNNER_TEMP` lintable. The action also mounts the
-credentials of an earlier `docker/login-action` step, for a private image:
+credentials of an earlier `docker/login-action` step, for a private image.
 
-```yaml title="Lint the built image before pushing it"
-- run: |
-    docker build -t "$IMAGE" .
-    mkdir -p "$RUNNER_TEMP/image"
-    docker save "$IMAGE" | tar -x -C "$RUNNER_TEMP/image"
-- uses: captf-io/cluster-api-provider-terraform/actions/tfcapi-lint@<commit> # vX.Y.Z
-  with:
-    command: image
-    target: oci:${{ runner.temp }}/image
-    role: machine
-    strict: true
-```
+[tfcapi-lint in CI](tfcapi-lint-ci.md) walks through it: a pull request
+workflow, [linting the built
+image](tfcapi-lint-ci.md#lint-the-image-before-pushing-it), several
+modules, Dependabot, private registries, self-hosted runners, other CI
+systems and [troubleshooting](tfcapi-lint-ci.md#troubleshooting).
 
 ## Building from source
 
@@ -265,6 +260,8 @@ reach a GitHub release.
 
     - [tfcapi-lint CLI](../reference/tfcapi-lint-cli.md) for every flag, every
       check ID and the exit codes.
+    - [tfcapi-lint in CI](tfcapi-lint-ci.md) for the GitHub Action and the
+      container image in a pipeline.
     - [Module contract](contract/README.md) and
       [image contract](image-contract.md) for what the checks enforce.
     - [Runtime environment](runtime-environment.md) for what a module sees
