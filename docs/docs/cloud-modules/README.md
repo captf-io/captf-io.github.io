@@ -34,7 +34,8 @@ CAPTF and testing a management cluster.
     tests on Terraform and OpenTofu, and image smoke tests, but none has yet
     been applied to a real cloud. Each role repository's `DESIGN.md` lists the
     facts the first real apply must confirm. Read it before you rely on a
-    module, and pin a release tag.
+    module, and pin a release tag. Images are signed with cosign: see
+    [verifying a signature](../module-author/releasing.md#what-ci-publishes).
 
 ## The modules
 

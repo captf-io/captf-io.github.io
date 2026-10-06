@@ -180,12 +180,32 @@ The `module-images` workflow publishes the images:
 | Registry | GHCR, `ghcr.io/<repository owner>/module-images/<set>-<role>`, logged in with the workflow's `GITHUB_TOKEN`. |
 | Matrix | Three roles by two runtimes, one `publish` job each: six images for each cloud (five for OpenStack, which has no `machinepool`). |
 | Platforms | `linux/amd64` and `linux/arm64`, one multi-arch index per tag, built with QEMU and Buildx. |
-| Attestations | An SBOM (`sbom: true`) and provenance at `mode=max`. |
+| Attestations | An SBOM (`sbom: true`) and provenance at `mode=max`, and a keyless cosign signature on each digest. |
 | Labels | `org.opencontainers.image.title`, `.description` and `.licenses` from the workflow, plus `.source`, `.revision` and `.version` and `io.captf.role` from the Dockerfile. The inherited `io.captf.*` labels come from the [base image](base-images.md). |
 | Annotations | The title, description and licenses again, on the index and the manifests. |
-| Permissions | The `publish` job has `contents: read` and `packages: write`. The workflow default is `contents: read`. |
+| Permissions | The `publish` job has `contents: read`, `packages: write` and `id-token: write` (for signing). The workflow default is `contents: read`. |
 
-Image signing is not part of the workflow. The machine image's
+The publish job signs each pushed image digest with cosign, keylessly with
+GitHub OIDC, so the signature covers every tag that points at it. Verify one
+before you run it:
+
+```sh
+cosign verify ghcr.io/captf-io/module-images/aws-machine:v0.1.0-opentofu@sha256:<digest> \
+  --certificate-identity-regexp '^https://github.com/captf-io/module-images/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+Signing applies to images built after it was added to the workflow; an
+existing tag is unsigned until its image is rebuilt.
+
+The build checks the other direction too. `hack/fetch.sh` builds a module
+release only if its `vX.Y.Z` tag is an annotated tag with a valid SSH
+signature from a key in `hack/allowed_signers` and points at the commit it
+fetches; a lightweight, unsigned or wrongly signed tag fails the build. A
+module release must therefore be a signed annotated tag (`git tag -s`).
+`LOCAL_MODULES` builds have no tag, skip the check and say so.
+
+The machine image's
 `io.captf.capacity` and `io.captf.node-info` labels come from the machine
 capacity values in `images.json`, so a CI build matches a local `make test`.
 The OpenStack machine image has no default shape, so it sets none.

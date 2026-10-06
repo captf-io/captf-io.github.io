@@ -70,7 +70,9 @@ in this order:
 4. **`module-images`.** Dependabot bumps the module versions in
    `sources/versions.tf` after each release. If a release changes providers,
    run `make lock IMAGES=<image>` and commit the locks to the Dependabot
-   branch. See [Releasing a Module](../module-author/releasing.md).
+   branch. The build verifies the SSH signature of each module's release
+   tag, so a module release must be a signed annotated tag. See
+   [Releasing a Module](../module-author/releasing.md).
 
 The order follows who depends on whom. The modules are linted by
 the provider's tfcapi-lint, so they can only pass a new check once the
@@ -103,6 +105,9 @@ repositories as siblings of `module-images`:
 cd module-images
 make test IMAGES=aws-machine LOCAL_MODULES=..
 ```
+
+A `LOCAL_MODULES` build has no release tag, so it skips the tag signature
+check and says so.
 
 The checks that gate `module-images` are `make verify` (the `images.json`,
 version and lock files agree; license headers; shellcheck; trivy) and
