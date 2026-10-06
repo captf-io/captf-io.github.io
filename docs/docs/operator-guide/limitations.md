@@ -21,7 +21,8 @@ what has and has not been tested, see [Compatibility](compatibility.md).
 
 ## Maturity
 
-- **Pre-alpha.** No release is published. Every API kind is
+- **Pre-alpha.** v0.1.0 and v0.1.1 are released, but nothing has been
+  applied to a real cloud. Every API kind is
   `v1alpha1`, and the module contract is `v1alpha1` and provisional: it may
   change before a real module has provisioned a cluster with it. See
   [Project status](../index.md#project-status).

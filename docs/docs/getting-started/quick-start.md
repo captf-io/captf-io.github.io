@@ -35,45 +35,32 @@ cloud provider.
 
     - A Kubernetes cluster to use as the management cluster, and `kubectl`
       pointed at it.
-    - `clusterctl`, `make`, Go and `podman` or `docker`: CAPTF has no release
-      yet, so this tutorial builds the provider's manager image from a clone
-      of this repository instead of fetching it.
-    - A container registry you can push to, and that the management cluster
-      can pull from, for the manager image.
-    - A management cluster that can pull from `ghcr.io`, where the no-op
-      module images are published.
+    - `clusterctl` (v1.14 or later) and a clone of
+      [`cluster-api-provider-terraform`](https://github.com/captf-io/cluster-api-provider-terraform):
+      the `templates/...` paths below are relative to it. Check out the
+      release tag you install, for example `git checkout v0.1.1`.
+    - A management cluster that can pull from `ghcr.io`, where the manager
+      image and the no-op module images are published.
 
-Run every command below from the root of that clone: the `make` targets
-and the `templates/...` paths are relative to it.
+Run every command below from the root of that clone.
 
 ## 1. Install the provider
 
-CAPTF has not published a release, so `clusterctl` cannot fetch its
-manifest from a URL yet; build one into a local repository instead. Build
-and push the manager image, then render the manifest against it:
-
-```sh
-export IMG=registry.example.com/you/cluster-api-provider-terraform:v0.1.0
-make docker-build docker-push IMG="${IMG}"
-make manifests-release RELEASE_DIR="${HOME}/local-repository/infrastructure-terraform/v0.1.0" \
-  RELEASE_IMG="${IMG}" VERSION=v0.1.0
-```
-
-Point a `clusterctl` config at that directory; the config entry's `name` is
+CAPTF is not one of `clusterctl`'s built-in providers, so point a
+`clusterctl` config at its release manifest; the config entry's `name` is
 `terraform`, CAPTF's registered provider name:
 
 ```yaml title="clusterctl.yaml"
 providers:
 - name: terraform
   type: InfrastructureProvider
-  url: file:///home/<you>/local-repository/infrastructure-terraform/v0.1.0/infrastructure-components.yaml
+  url: https://github.com/captf-io/cluster-api-provider-terraform/releases/download/v0.1.1/infrastructure-components.yaml
 ```
 
-`<you>` is your home directory's user name, so the `url` is the absolute
-path of the directory `manifests-release` just wrote.
+Install that release:
 
 ```sh
-clusterctl init --config clusterctl.yaml --infrastructure terraform:v0.1.0
+clusterctl init --config clusterctl.yaml --infrastructure terraform:v0.1.1
 ```
 
 This also installs Cluster API's core, bootstrap and control-plane
@@ -82,7 +69,31 @@ present, since CAPTF's webhooks need it. See
 [Installation](../operator-guide/installation.md) for what this creates
 and how to confirm it, and [Installing from a local
 repository](../developer-guide/releasing.md#installing-from-a-local-repository)
-for the general form of the local-repository steps above.
+for the general form of the local-repository steps.
+
+??? note "Install an unreleased change from a local build"
+
+    To try a change that is not in a release, build the manager image from
+    your clone, push it to a registry the management cluster can pull from,
+    and render a local repository against it:
+
+    ```sh
+    export IMG=registry.example.com/you/cluster-api-provider-terraform:dev
+    make docker-build docker-push IMG="${IMG}"
+    make manifests-release RELEASE_DIR="${HOME}/local-repository/infrastructure-terraform/v0.1.1" \
+      RELEASE_IMG="${IMG}" VERSION=v0.1.1
+    ```
+
+    Then use the `file://` form of the `url` in `clusterctl.yaml`, with
+    `<you>` your user name, the absolute path of the directory
+    `manifests-release` just wrote:
+
+    ```yaml title="clusterctl.yaml"
+    providers:
+    - name: terraform
+      type: InfrastructureProvider
+      url: file:///home/<you>/local-repository/infrastructure-terraform/v0.1.1/infrastructure-components.yaml
+    ```
 
 ## 2. Apply an identity
 
@@ -146,13 +157,13 @@ export TERRAFORM_IDENTITY_NAME=aws-prod
 
 clusterctl generate cluster my-cluster --from templates/cluster-template.yaml \
   --target-namespace team-a \
-  --kubernetes-version v1.36.3 \
+  --kubernetes-version v1.36.4 \
   --control-plane-machine-count 1 --worker-machine-count 0 \
   | kubectl apply -f -
 ```
 
 `--from` renders the template file directly, so this command needs no
-provider registration and works the same before or after a release exists.
+provider registration.
 A ClusterClass-based flavor is also available; see [Templates and
 ClusterClass](../user-guide/clusterclass.md), which also covers every
 variable this template accepts, and [clusterctl

@@ -41,7 +41,7 @@ install -m 0755 "tfcapi-lint-<os>-<arch>" /usr/local/bin/tfcapi-lint
 tfcapi-lint version
 ```
 
-- `<version>` is the provider release you deploy, for example `v0.1.0`.
+- `<version>` is the provider release you deploy, for example `v0.1.1`.
 - `<os>` and `<arch>` pick one row of the table above, for example
   `linux` and `amd64`. On macOS, verify the checksum with
   `shasum -a 256 -c --ignore-missing tfcapi-lint-checksums.txt` instead.

@@ -127,7 +127,7 @@ Placeholders:
 - `<pod-cidr>` and `<seconds>`: optional. Leave them out to use the
   defaults in the tables above.
 - `<cluster-name>`, `<namespace>` and `<version>`: the name, the target
-  namespace and the Kubernetes version, such as `v1.36.3`.
+  namespace and the Kubernetes version, such as `v1.36.4`.
 
 `--infrastructure terraform` needs the provider registered with clusterctl.
 To render a template file directly instead, replace it with `--from

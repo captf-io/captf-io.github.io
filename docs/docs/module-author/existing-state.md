@@ -249,7 +249,7 @@ never hold secrets. It is at most 64 KiB of compact JSON.
     this page did, still works, but it depends on the `v1alpha1` state
     layout (the Secret names, labels and suffix rule in [Secret names and
     the suffix](../concepts/state.md#secret-names-and-the-suffix)), which
-    may change before the first release. Prefer `status.exports`. The field
+    may change before the contract leaves `v1alpha1`. Prefer `status.exports`. The field
     is absent when `exports` exceed 64 KiB (the manager emits a Warning
     event, `ExportsNotPublished`) and for an externally managed cluster.
 

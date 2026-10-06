@@ -49,15 +49,16 @@ providers:
   url: https://github.com/captf-io/cluster-api-provider-terraform/releases/latest/infrastructure-components.yaml
 ```
 
-`url` can also name a specific tag instead of `latest`, or a `file://` path
+`url` can also name a specific tag instead of `latest`, for example
+`.../releases/download/v0.1.1/infrastructure-components.yaml`, or a `file://` path
 into a local repository built from a release's assets; see [Installing from
 a local repository](../developer-guide/releasing.md#installing-from-a-local-repository)
 for the local repository layout and for pinning a version.
 
-!!! warning "No release is published yet"
+!!! tip "Pin a version"
 
-    CAPTF has not published a release yet, so the URL above does not resolve to
-    anything: install from a local repository until one exists.
+    `latest` follows the newest release. For anything you keep, pin one:
+    `clusterctl init --config clusterctl.yaml --infrastructure terraform:v0.1.1`.
 
 ## Install with clusterctl init
 

@@ -116,9 +116,10 @@ What exists today follows from those triggers:
 
 - **The provider image is published by the `publish` workflow** on every
   push to `main` (`:edge` and `:sha-<commit>`) and on every release tag
-  (`:vX.Y.Z`); `workflow_dispatch` republishes `:edge`. No release has been
-  made yet, so no `:vX.Y.Z` tag exists. Until one does, use `:edge` or pin
-  a `:sha-<commit>` tag or a digest. To build your own, use
+  (`:vX.Y.Z`); `workflow_dispatch` republishes `:edge`. Releases v0.1.0 and
+  v0.1.1 exist, so `:v0.1.1` is a tag you can install. Pin a release tag,
+  or better its digest, in anything you keep; `:edge` and `:sha-<commit>`
+  are untested builds of `main`. To build your own, use
   `make docker-build` and `make docker-push IMG=...`. A maintainer can fall
   back to `make release` when CI cannot run; see
   [Releasing](../developer-guide/releasing.md#manual-fallback).
@@ -165,7 +166,7 @@ repositories attach no release assets: their output is the images above.
 | Repository | Version scheme | Owned by |
 | --- | --- | --- |
 | `cluster-api-provider-terraform` | Tags `vX.Y.Z` and `vX.Y.Z-rc.N`. `metadata.yaml` lists the clusterctl release series, append-only, currently `0.1` on contract `v1beta2`. | [Releasing](../developer-guide/releasing.md) |
-| `opentofu-base`, `terraform-base` | Not tagged in git. The image tags follow the runtime version (`1.12.6`, `1.12`), with a date-stamped build tag. | [Tags and pinning](../module-author/base-images.md#tags-and-pinning) |
+| `opentofu-base`, `terraform-base` | `vX.Y.Z` tags in git (both at v0.1.0). The image tags follow the runtime version (`1.12.7`, `1.12`), with a date-stamped build tag. | [Tags and pinning](../module-author/base-images.md#tags-and-pinning) |
 | `module-images` | Not tagged. An image's version is the release of its module in `sources/versions.tf`; the image tags add the runtime: `vX.Y.Z-opentofu`, `vX.Y.Z-terraform`. | [Releasing a Module](../module-author/releasing.md) |
 | `terraform-<provider>-<role>` | Signed tags `vX.Y.Z`, published to the Terraform Registry. Versions follow the CAPTF release. | [Releasing](../developer-guide/releasing.md) |
 
