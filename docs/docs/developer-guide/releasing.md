@@ -67,7 +67,9 @@ fallback](#manual-fallback).
 The 17 `terraform-<provider>-<role>` repositories release on their own. A
 release is a signed `vX.Y.Z` tag on `main`, pushed after `make verify` and CI
 are green. The Terraform Registry publishes `captf-io/<role>/<provider>` at
-that version within a minute. No image is built from these repositories, and
+that version within a minute, and the `release` job of CI on the tag creates
+the GitHub Release once `verify` passes; the tag message body becomes its
+upgrade notes. No image is built from these repositories, and
 versions follow the CAPTF release. The module images are built by
 [`module-images`](https://github.com/captf-io/module-images): a Dependabot
 bump of `sources/versions.tf` there, once it is merged, publishes

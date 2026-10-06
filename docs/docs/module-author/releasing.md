@@ -87,7 +87,8 @@ A release starts in the module repository and reaches the images through
 1. Run the gate on `main` of the module repository: `make verify`. The checks
    are described in [Testing a Module](testing.md).
 2. Tag the commit `vX.Y.Z` and push the tag; the Terraform Registry
-   publishes the module version (see [Terraform Registry](#terraform-registry)).
+   publishes the module version, and CI creates the GitHub Release (see
+   [Terraform Registry](#terraform-registry)).
 3. Dependabot, daily on the `terraform` ecosystem, opens a pull request in
    `module-images` that bumps the version in `sources/versions.tf`.
 4. If the release changes providers, run `make lock IMAGES=<image>` in
@@ -142,14 +143,33 @@ reference modules' versions follow the CAPTF release they were cut with
 1. Run the gate on `main`: `make verify`, with `PROVIDER_DIR` set as above if
    the provider repository is not a sibling. It is the same gate CI runs on
    the tag.
-2. Tag the commit and push the tag:
+2. Tag the commit with a signed, annotated tag and push it. The tag
+   message's first line is the version; anything after a blank line becomes
+   the release's upgrade notes, so write them there when the release changes
+   a default, tightens an input or needs action on upgrade:
 
     ```sh
-    git tag -s vX.Y.Z -m "vX.Y.Z"
+    git tag -s vX.Y.Z -F - <<'EOF'
+    vX.Y.Z
+
+    - `boot_diagnostics` now defaults to `false`; set it to `true` to keep
+      the serial console log.
+    EOF
     git push origin vX.Y.Z
     ```
 
-3. Check that the new version appears on the module's registry page.
+3. Check that the new version appears on the module's registry page, and
+   that CI created the GitHub Release.
+
+CI runs on the tag too. Once `verify` passes, its `release` job creates the
+GitHub Release, with notes from `.github/release-notes.sh` (the same file in
+every module repository): the repository description, the upgrade notes from
+the tag message, the module image and the Registry snippet, and the commit
+subjects since the previous tag. The job refuses a lightweight tag, a tag
+that is not on `main`, and a tag GitHub does not show as signed. It marks
+the release Latest when it is the highest `vX.Y.Z`, and a `vX.Y.Z-rc.N` tag
+as a pre-release. Re-running the job rewrites the notes of the existing
+release.
 
 A registry release is the first half of an image release. The registry module
 is source: calling it directly makes it a root module with its own provider

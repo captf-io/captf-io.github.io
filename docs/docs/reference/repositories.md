@@ -94,8 +94,10 @@ fetches the tagged releases from the Registry.
 | [`terraform-noop-machinepool`](https://github.com/captf-io/terraform-noop-machinepool) | `machinepool` | `captf-io/machinepool/noop` | `make verify`: format, validate, apply and destroy of `test/root`, license headers. |
 
 A release is a signed `vX.Y.Z` tag on `main`, which the Terraform Registry
-publishes within a minute. Versions follow the CAPTF release; `0.1.0` is
-published for all 17. See [Releasing](../developer-guide/releasing.md).
+publishes within a minute; CI then creates the GitHub Release with its notes
+(the tag message body becomes the upgrade notes). Every tag has a release on
+the repository's Releases page. See
+[Releasing a module](../module-author/releasing.md#terraform-registry).
 
 The module repositories are described together in [Cloud
 Modules](../cloud-modules/README.md); their layout is in [Module Repository
@@ -170,7 +172,7 @@ repositories attach no release assets: their output is the images above.
 | `cluster-api-provider-terraform` | Tags `vX.Y.Z` and `vX.Y.Z-rc.N`. `metadata.yaml` lists the clusterctl release series, append-only, currently `0.1` on contract `v1beta2`. | [Releasing](../developer-guide/releasing.md) |
 | `opentofu-base`, `terraform-base` | `vX.Y.Z` tags in git (both at v0.1.0). The image tags follow the runtime version (`1.12.7`, `1.12`), with a date-stamped build tag. | [Tags and pinning](../module-author/base-images.md#tags-and-pinning) |
 | `module-images` | Not tagged. An image's version is the release of its module in `sources/versions.tf`; the image tags add the runtime: `vX.Y.Z-opentofu`, `vX.Y.Z-terraform`. | [Releasing a Module](../module-author/releasing.md) |
-| `terraform-<provider>-<role>` | Signed tags `vX.Y.Z`, published to the Terraform Registry. Versions follow the CAPTF release. | [Releasing](../developer-guide/releasing.md) |
+| `terraform-<provider>-<role>` | Signed tags `vX.Y.Z`, published to the Terraform Registry; CI creates the GitHub Release. Versions follow the CAPTF release. | [Releasing](../developer-guide/releasing.md) |
 
 Which provider, Cluster API and runtime versions are tested together is in
 [Compatibility](../operator-guide/compatibility.md).
