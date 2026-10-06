@@ -64,6 +64,8 @@ The base leaves these absent:
   with `.version` equal to the tag.
 - On machine images, optionally, the `io.captf.capacity` and
   `io.captf.node-info` labels.
+- Optionally, the `io.captf.variables-schema` label, generated from the
+  module with `tfcapi-lint schema`.
 
 Label values and rules are in [OCI labels](image-contract.md#oci-labels).
 
@@ -145,7 +147,10 @@ shape, so they belong to the image, not the role: `images.json` holds them,
 and `make build` and the publish job add them with `--label`. The
 architecture is fixed there, never `TARGETARCH`, so every platform of a
 multi-arch build gets identical labels. An image without a default shape (the
-OpenStack machine image) carries neither label. Build one image with:
+OpenStack machine image) carries neither label. The variables schema label,
+`io.captf.variables-schema`, is derived from the fetched module with
+`tfcapi-lint schema` (`hack/schema.sh`), so every image carries one. Build
+one image with:
 
 ```sh
 make test IMAGES=aws-machine RUNTIMES=opentofu

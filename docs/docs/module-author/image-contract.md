@@ -93,7 +93,8 @@ With the [CAPTF base images](#captf-base-images), the base supplies
 `io.captf.contract`, `io.captf.runtime` and `io.captf.runtime.version`, and
 a module image inherits them unchanged. The module image sets
 `io.captf.role`, the `org.opencontainers.image.*` labels, and on machine
-images the capacity labels below. An image that does not build FROM a CAPTF
+images the capacity labels below. Any image may also carry the optional
+`io.captf.variables-schema` label. An image that does not build FROM a CAPTF
 base must set every label itself.
 
 | Label | Value |
@@ -210,6 +211,53 @@ above. See [Base Images](base-images.md) for what they provide, stage
 layout, tags, digest pinning and [building without
 one](base-images.md#without-a-base-image).
 
+**Variables schema** (optional, every role). `io.captf.variables-schema` is
+a compact JSON Schema of the module's [user
+variables](../user-guide/variables.md): every root-module variable except
+the `captf_` inputs and the role's contract inputs. The manager reads it
+from the image config, which needs no layer pull, and checks the merged
+`variables` and `variablesFrom` against it before any Job runs. A variable
+the module does not declare, a required one that nothing sets, or a value
+of the wrong type then stops the object at
+[`DependenciesReady=False/VariablesInvalid`](../reference/conditions.md#dependenciesready),
+naming the variable, instead of failing the apply with `Unsupported
+argument`. An image without the label is not checked.
+
+Do not write it by hand: `tfcapi-lint schema --role <role> <module-dir>`
+prints the value, mapped from the HCL types.
+
+```sh
+docker build --label "io.captf.variables-schema=$(tfcapi-lint schema --role machine ./module)" .
+```
+
+The schema uses only `type`, `properties`, `required`, `items`,
+`prefixItems` and `additionalProperties`. The root is closed
+(`additionalProperties: false`) and lists a variable in `required` when it
+has no default. Terraform types map as follows:
+
+| Terraform type | Schema |
+| --- | --- |
+| `string`, `number`, `bool` | `string`, `number`, `boolean` |
+| `list(T)`, `set(T)` | `array` with `items` of `T` |
+| `map(T)` | `object` with `additionalProperties` of `T` |
+| `object({...})` | `object` with `properties`; an attribute is `required` unless it is `optional(...)` |
+| `tuple([...])` | `array` with `prefixItems` |
+| `any`, or no type | `{}`, which accepts anything |
+
+Terraform's own conversions are accepted (`"3"` for a `number`, a number for
+a `string`), and `null` is accepted everywhere, because the schema does not
+record `nullable`. An attribute a nested object type does not name is
+ignored, as Terraform ignores it. Values from a `variablesFrom` source with
+format `String` are checked leniently: only an unknown key or a type a
+string can never convert to (a list or an object) is rejected, so use format
+`JSON` for those.
+
+The compact JSON is capped at 32768 bytes. `tfcapi-lint schema` fails with
+a clear message when the schema is larger, and
+[`image/label-variables-schema`](../reference/tfcapi-lint-cli.md#labels-and-user)
+reports a label that is invalid or over the cap. Set it identically on every
+platform of a multi-arch index.
+
 ## Checklist for `tfcapi-lint image`
 
 Summarized: `/captf/module` present and lints clean for the role;
@@ -217,7 +265,7 @@ Summarized: `/captf/module` present and lints clean for the role;
 follows the mirror layout and covers every `required_providers` entry for
 the platform being checked; labels, if present, agree with
 `--role`/`--contract`; the capacity labels, if present, are valid JSON of
-the shapes above; no files under the reserved paths; `config.User` is
+the shapes above, and so is the variables schema; no files under the reserved paths; `config.User` is
 non-root (running as root is a warning, not an error). See
 [tfcapi-lint CLI: checks](../reference/tfcapi-lint-cli.md#checks) for
 every check's ID, severity and the roles it applies to.

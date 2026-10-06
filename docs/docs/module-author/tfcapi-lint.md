@@ -133,6 +133,17 @@ pull is anonymous. Log in with `docker login` or `podman login` against
 the registry before linting a private image; `--insecure` allows a
 plain-HTTP registry for a local or air-gapped registry that has none.
 
+## Print the variables schema
+
+```sh
+tfcapi-lint schema --role machine ./machine
+```
+
+Prints the JSON Schema of the module's user variables on one line. Pass it
+to the image build as the `io.captf.variables-schema` label, so the manager
+rejects unknown, missing or mistyped variables before any Job runs; see
+[the image contract](image-contract.md#oci-labels).
+
 ## Strict mode and allowed warnings
 
 `--strict` treats a warning the same as an error for the exit code, so a

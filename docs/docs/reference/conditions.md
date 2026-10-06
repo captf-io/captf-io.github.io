@@ -86,6 +86,7 @@ yet. In the `Ready` summary an absent input counts as `Unknown`, except
 | [`EndpointAvailable`](#endpointavailable) | `TerraformCluster` | Normal | A valid control-plane endpoint is known. |
 | [`AutoscalingActive`](#autoscalingactive) | `TerraformMachinePool` | Normal | The module owns the pool's desired count. |
 | [`CapacityResolved`](#capacityresolved) | `TerraformMachineTemplate` | Normal | Capacity and node info were read from the image's labels. |
+| [`VariablesValid`](#variablesvalid) | `TerraformMachineTemplate` | Normal | The template's variables fit the variables schema its image publishes. |
 | [`Paused`](#paused) | All three | State | The object or its Cluster is paused. |
 | [`Deleting`](#deleting) | All three | Negative | The object is being deleted. |
 | [`TerraformPlan` conditions](#terraformplan) | `TerraformPlan` | Normal | `Ready` and `Approved`: where a plan waiting for an approval is. |
@@ -129,7 +130,7 @@ deleting object skips the owner gates, so its destroy still runs.
 | `False` | `ClusterNotTerraform` | The owning `Cluster`'s `infrastructureRef` is not a `TerraformCluster`. Nothing is rendered or run. Point the `Cluster` at a `TerraformCluster`, or move the object to the right one. |
 | `False` | `OwnerMismatch` | An `ownerReference` of the expected kind resolves to an object that does not reference this one back: a wrong or missing `infrastructureRef`, a UID mismatch, or a `cluster.x-k8s.io/cluster-name` label that disagrees with the owner. CAPTF treats the reference as forged or stale, so the object has no valid owner, no Job runs and nothing is written to the named owner or its `Cluster`. The message says which check failed. |
 | `False` | `OwnerNotFound` | The owner object is gone. Delete this object if it is orphaned. See [deletion order](../concepts/deletion/order.md). |
-| `False` | `VariablesInvalid` | A `variablesFrom` source has a key that is not a Terraform identifier or is reserved, or a value that is not UTF-8 or, for format `json`, not valid JSON. The message names the key, never the value. No Job starts until you correct the source. See [module variables](../user-guide/variables.md#troubleshooting). |
+| `False` | `VariablesInvalid` | A `variablesFrom` source has a key that is not a Terraform identifier or is reserved, or a value that is not UTF-8 or, for format `json`, not valid JSON; or the merged variables do not fit the variables schema the image publishes (`io.captf.variables-schema`): an unknown key, a required variable nothing sets, or a value of the wrong type. The message names the key, never the value. No Job starts until you correct the variables or the source. See [module variables](../user-guide/variables.md#troubleshooting). |
 | `False` | `VariablesSourceNotFound` | A ConfigMap or Secret named in `spec.variablesFrom`, not marked optional, is missing or lacks the `captf.io/variables=true` label. No Job starts. See [module variables](../user-guide/variables.md#troubleshooting). |
 | `False` | `WaitingForOwnerMachine` | A fresh `TerraformMachine` has only a non-controller control-plane `ownerReference` and no `Machine` one yet. Wait for Cluster API to set it. |
 | `False` | `WaitingForOwnerMachinePool` | A `TerraformMachinePool` has `ownerReferences` but none to a `MachinePool` yet. Wait for Cluster API to set it. |
@@ -394,6 +395,27 @@ labels. See [Templates](../user-guide/clusterclass.md).
 | `True` | `CapacityResolved` | Both labels parsed. |
 | `False` | `CapacityLabelInvalid` | A label is present but invalid. Fix the label in the image; see the [image contract](../module-author/image-contract.md). |
 | `False` | `ImageInspectFailed` | The registry fetch or authentication failed. Fix the image reference or the credentials. The controller also emits a `Warning` event. |
+
+## VariablesValid
+
+Carried by `TerraformMachineTemplate`, which has no `Ready` condition.
+Polarity: normal.
+
+Whether the template's `variables` and `variablesFrom` fit the variables
+schema its image publishes in `io.captf.variables-schema` ([image
+contract](../module-author/image-contract.md#oci-labels)). It is set when
+the template's image is first inspected, with the capacity, so a ClusterClass
+author sees a bad variable before any machine uses the template. A machine
+or cluster made from the template is checked again, with its own sources,
+before its Job (see [`DependenciesReady`](#dependenciesready)).
+
+| Status | Reason | Meaning |
+| --- | --- | --- |
+| `True` | `VariablesValid` | The variables fit the image's schema. |
+| `True` | `VariablesSchemaNotDeclared` | The image carries no usable schema, so nothing is checked. |
+| `False` | `VariablesRejected` | A variable is unknown to the module, required and not set, or of the wrong type, or a source has an invalid key. The message names the variable, never the value. `spec.template.spec` is immutable: create a new template. |
+| `Unknown` | `VariablesSourcePending` | A `variablesFrom` source of the template is missing or unlabeled. The controller retries every 30 seconds. |
+| `Unknown` | `VariablesSchemaUnavailable` | The image could not be read, so the schema is unknown. The same failure is reported on [`CapacityResolved`](#capacityresolved) as `ImageInspectFailed`. |
 
 ## Paused
 

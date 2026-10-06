@@ -115,10 +115,10 @@ template. When `spec.template.spec.source.image` differs from
 | `status.capacitySource` | object | Records where `capacity` and `nodeInfo` came from. |
 | `status.capacitySource.source` | string | `Spec` when `status.capacity` is `spec.capacity`, `Image` when it comes from the image label. **Allowed values:** `Spec`, `Image`. |
 | `status.capacitySource.image` | string | The `spec.template.spec.source.image` last resolved. **Range:** 1 to 512 characters. Required when `source` is `Image`; unset when `source` is `Spec` and the image could not be inspected. |
-| `status.conditions` | list | The `CapacityResolved` condition. **Range:** at most 32. |
-| `status.conditions[].type` | string | The condition type: `CapacityResolved`. |
+| `status.conditions` | list | The `CapacityResolved` and `VariablesValid` conditions. **Range:** at most 32. |
+| `status.conditions[].type` | string | The condition type: `CapacityResolved` or `VariablesValid`. |
 | `status.conditions[].status` | string | `True`, `False` or `Unknown`. |
-| `status.conditions[].reason` | string | A CamelCase reason. Every reason is on [Conditions](../conditions.md#capacityresolved). |
+| `status.conditions[].reason` | string | A CamelCase reason. Every reason is on [Conditions](../conditions.md#capacityresolved) and [Conditions](../conditions.md#variablesvalid). |
 | `status.conditions[].message` | string | A human-readable detail. |
 | `status.conditions[].lastTransitionTime` | time | When `status` last changed. |
 | `status.conditions[].observedGeneration` | integer | The `metadata.generation` the condition was computed for. |
@@ -208,8 +208,8 @@ spec:
 
 ### Conditions
 
-`CapacityResolved` is the only condition. A template has no `Ready`
-condition.
+A template has two conditions, `CapacityResolved` and `VariablesValid`, and
+no `Ready` condition. `CapacityResolved`:
 
 | Status | Reasons | Meaning |
 | --- | --- | --- |
@@ -218,6 +218,19 @@ condition.
 | `True` | [`CapacityNotDeclared`](../conditions.md#capacityresolved) | The image carries neither label. Both fields stay unset. This is not an error. |
 | `False` | [`ImageInspectFailed`](../conditions.md#capacityresolved) | The registry could not be read: authentication failed, the image was not found, or the registry was unreachable. The previous values stay. The message names the class of failure, never the registry's own text. The manager retries, doubling the delay from 30 seconds to at most 10 minutes. |
 | `False` | [`CapacityLabelInvalid`](../conditions.md#capacityresolved) | A label is present but invalid. That field is unset; a valid other label is still applied. The manager does not retry the same image, because the tag is not polled again. |
+
+`VariablesValid` says whether the template's `variables` and
+`variablesFrom` fit the variables schema the image publishes in
+`io.captf.variables-schema` ([image
+contract](../../module-author/image-contract.md#oci-labels)); the manager
+reads it from the same image config, in the same pass:
+
+| Status | Reasons | Meaning |
+| --- | --- | --- |
+| `True` | [`VariablesValid`](../conditions.md#variablesvalid) | The variables fit the schema. |
+| `True` | [`VariablesSchemaNotDeclared`](../conditions.md#variablesvalid) | The image has no usable schema; nothing is checked. |
+| `False` | [`VariablesRejected`](../conditions.md#variablesvalid) | A variable is unknown, required and not set, or of the wrong type. The message names the variable, never the value. |
+| `Unknown` | [`VariablesSourcePending`](../conditions.md#variablesvalid), [`VariablesSchemaUnavailable`](../conditions.md#variablesvalid) | A source is missing, or the image could not be read. The manager retries. |
 
 The manager emits a `CapacityResolved` Normal event when the values change and
 an `ImageInspectFailed` Warning event on the first failure. See

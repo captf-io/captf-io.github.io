@@ -158,8 +158,8 @@ Two consequences follow:
 - **These conditions never feed `Ready`**, so check them by symptom:
   `Paused`, `RestoreJobSucceeded`, `DriftJobSucceeded`, `DriftDetected`,
   `DeletionBlocked`, `EndpointAvailable` and `AutoscalingActive`.
-  `CapacityResolved` belongs to the template kinds and `Ready` to the
-  identity, which sets it from its Secret.
+  `CapacityResolved` and `VariablesValid` belong to the template kinds and
+  `Ready` to the identity, which sets it from its Secret.
 
 ## By symptom
 

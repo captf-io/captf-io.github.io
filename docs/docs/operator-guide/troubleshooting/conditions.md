@@ -29,7 +29,8 @@ Jump to: [Ready](#ready) [Paused](#paused) [Deleting](#deleting)
 [InfrastructureHealthy](#infrastructurehealthy)
 [DriftJobSucceeded](#driftjobsucceeded) [DriftDetected](#driftdetected)
 [DeletionBlocked](#deletionblocked) [EndpointAvailable](#endpointavailable)
-[AutoscalingActive](#autoscalingactive) [CapacityResolved](#capacityresolved).
+[AutoscalingActive](#autoscalingactive) [CapacityResolved](#capacityresolved)
+[VariablesValid](#variablesvalid).
 
 How to read the tables:
 
@@ -105,7 +106,7 @@ apply: the destroy still runs.
 | `False` | `ClusterNotTerraform` | The owning Cluster's `infrastructureRef` is not a `TerraformCluster`. | A machine or pool was created for a Cluster that uses another infrastructure provider. | Point the Cluster at a `TerraformCluster`, or move the machine to the right Cluster. | [Kinds](../../concepts/kinds.md) |
 | `False` | `OwnerMismatch` | An owner reference of the expected kind resolves to an object that does not reference this one back. The reference is treated as forged or stale. | A wrong or missing `infrastructureRef`, a UID mismatch, or a `cluster-name` label that disagrees with the owner. | Fix the owner's `infrastructureRef` or the label. The message says which check failed. | [Kinds](../../concepts/kinds.md) |
 | `False` | `OwnerNotFound` | The owner Machine, MachinePool or Cluster is gone. | The owner was deleted before this object, or a stale owner reference remains. | Delete this object if it is orphaned. A deleting object still destroys from its durable inputs. | [Deletion order](../../concepts/deletion/order.md) |
-| `False` | `VariablesInvalid` | A `variablesFrom` source has a key that is not a Terraform identifier or is reserved, or a value that is not UTF-8 or valid JSON. The message names the key, never the value. | A malformed ConfigMap or Secret. | Correct the source. No Job starts until you do. | [Module variables](../../user-guide/variables.md#troubleshooting) |
+| `False` | `VariablesInvalid` | A `variablesFrom` source has a key that is not a Terraform identifier or is reserved, or a value that is not UTF-8 or valid JSON, or the merged variables do not fit the module image's variables schema (an unknown key, a required variable nothing sets, a value of the wrong type). The message names the key, never the value. | A malformed ConfigMap or Secret, or a typo in a variable name. | Correct the variable or the source. No Job starts until you do. | [Module variables](../../user-guide/variables.md#troubleshooting) |
 | `False` | `VariablesSourceNotFound` | A required `variablesFrom` ConfigMap or Secret is missing or lacks the `captf.io/variables=true` label. | Not created, wrong name, a missing label, or not recreated after a `clusterctl move`. | Create the source and label it, or mark the reference optional. | [Module variables](../../user-guide/variables.md#troubleshooting) |
 | `False` | `WaitingForOwnerMachine` | A fresh `TerraformMachine` has only a control-plane owner reference so far. | The control-plane provider created it before Cluster API set the Machine owner reference. | Wait. If it persists, check the Machine's `infrastructureRef` and the object's owner references. | [Control planes](../../module-author/control-planes/README.md) |
 | `False` | `WaitingForOwnerMachinePool` | A `TerraformMachinePool` has owner references but none to its MachinePool yet. | Cluster API has not set the MachinePool owner reference. | Wait. If it persists, check the MachinePool's `infrastructureRef`. | [Machine pools](../../user-guide/machine-pools.md) |
@@ -351,6 +352,20 @@ Whether a template's capacity and node info were read from its image's labels.
 | `True` | `CapacityNotDeclared` | The image carries neither label. | Not every image declares capacity. | Nothing, unless a ClusterClass autoscaler needs it. | [Templates](../../user-guide/clusterclass.md) |
 | `False` | `ImageInspectFailed` | The registry fetch or authentication failed. | A wrong reference, a registry outage or missing credentials. | Fix the reference or credentials. A `Warning` event is emitted. | [Templates](../../user-guide/clusterclass.md) |
 | `False` | `CapacityLabelInvalid` | A label is present but invalid. | A malformed capacity or node-info label on the image. | Fix the label in the image. | [Image contract](../../module-author/image-contract.md) |
+
+## VariablesValid
+
+Carried by: TerraformMachineTemplate. Polarity: normal (`True` is healthy).
+
+Whether a template's variables fit the variables schema its image publishes.
+
+| Status | Reason | Meaning | Likely cause | What to do | See |
+| --- | --- | --- | --- | --- | --- |
+| `True` | `VariablesValid` | The variables fit the image's schema. | The normal state. | Nothing. | [Module variables](../../user-guide/variables.md#validation-against-the-image-schema) |
+| `True` | `VariablesSchemaNotDeclared` | The image has no usable schema, so nothing is checked. | An image built without `io.captf.variables-schema`. | Nothing. | [Image contract](../../module-author/image-contract.md#oci-labels) |
+| `False` | `VariablesRejected` | A variable is unknown to the module, required and not set, or of the wrong type. | A typo, or a variable the module does not declare. | Create a new template with the variables fixed; the message names the variable. | [Module variables](../../user-guide/variables.md#validation-against-the-image-schema) |
+| `Unknown` | `VariablesSourcePending` | A `variablesFrom` source of the template is missing or unlabeled. | The ConfigMap or Secret is not created yet. | Create and label it. The controller retries every 30 seconds. | [Module variables](../../user-guide/variables.md#set-a-variable-from-a-configmap-or-secret) |
+| `Unknown` | `VariablesSchemaUnavailable` | The image could not be read, so the schema is unknown. | A wrong reference, a registry outage or missing credentials. | As for `CapacityResolved`'s `ImageInspectFailed`. | [Templates](../../user-guide/clusterclass.md) |
 
 !!! related "See also"
 

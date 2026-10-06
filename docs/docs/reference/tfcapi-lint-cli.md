@@ -55,6 +55,7 @@ image](../module-author/tfcapi-lint.md#container-image).
 ```text
 tfcapi-lint image  --role=<role> [flags] <image-ref>
 tfcapi-lint module --role=<role> [flags] <module-dir>
+tfcapi-lint schema --role=<role> [--contract=<version>] <module-dir>
 tfcapi-lint version [--json]
 tfcapi-lint --version[=raw]
 ```
@@ -169,6 +170,33 @@ report also describes the image it checked.
 Findings are ordered by file, line and ID, so output is stable between
 runs. `--allow-warning` changes a warning to `info` and says so in its
 message.
+
+## schema
+
+```text
+tfcapi-lint schema --role=<role> [--contract=<version>] <module-dir>
+```
+
+Prints, on one line, the compact JSON Schema of the module's user variables:
+the value of the optional `io.captf.variables-schema` image label (see the
+[image contract](../module-author/image-contract.md#oci-labels)). It reads
+the module the same way `module` does, and lists every root-module variable
+except the `captf_` names and the role's contract inputs. A variable
+without a default is required, and the root is closed, so a key the module
+does not declare is rejected. Pass the output to the image build with
+`--label`.
+
+| Flag | Type | Default | Description |
+| --- | --- | --- | --- |
+| `--role` | `string` | | The module role: `cluster`, `machine` or `machinepool`. Required. |
+| `--contract` | `string` | `v1alpha1` | The contract version. |
+
+```sh
+tfcapi-lint schema --role machine ./modules/machine
+```
+
+It exits `1` when the schema exceeds the 32768-byte label cap, `2` when
+the module cannot be parsed, and `3` on a bad command line.
 
 ## version
 
@@ -304,6 +332,7 @@ registry access when the Job runs.
 | `image/label-contract` | info or warning | `io.captf.contract` is not set (info), or names a different version than `--contract` (warning). | Set the label to the contract version. |
 | `image/label-capacity` | info or error | Machine role. `io.captf.capacity` and `io.captf.node-info` do not parse. Missing labels are info: no scale-from-zero capacity. Other roles get info only. | Make the labels valid JSON of the documented shape. |
 | `image/capacity-size-variable` | warning | Machine role. The image declares `io.captf.capacity` and the module has a size variable: `instance_type`, `vm_size`, `machine_type`, `shape`, `flavor`, `flavor_name`, `ocpus`, `memory_gib` or `memory_in_gbs`. The label cannot follow a changed size. | Drop the label and set `spec.capacity` on the `TerraformMachineTemplate`, or remove the variable. |
+| `image/label-variables-schema` | error | `io.captf.variables-schema` is present but is not a variables schema of the supported subset, or is over the 32768-byte cap. An absent label is no finding: it is optional. | Generate the label with `tfcapi-lint schema`. |
 | `image/user-root` | warning | The image runs as root, so the Job cannot run under the restricted Pod Security Standard. | Set a numeric non-root `USER`. |
 | `image/user-unresolved` | warning | The image user is a name the linter cannot resolve, so permission checks are approximated. | Use a numeric uid. |
 
