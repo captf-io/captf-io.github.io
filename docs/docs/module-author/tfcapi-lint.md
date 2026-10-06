@@ -68,8 +68,8 @@ signed and attested like the manager image (see
 | Tag | Built from |
 | --- | --- |
 | `vX.Y.Z` | The provider release `vX.Y.Z`; never moves. |
-| `edge` | The newest commit on `main`. |
-| `sha-<7>` | That commit on `main`. |
+| `edge` | The newest commit on `main` whose CI passed. |
+| `sha-<7>` | That commit on `main`, once its CI passed. |
 
 Mount the module read-only and lint it in place:
 

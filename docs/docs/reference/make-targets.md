@@ -233,11 +233,13 @@ procedure. Publishing is for maintainers.
 | Target | Description |
 | --- | --- |
 | `release-preflight` | Check that the tree is clean, `HEAD` carries the tag `$(VERSION)`, and `metadata.yaml` only grows. |
-| `release` | The manual fallback for when CI cannot run; never run it for a tag `publish.yaml` publishes. Run the preflight, build and push host-platform manager and tfcapi-lint images (unsigned), and build every asset into `out/release` with the image pinned by digest. Set `VERSION=vX.Y.Z`. |
+| `release-ci-check` | Check that the `ci` workflow passed on `main` for `COMMIT` (default `HEAD`), waiting for a running one. It needs `gh`. `publish.yaml` runs the same check for a tag and a manual republish. |
+| `release-check-images` | Fail unless the manager and tfcapi-lint images both carry `:$(VERSION)`; with `MANAGER_DIGEST` and `LINT_DIGEST` set, each must also resolve to that digest. `publish.yaml` and `release` run it. |
+| `release` | The manual fallback for when CI cannot run; never run it for a tag `publish.yaml` publishes. Run the preflight, build and push host-platform manager and tfcapi-lint images (unsigned), check both tags exist, and build every asset into `out/release` with the image pinned by digest. Set `VERSION=vX.Y.Z`. |
 | `release-image-digest` | Print the registry digest of `$(RELEASE_REPO):$(VERSION)`. It needs `skopeo`. |
 | `manifests-release` | Build `out/infrastructure-components.yaml` for `$(RELEASE_IMG)`, and copy `metadata.yaml` and `templates/*.yaml` next to it. |
 | `release-assets` | Build every release asset for `$(VERSION)` into `out/release`. It needs the git tag. |
-| `release-notes` | Write `out/release/notes.md` from the commits since the previous tag. |
+| `release-notes` | Write `out/release/notes.md` for `$(VERSION)` with `hack/release-notes.sh`: a summary, install commands, both images with digests, verify commands and the changes since the previous tag. |
 | `release-github` | Create the GitHub release for `$(VERSION)` from `out/release`, marked as a pre-release for `vX.Y.Z-rc.N`. This publishes; `publish.yaml` runs it on a tag push. |
 | `release-lint-snapshot` | Build the `tfcapi-lint` release assets and checksums into `dist/` as a GoReleaser snapshot, to try a release without a tag. |
 | `release-lint-binaries` | An alias of `release-lint-snapshot`. |

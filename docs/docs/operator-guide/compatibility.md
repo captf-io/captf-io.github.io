@@ -43,8 +43,8 @@ check them against the tag you install.
 ### Architectures
 
 The `publish` workflow pushes the manager image as a multi-architecture
-image for `linux/amd64` and `linux/arm64`: `:edge` and `:sha-<commit>` on
-every push to `main`, and `:vX.Y.Z` on a release tag. The Dockerfile
+image for `linux/amd64` and `linux/arm64`: `:edge` and `:sha-<commit>` for
+every commit on `main` whose CI passed, and `:vX.Y.Z` on a release tag. The Dockerfile
 cross-compiles, so the `arm64` image is built without emulation. The
 `security` workflow also builds both platforms on every run, without
 pushing, and scans and runs the `linux/amd64` build only. An image pushed

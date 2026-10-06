@@ -187,8 +187,8 @@ and the action always come from the same provider commit:
 | Another branch | None: the step fails; set `version` |
 
 Pin the commit of a release, as for every other action: a tag can be
-moved, a commit cannot. Every push to the provider's `main` publishes the
-`:sha-<7>` image of the pushed commit, and a release is tagged on `main`,
+moved, a commit cannot. Every commit on the provider's `main` whose CI passed gets a
+`:sha-<7>` image, and a release is tagged on `main`,
 so the commit of a release has one. Pin the provider release you deploy:
 the linter checks the contract versions its own release supports. Two
 inputs override the image:

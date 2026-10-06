@@ -47,18 +47,25 @@ provide.
 
 ## Manager availability
 
-- [ ] **Replicas.** The shipped Deployment runs **one** replica, with the leader
-  election flag set. One replica is a valid production setting: while it
-  restarts, running Jobs continue, and the manager picks them up again. No
-  PodDisruptionBudget or anti-affinity is shipped; add them if you scale up.
+- [ ] **Replicas.** The shipped Deployment runs **two** replicas, with the
+  leader election flag set: the leader reconciles and both serve the webhooks,
+  so a restart or a node drain of one pod does not block writes. A rolling
+  update keeps both available (`maxUnavailable: 0`, `maxSurge: 1`), a
+  `PodDisruptionBudget` allows one voluntary disruption at a time, and a
+  topology spread prefers separate nodes without requiring them. On a
+  single-node cluster both replicas share the node, so a node loss still
+  takes the webhooks down. Patching `replicas` to 1 is valid and stays
+  drainable: while the manager restarts, running Jobs continue and it picks
+  them up again.
 - [ ] **Leader election.** The binary's `--leader-elect` defaults to `false`;
   the shipped manifest passes it. If you build your own manifest, enable it
   before you run more than one replica, or two managers reconcile the same
   objects. See [Configuration: leader
   election](configuration.md#leader-election).
-- [ ] **Failover time.** The manager does not release the election lease when
-  it stops, so a replacement waits for the lease to expire: up to 15 seconds
-  with the defaults (lease 15s, renew 10s, retry 2s). A failover loses
+- [ ] **Failover time.** A leader that shuts down on SIGTERM releases the
+  election lease, so the standby takes over at once. After a crash or a node
+  loss the standby waits for the lease to expire: up to 15 seconds with the
+  defaults (lease 15s, renew 10s, retry 2s). A failover loses
   nothing: Jobs are Kubernetes objects, and the names, the leases and the
   cache-lag checks make the resumed work idempotent. The webhooks run on
   every replica, so writes keep working while no manager leads. See
@@ -70,11 +77,14 @@ provide.
 
 ## Sizing
 
-- [ ] **Manager resources.** The shipped requests are 10m CPU and 64Mi of memory,
-  with limits of 500m and 256Mi. They suit a small installation. The manager
-  holds informers for Jobs and managed Secrets, so memory grows with the
-  number of objects, Jobs and Secrets. Watch the manager's working set
-  and raise the limit before it reaches it.
+- [ ] **Manager resources.** The shipped requests are 10m CPU and 128Mi of
+  memory, with limits of 500m and 512Mi, and `GOMEMLIMIT` follows the memory
+  limit. The sizes are an estimate, not yet measured: the informers hold
+  Secrets without their data, so the steady state is small, and the limit
+  leaves room for a reconcile that reads a large state (up to 64Mi
+  decompressed) with several others in flight. Memory still grows with the
+  number of objects and Jobs. Watch the manager's working set and raise the
+  limit before it reaches it.
 - [ ] **Concurrency.** `--terraformcluster-concurrency` and its machine, pool and
   template counterparts default to 10 each. They cap reconciles in flight
   per kind, not Jobs. A reconcile starts a Job and returns, so no flag caps
@@ -251,11 +261,14 @@ The shipped Deployment in `config/manager/manager.yaml` sets:
   capabilities dropped.
 - **Scheduling:** a toleration for the `node-role.kubernetes.io/control-plane`
   `NoSchedule` taint, so it may run on control-plane nodes. There is no
-  node selector, affinity, anti-affinity or PodDisruptionBudget.
+  node selector or affinity. Two replicas are spread over nodes with a
+  `ScheduleAnyway` topology spread constraint on the hostname, and a
+  `PodDisruptionBudget` (`maxUnavailable: 1`) covers voluntary disruptions.
 - **Probes:** liveness on `/healthz` (15s initial delay, 20s period) and
   readiness on `/readyz` (5s, 10s), both on port 9440.
-- **Other:** one replica, a 10 second termination grace period, and
-  resources as in [Sizing](#sizing).
+- **Other:** two replicas, a 30 second termination grace period (a 5 second
+  `preStop` sleep, which needs Kubernetes 1.30 or later, then a 20 second
+  graceful shutdown), and resources as in [Sizing](#sizing).
 
 This satisfies the `restricted` Pod Security profile for the manager's
 namespace; the Job pods are a separate matter, covered under
@@ -292,22 +305,27 @@ entrypoint. The same image is the runner. Pin the image you install by
 digest as well.
 
 **Signatures and attestations.** The `publish` workflow pushes the manager
-image on every push to `main` (`:edge`, `:sha-<commit>`) and on every release
-tag (`:vX.Y.Z`), for `linux/amd64` and `linux/arm64`. Every pushed image
+image for every commit on `main` whose CI passed (`:edge`, `:sha-<commit>`)
+and on every release tag whose commit passed CI (`:vX.Y.Z`), for `linux/amd64` and `linux/arm64`. Every pushed image
 digest gets a keyless cosign signature (GitHub OIDC), a SLSA build-provenance
 attestation and an SPDX SBOM attestation, stored in the registry and in
 GitHub attestations. Every release asset gets a provenance attestation, and
-the bundle is also attached as `provenance.intoto.jsonl`. Verify:
+the bundle is also attached as `provenance.intoto.jsonl`. Verify a release by
+its version tag, and deploy the digest:
 
 ```sh
 cosign verify ghcr.io/captf-io/cluster-api-provider-terraform:vX.Y.Z \
-  --certificate-identity-regexp '^https://github.com/captf-io/cluster-api-provider-terraform/' \
+  --certificate-identity https://github.com/captf-io/cluster-api-provider-terraform/.github/workflows/publish.yaml@refs/tags/vX.Y.Z \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 gh attestation verify oci://ghcr.io/captf-io/cluster-api-provider-terraform:vX.Y.Z \
   -R captf-io/cluster-api-provider-terraform
 gh attestation verify infrastructure-components.yaml \
   -R captf-io/cluster-api-provider-terraform
 ```
+
+`:edge` and `:sha-<commit>` images are signed on `refs/heads/main`: verify
+those with
+`--certificate-identity-regexp '^https://github.com/captf-io/cluster-api-provider-terraform/'`.
 
 Add `--predicate-type https://spdx.dev/Document/v2.3` to the `gh` image
 command to verify the SBOM. `tfcapi-lint` also has a checksum file. An image

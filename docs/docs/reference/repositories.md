@@ -107,7 +107,7 @@ All images are in GitHub Container Registry under `ghcr.io/captf-io/`.
 
 | Image | Published by | Tags | Platforms |
 | --- | --- | --- | --- |
-| `cluster-api-provider-terraform` | The `publish` workflow: every push to `main`, and a `vX.Y.Z` tag push | `edge` and `sha-<commit>` on a push to `main`; `vX.Y.Z` (or `vX.Y.Z-rc.N`) on a tag. Never `latest`. | `linux/amd64`, `linux/arm64` |
+| `cluster-api-provider-terraform` | The `publish` workflow: every commit on `main` whose `ci` passed, and a `vX.Y.Z` tag push whose commit passed `ci` | `edge` and `sha-<commit>` for a commit on `main` with a green `ci`; `vX.Y.Z` (or `vX.Y.Z-rc.N`) on a tag. Never `latest`. | `linux/amd64`, `linux/arm64` |
 | `opentofu-base`, `terraform-base` | The `build` workflow of each repository: every push to `main`, plus a weekly rebuild | `<version>`, `<major.minor>`, `<version>-YYYYMMDD`, `latest`, where `<version>` is the runtime version. | `linux/amd64`, `linux/arm64` |
 | `module-images/aws-<role>`, `module-images/azure-<role>`, `module-images/gcp-<role>`, `module-images/oci-<role>`, `module-images/noop-<role>` with `<role>` one of `cluster`, `machine`, `machinepool` | The `build` workflow of `module-images`, on a merge to `main` | `vX.Y.Z-<runtime>` for module release `vX.Y.Z`, and `<runtime>` for the newest release. `<runtime>` is `opentofu` or `terraform`. | `linux/amd64`, `linux/arm64` |
 | `module-images/openstack-<role>` with `<role>` one of `cluster`, `machine` | The `build` workflow of `module-images` | The same scheme as the other clouds. | `linux/amd64`, `linux/arm64` |
@@ -115,11 +115,13 @@ All images are in GitHub Container Registry under `ghcr.io/captf-io/`.
 What exists today follows from those triggers:
 
 - **The provider image is published by the `publish` workflow** on every
-  push to `main` (`:edge` and `:sha-<commit>`) and on every release tag
-  (`:vX.Y.Z`); `workflow_dispatch` republishes `:edge`. Releases v0.1.0 and
+  commit on `main` whose `ci` workflow passed (`:edge` and `:sha-<commit>`;
+  `:edge` only while that commit is still `main`'s head) and on every release
+  tag whose commit passed `ci` (`:vX.Y.Z`); `workflow_dispatch` republishes
+  `:edge` after the same check. Releases v0.1.0 and
   v0.1.1 exist, so `:v0.1.1` is a tag you can install. Pin a release tag,
   or better its digest, in anything you keep; `:edge` and `:sha-<commit>`
-  are untested builds of `main`. To build your own, use
+  are builds of `main` that passed CI but are not releases. To build your own, use
   `make docker-build` and `make docker-push IMG=...`. A maintainer can fall
   back to `make release` when CI cannot run; see
   [Releasing](../developer-guide/releasing.md#manual-fallback).

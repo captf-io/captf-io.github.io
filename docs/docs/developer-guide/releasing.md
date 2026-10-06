@@ -32,8 +32,11 @@ of a CAPTF release: they are built and tagged from
 
 **Pushing the tag is the release.** The
 [`publish.yaml`](https://github.com/captf-io/cluster-api-provider-terraform/blob/main/.github/workflows/publish.yaml)
-workflow runs on the tag push: it runs `make release-preflight`, pushes both
-images as `:vX.Y.Z`, builds the release assets and creates the GitHub release.
+workflow runs on the tag push: it requires a green `ci` run for the tagged
+commit (see [Images from `main`](#images-from-main)), runs
+`make release-preflight`, pushes both images as `:vX.Y.Z`, checks that both
+tags exist at the pushed digests (`make release-check-images`), builds the
+release assets and creates the GitHub release.
 A `vX.Y.Z-rc.N` version is marked as a pre-release. `make release` is the
 manual fallback for when CI cannot run; see [Manual
 fallback](#manual-fallback).
@@ -73,14 +76,35 @@ Module](../module-author/releasing.md).
 
 ## Images from `main`
 
-Every push to `main` publishes both images as `:edge` and
-`:sha-<7-character commit>`, and running the workflow by hand
-(`workflow_dispatch`) republishes `:edge` from `main`. `latest` is never
-published. These images are signed and attested like release images.
+A commit on `main` is published as `:edge` and `:sha-<7-character commit>`
+only after the `ci` workflow succeeded for it. `publish.yaml` runs when `ci`
+completes (a `workflow_run` trigger), and a `gate` job accepts only a
+successful `ci` run caused by a push to `main` of this repository, never a
+pull request, a fork or a schedule. Everything after the gate builds that
+run's commit, not whatever `main` has moved to. `:edge` moves only while that
+commit is still the head of `main`, so a slow `ci` run cannot move it
+backwards; `:sha-<7>` is always published. `latest` is never published.
+
+- **A release tag** is published only if `ci` passed on that commit: the gate
+  waits up to 30 minutes for a run that is still going, and fails for a
+  failed, cancelled or missing one. So tag a commit that was the head of
+  `main` and green.
+- **`workflow_dispatch`** republishes `:edge` and `:sha-<7>` from the head of
+  `main`, after the same check as a tag.
+- `make release-ci-check` (`COMMIT` defaults to `HEAD`) runs that check
+  locally; it needs an authenticated `gh`. `release-preflight` stays offline
+  and does not call it.
+
+These images are signed and attested like release images, but a
+`workflow_run` job runs the default branch's workflow, so their signature
+names `refs/heads/main` rather than the built commit. The image's
+`org.opencontainers.image.revision` label and its `:sha-<7>` tag carry the
+commit.
 
 The tfcapi-lint GitHub Action depends on these tags: pinned to a commit
 on `main`, it runs that commit's `:sha-<7>` linter image, so a commit that
-was never the head of a push to `main` has no image for it to run.
+was never the head of a push to `main` with a green `ci` run has no image for
+it to run.
 
 ## Assets
 
@@ -102,35 +126,45 @@ components to one specific image build.
 ## Signatures and attestations
 
 `publish.yaml` signs and attests every image digest it pushes, from `main`
-and from tags:
+and from tags. The GitHub release carries curated notes from
+`hack/release-notes.sh`: a summary, the install commands, both images with
+their digests, the verify commands and the changes since the previous tag.
 
 - A keyless cosign signature, using the GitHub OIDC identity of the workflow.
 - A SLSA build-provenance attestation.
 - An SPDX SBOM attestation.
 
 The attestations are stored in the registry and in GitHub attestations. Every
-release asset also gets a provenance attestation. Verify an image with the following (the same for
+release asset also gets a provenance attestation. Verify a release by its version tag with the following (the same for
 `ghcr.io/captf-io/tfcapi-lint`, still with
-`-R captf-io/cluster-api-provider-terraform`):
+`-R captf-io/cluster-api-provider-terraform`; its first release tag is
+`v0.1.1`):
 
 ```sh
 cosign verify ghcr.io/captf-io/cluster-api-provider-terraform:vX.Y.Z \
-  --certificate-identity-regexp '^https://github.com/captf-io/cluster-api-provider-terraform/' \
+  --certificate-identity https://github.com/captf-io/cluster-api-provider-terraform/.github/workflows/publish.yaml@refs/tags/vX.Y.Z \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 gh attestation verify oci://ghcr.io/captf-io/cluster-api-provider-terraform:vX.Y.Z \
   -R captf-io/cluster-api-provider-terraform
 ```
 
 Add `--predicate-type https://spdx.dev/Document/v2.3` to the second command
-to verify the SBOM attestation instead. Verify a downloaded release asset
-with:
+to verify the SBOM attestation instead. Resolve the tag once and deploy the
+digest, which the release notes print: `cosign verify` and
+`gh attestation verify` accept `@sha256:...` in place of the tag. Verify a
+downloaded release asset with:
 
 ```sh
+gh release download vX.Y.Z -R captf-io/cluster-api-provider-terraform \
+  -p infrastructure-components.yaml
 gh attestation verify infrastructure-components.yaml \
   -R captf-io/cluster-api-provider-terraform
 ```
 
-Images pushed by the manual fallback are not signed or attested.
+Images built from `main` (`:edge`, `:sha-<7>`) are signed on
+`refs/heads/main`: for those, use
+`--certificate-identity-regexp '^https://github.com/captf-io/cluster-api-provider-terraform/'`
+instead. Images pushed by the manual fallback are not signed or attested.
 
 ## Checklist
 
@@ -160,8 +194,10 @@ Images pushed by the manual fallback are not signed or attested.
     there is no emulation) and signs and attests it. The `release` job then
     builds the assets with the image pinned by the digest just pushed, so
     the published components never follow a moved tag, attests them, and
-    creates the GitHub release with notes from the commits since the
-    previous tag.
+    creates the GitHub release. Before it publishes anything, the `release`
+    job fails unless both `ghcr.io/captf-io/cluster-api-provider-terraform:vX.Y.Z`
+    and `ghcr.io/captf-io/tfcapi-lint:vX.Y.Z` exist at the digests the
+    `image` job pushed (`make release-check-images`).
 6. Smoke-test from a local repository against a real cluster, by hand: see
     [Installing from a local repository](#installing-from-a-local-repository).
     `make e2e-foundation e2e-noop` also runs the opt-in e2e suites on a
@@ -195,7 +231,7 @@ linter image), reads the manager image's registry digest with
 `skopeo`, and builds the assets with the image pinned by that digest.
 The assets land in `out/release/`. Then publish with
 `make release-github VERSION=vX.Y.Z`, which writes `out/release/notes.md`
-from the commits since the previous tag and runs `gh release create` with
+with `hack/release-notes.sh` and runs `gh release create` with
 every asset.
 
 !!! warning "`make release` publishes a single-architecture, unsigned image"
