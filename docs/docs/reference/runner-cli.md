@@ -215,8 +215,10 @@ parses it, so the field names are fixed. `version` is `1`.
 bytes. For `validate`, `apply` and `destroy` it comes from the step's JSON
 diagnostics (the runner runs `apply` and `destroy` with `-json`); for every
 other step, from the `Error:` lines of its stderr. When there are none, it
-names the step and its exit code. `error.resources` lists the addresses of
-the diagnostics that name a resource. The full output is in the Pod log: the
+names the step and its exit code. `error.resources` ties each error
+diagnostic to a resource, by the diagnostic's own `address` (often null),
+else the address of the next `apply_errored` message, else the `resource` or
+`data` block its source snippet names, which carries no module path. The full output is in the Pod log: the
 runner renders each JSON message back to a readable line, and an error
 diagnostic as the `Error:` block the runtime prints without `-json`. Secret
 values are redacted from the log lines, the summary and the resources.

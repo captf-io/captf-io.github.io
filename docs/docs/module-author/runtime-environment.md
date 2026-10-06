@@ -207,8 +207,11 @@ covered in [Plan Approval](../user-guide/plan-approval.md).
 
 The failure summary itself is built from the failing step's own output,
 never a raw stderr dump: for `validate`, `apply` and `destroy`, from their
-`-json` diagnostics (an error diagnostic that names a resource also adds
-`<address>: <summary>` to `status.lastRun.error.resources`); for every other
+`-json` diagnostics (each error diagnostic tied to a resource also adds
+`<address>: <summary>` to `status.lastRun.error.resources`: the
+diagnostic's own address, which the runtimes often leave null, else the
+address of the failed resource from the runtime's `apply_errored` message,
+else the resource its source snippet names, without a module path); for every other
 step, from the `Error:` diagnostic header lines in its stderr
 (ANSI escape codes stripped first, since a provider or a `local-exec`
 child is not bound by `-no-color`). When neither yields a line, it falls
