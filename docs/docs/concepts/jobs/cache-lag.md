@@ -33,7 +33,7 @@ page explains what it checks, when, and what it does on a mismatch.
 | A single Job, to confirm `status.activeJob` or a lease holder | The uncached API reader |
 | The run and cluster leases | The uncached API reader |
 | Pods of a Job | The uncached API reader; pods are never cached |
-| Secrets (state, durable inputs, per-run, backups) | Live reads |
+| Secrets (state, durable inputs, per-run, backups) | The API server: every `Get` or `List` of a Secret is a live read. The cache holds only the metadata of managed Secrets |
 | The state lock Lease | The uncached API reader |
 
 ## The two checks

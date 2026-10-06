@@ -161,7 +161,7 @@ timing is compiled in, and the limit is the per-object
 | `--sync-period` | `10m` | The informers' resync, and the orphan sweep's interval | [Schedules](schedules.md) |
 | `--drift-default-interval` | `30m` | Drift interval for objects that set none | [Schedules](schedules.md) |
 | `--terraformcluster-concurrency` and the machine, template and pool counterparts | `10` each | Reconciles in flight per kind | [Leader election](leader-election.md) |
-| `--leader-elect` and its lease, renew and retry flags | `false`; `15s`, `10s`, `2s` | One active manager | [Leader election](leader-election.md) |
+| `--leader-elect` and its lease, renew and retry flags | `false` (the shipped manifest sets it); `15s`, `10s`, `2s` | One active manager | [Leader election](leader-election.md) |
 | `--runner-events` | `true` | Runner progress events | [Events](../../reference/events.md) |
 | `--state-backups` | `5` | Backups kept per object | [Backups](../secret-management/backups.md) |
 

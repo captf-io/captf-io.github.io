@@ -19,7 +19,8 @@ works before reading a more specific page.
 ## Components
 
 **The manager Deployment** is CAPTF's one Deployment and one container
-image. It runs the controllers that reconcile every kind except
+image, with two replicas: the leader reconciles and both serve the
+webhooks. It runs the controllers that reconcile every kind except
 `TerraformClusterTemplate` and `TerraformMachinePoolTemplate`, which have
 no reconciler of their own, and it serves the validating webhooks for all
 seven kinds from the same process, on a separate port. It watches every

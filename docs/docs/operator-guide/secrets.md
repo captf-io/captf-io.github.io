@@ -58,7 +58,10 @@ is shortened to its prefix plus a hash, still deterministic and unique.
 The manager's main cache holds only Secrets labeled `captf.io/managed=true`:
 credential mirrors, durable and per-run inputs, state and state backups —
 the five Secrets above that carry that label, whether CAPTF or the state
-backend created them. A
+backend created them. It keeps their metadata only (name, namespace, labels
+and annotations): the data is stripped before the Secret is stored, so no
+state chunk, backup or input payload sits in memory, and every `Get` or
+`List` of a Secret goes to the API server. A
 second, separate cache backs `spec.variablesFrom` watches; it holds Secrets
 (and ConfigMaps) labeled `captf.io/variables=true`, with their data stripped
 out before they are stored, so no variable value ever sits in memory there.

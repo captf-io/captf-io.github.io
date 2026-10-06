@@ -170,7 +170,9 @@ against a small or rate-limited API server.
 one of several manager replicas reconciles at a time; enable it whenever
 you run more than one replica, so a rolling update or a crash never leaves
 two managers reconciling the same objects together. The shipped Deployment
-runs one replica but sets `--leader-elect` anyway, ready for a scale-up.
+runs two replicas and sets `--leader-elect`: the leader reconciles, and both
+serve the webhooks. The leader releases the Lease when it shuts down on
+SIGTERM, so the standby takes over at once.
 `--leader-elect-lease-duration`, `--leader-elect-renew-deadline` and
 `--leader-elect-retry-period` tune how fast a crashed leader is detected
 and replaced; the defaults (15s/10s/2s) match `kube-controller-manager` and

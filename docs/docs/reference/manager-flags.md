@@ -133,7 +133,9 @@ named `controller-leader-election-captf` and is not parameterized.
 
 The defaults match `kube-controller-manager` and rarely need changing.
 Lower them to replace a crashed leader faster, at the cost of more Lease
-traffic.
+traffic. A leader that stops on SIGTERM releases the Lease whatever these
+are set to, so a rolling update does not wait for the lease duration. The
+manager gives its runnables 20 seconds to stop; this is fixed, not a flag.
 
 ## Webhooks
 

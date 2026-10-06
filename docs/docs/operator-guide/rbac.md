@@ -84,8 +84,9 @@ share a management cluster.
 namespace, bound to the manager's ServiceAccount by
 `captf-leader-election-rolebinding`. It grants `leases` (get, list, watch,
 create, update, patch, delete) and `events` (create, patch):
-controller-runtime's leader election uses a Lease, one per manager, and only
-matters when `--leader-elect` is on (see
+controller-runtime's leader election uses one Lease, shared by the two
+replicas, and only matters when `--leader-elect` is on (the shipped manifest
+sets it) (see
 [Leader election](configuration.md#leader-election)).
 
 ## The runner ClusterRole

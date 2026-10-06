@@ -72,7 +72,7 @@ text to a cause:
 
 | Error text | Likely cause |
 | --- | --- |
-| `... failed calling webhook ...: no endpoints available for service "captf-webhook-service"` | No manager pod is `Ready`; go to step 2. |
+| `... failed calling webhook ...: no endpoints available for service "captf-webhook-service"` | No manager pod is `Ready` (the shipped Deployment runs two, so both are down); go to step 2. |
 | `... failed calling webhook ...: context deadline exceeded` or `connection refused` | The Service or pod is reachable but not serving on the expected port, or a `NetworkPolicy` blocks it; go to step 3. |
 | `... x509: certificate signed by unknown authority` | The webhook's `caBundle` is empty or stale; go to step 4. |
 

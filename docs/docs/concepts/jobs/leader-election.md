@@ -27,7 +27,8 @@ names and the cache-lag checks pay off.
 | `--leader-elect-retry-period` | `2s` | How often a candidate tries |
 
 The default is off, but the shipped Deployment sets `--leader-elect` and
-runs one replica, ready for a scale-up.
+runs two replicas: one leads, and the other serves the webhooks and stands
+by.
 
 !!! warning "Run more than one replica only with leader election on"
 
@@ -36,9 +37,10 @@ runs one replica, ready for a scale-up.
 The lock is a `coordination.k8s.io` Lease named
 `controller-leader-election-captf` in the manager's namespace; the manager
 needs the [leader-election Role](../../operator-guide/rbac.md#the-leader-election-role)
-for it. The manager does not release the lease when it stops, so after a
-shutdown a replacement waits for the lease to expire, up to 15 seconds by
-default. See [Configuration](../../operator-guide/configuration.md#leader-election).
+for it. The leader releases the lease when it shuts down cleanly on SIGTERM
+(`LeaderElectionReleaseOnCancel`), so the standby takes over at once. After a
+crash or a node loss the lease is not released, and the standby waits for it
+to expire, up to 15 seconds by default. See [Configuration](../../operator-guide/configuration.md#leader-election).
 
 ## What runs only on the leader
 
@@ -78,8 +80,8 @@ retried.
 
 The new leader reconciles every object once as its caches fill, then on
 events and requeues. Nothing is lost by a failover. What it costs is time:
-up to the lease duration before a new leader acts, plus a reconcile of every
-object.
+up to the lease duration after a crash (almost none after a clean shutdown,
+which releases the lease), plus a reconcile of every object.
 
 ## Two leaders
 

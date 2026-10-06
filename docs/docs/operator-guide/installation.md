@@ -96,9 +96,11 @@ namespace.
   `TerraformClusterIdentity` (the last is cluster-scoped; the rest are
   namespaced). See [The Kinds](../concepts/kinds.md) for what each one does,
   and [Custom Resources](../reference/resources/README.md) for every field.
-- **The manager**, a single-replica `Deployment` named
+- **The manager**, a two-replica `Deployment` named
   `captf-controller-manager`, running as a non-root user, with a
-  `ServiceAccount` of the same name. It serves its webhooks on `:9443`, its
+  `ServiceAccount` of the same name. Leader election is on: the leader
+  reconciles, and both replicas serve the webhooks. A `PodDisruptionBudget`
+  (`maxUnavailable: 1`) keeps one replica serving during a node drain. It serves its webhooks on `:9443`, its
   metrics on `:8443`, and its health and readiness probes on `:9440`.
 - **The admission webhook**: a `ValidatingWebhookConfiguration` named
   `captf-validating-webhook-configuration`, one rule per kind, backed by the
@@ -119,7 +121,11 @@ namespace.
 
 The manager pod tolerates the `node-role.kubernetes.io/control-plane:NoSchedule`
 taint, and has liveness (`/healthz`) and readiness (`/readyz`) probes on the
-`healthz` port. For what to tune for production, see
+`healthz` port. The replicas prefer separate nodes (a `ScheduleAnyway`
+topology spread on the hostname), so a single-node cluster still schedules
+both. The container has a `preStop` sleep of 5 seconds, which needs
+Kubernetes 1.30 or later, where the sleep lifecycle action is on by default.
+For what to tune for production, see
 [Production Readiness](production-readiness.md).
 
 None of this installs a `TerraformClusterIdentity` or any Terraform*
