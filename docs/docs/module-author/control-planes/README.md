@@ -19,6 +19,11 @@ that infrastructure is the job of a Cluster API control-plane provider —
 KubeadmControlPlane (KCP) or RKE2ControlPlane (RCP) — plus its bootstrap
 provider.
 
+**CAPTF is for self-built control planes only.** Use kubeadm, RKE2 or a similar
+self-managed distribution; managed Kubernetes services (EKS, AKS, GKE, OKE) are
+out of scope and should use the cloud provider's own Cluster API provider
+instead.
+
 Those providers read specific fields from your modules and write specific
 fields back, on a specific schedule. Getting the details wrong produces a
 cluster that hangs rather than one that fails loudly.

@@ -20,6 +20,16 @@ stands today. Each item says what the limit is, what follows from it, and
 where the detail is. A limit that has a workaround says so. For versions and
 what has and has not been tested, see [Compatibility](compatibility.md).
 
+## Scope: self-built control planes only
+
+CAPTF does not provide infrastructure for managed Kubernetes services. It is
+built for self-managed, self-built control planes (kubeadm, RKE2): you bring
+the Kubernetes distribution and bootstrap mechanism, and CAPTF handles the
+underlying cloud infrastructure. For managed Kubernetes (EKS, AKS, GKE, OKE),
+use the cloud provider's own Cluster API provider (CAPA for EKS, CAPZ for AKS,
+CAPG for GKE, CAPOCI for OKE). See [Control-Plane
+Integration](../module-author/control-planes/README.md).
+
 ## Maturity
 
 - **Pre-alpha.** v0.1.0 and v0.1.1 are released, but nothing has been
