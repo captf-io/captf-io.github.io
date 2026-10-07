@@ -1,6 +1,14 @@
 User-agent: *
 Allow: /
 
+# Search engines index the HTML pages. The Markdown copies and
+# llms-full.txt repeat them word for word, so keep those out of search
+# results; LLM tools, under the group above, can still fetch them.
+User-agent: Googlebot
+User-agent: Bingbot
+Disallow: /*index.md$
+Disallow: /llms-full.txt
+
 Sitemap: https://captf.io/sitemap.xml
 
 # The whole site as Markdown, for LLM tools: https://captf.io/llms.txt
