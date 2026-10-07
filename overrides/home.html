@@ -473,5 +473,5 @@
 {#- The Copy buttons in the code windows. Loaded here, in the body, so that it
     also runs when the page is reached through instant navigation; the script
     guards against binding twice. -#}
-<script src="{{ 'assets/javascripts/landing.js' | url }}"></script>
+<script defer src="{{ 'assets/javascripts/landing.js' | url }}"></script>
 {% endblock %}

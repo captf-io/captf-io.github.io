@@ -230,3 +230,13 @@
   <code>v1alpha1</code> and may still change.
   <a href="{{ 'docs/operator-guide/limitations/' | url }}">Read the known limitations</a>.
 {% endblock %}
+
+{#- The theme's scripts, deferred. As plain scripts at the end of the body,
+    they ran as soon as the parser reached them, before the browser had
+    painted the article; on a throttled phone the bundle's start-up work
+    held a docs page's text back by over a second. Deferred, they still run
+    in order and before DOMContentLoaded, after the first paint has had its
+    chance. -#}
+{% block scripts %}
+  {{ super() | replace("<script src=", "<script defer src=") }}
+{% endblock %}
