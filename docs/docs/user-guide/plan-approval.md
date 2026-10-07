@@ -1,6 +1,6 @@
 ---
 title: "Approve a Terraform Plan Before Apply"
-description: Review and approve a destructive plan or, under applyPolicy Manual, every plan, with the exact kubectl commands and caveats.
+description: Find, review and approve a TerraformPlan for a destructive plan or, under applyPolicy Manual, every plan, with the kubectl commands and caveats.
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 2, 2026"
 git_creation_date_iso: "2026-09-29"
@@ -15,84 +15,114 @@ subtitle: "Gate destructive or manual applies"
 
 `TerraformCluster` guards two things before it changes infrastructure: a
 plan that deletes or replaces a resource waits for an approval, and with
-`spec.applyPolicy: Manual` every plan waits for one. This page is the
-how-to: the commands to review and approve. How the gates work, what the
-plan hash binds and what they do not cover are in the chapter
-[Approvals and Gates](../concepts/approvals/README.md).
+`spec.applyPolicy: Manual` every plan waits for one. Each wait is a
+[`TerraformPlan`](../reference/resources/terraformplan.md) object that you
+approve by setting `spec.approved`. This page is the how-to: the commands to
+find, review and approve it. How the gates work, what the plan hash binds and
+what they do not cover are in the chapter [Approvals and
+Gates](../concepts/approvals/README.md).
 
 !!! info "Before you begin"
 
     - A `TerraformCluster` whose apply you want to guard or preview.
-    - `kubectl` access to annotate it and to read the logs of its Jobs. Anyone
-      who can patch the object can approve; see [who can
+    - `kubectl` access to read `terraformplans` and to patch them, and to read
+      the logs of the target's Jobs. Approving needs no access to the target;
+      see [who can
       approve](../concepts/approvals/operating.md#who-can-approve).
+
+## Find the plan
+
+A waiting plan is named by `status.pendingPlanRef.name` on its target (a
+`TerraformCluster` or a `TerraformMachinePool`), and the field is omitted when
+no plan is live:
+
+```sh
+kubectl get terraformcluster <name> -n <namespace> \
+  -o jsonpath='{.status.pendingPlanRef.name}'
+```
+
+To list plans by label instead:
+
+```sh
+kubectl get terraformplans -n <namespace> -l captf.io/plan-phase=Pending
+```
+
+`kubectl get terraformplans` shows each plan's target, reason, phase and
+counts. A target has at most one live plan, in the phase `Pending` or
+`Approved`. A newer plan, or a change that makes the plan moot, supersedes
+it.
+
+## Approve a plan
+
+1. Read the plan: its counts and resources are in `spec.summary`, and the
+   human-readable plan is in the log of the Job the condition message names:
+
+    ```sh
+    kubectl get terraformplan <plan> -n <namespace> -o jsonpath='{.spec.summary}'
+    kubectl logs job/<job> -n <namespace> -c source
+    ```
+
+2. Approve it, with your own username in `approvedBy`:
+
+    ```sh
+    kubectl patch terraformplan <plan> -n <namespace> --type merge \
+      -p '{"spec":{"approved":true,"approvedBy":"'"$(kubectl auth whoami -o jsonpath='{.status.userInfo.username}')"'"}}'
+    ```
+
+    The admission webhook requires `approvedBy` to equal the username of the
+    request, so the field says who approved. The plan moves to `Approved`, and
+    the controller emits `PlanApproved` on the target.
+
+3. The apply runs with `--expect-plan=<spec.planHash>`. It plans again and
+   applies only if the new plan has the same hash. After it succeeds, the
+   plan is `Applied`.
+
+An approval cannot be undone, and a plan that is `Applied`, `Superseded` or
+`Failed` can no longer be approved.
 
 ## The destructive-plan guard
 
 Under the default `applyPolicy: Automatic`, every `TerraformCluster` apply,
 including a drift remediation, plans first and stops before applying if the
-plan deletes or replaces a resource. Nothing changes. `ApplyJobSucceeded`
-turns `False`/`DestructivePlanBlocked` and its message names the affected
-resources and the inputs hash. See [The destructive-plan
+plan deletes or replaces a resource. Nothing changes. The manager creates a
+`TerraformPlan` with the reason `Destructive`, and `ApplyJobSucceeded` turns
+`False`/`DestructivePlanBlocked`. Its message names the affected resources and
+the plan to approve, with the command. See [The destructive-plan
 guard](../concepts/approvals/destructive-guard.md) for the full behavior.
 
-To approve:
+Approve the plan as above. The approval binds the exact plan, not only the
+inputs: if the approved apply plans something else, it applies nothing, the
+plan becomes `Failed`, and a new plan blocks again if it is still
+destructive.
 
-1. Read the plan: `kubectl logs job/<job> -n <namespace> -c source`. The
-   condition message lists what it deletes or replaces.
-2. Approve the **inputs hash** named in the condition:
+!!! note "Each destructive plan needs its own approval"
 
-    ```sh
-    kubectl annotate terraformcluster <name> -n <namespace> \
-      captf.io/approve-destructive-plan=<inputs-hash> --overwrite
-    ```
-
-    `<name>` and `<namespace>` are the `TerraformCluster`'s; `<inputs-hash>`
-    is the hash from the condition message.
-
-!!! note "The approval covers exactly those inputs"
-
-    The next change produces a new hash and is guarded again. The
-    controller removes the annotation after the approved apply succeeds.
-    `lifecycle { prevent_destroy = true }` in the module remains the
-    stronger control for a resource that must never be replaced.
+    A finished plan cannot be approved again, so the next destructive plan
+    is blocked and needs a new plan and a new approval.
+    `lifecycle { prevent_destroy = true }` in the module remains the stronger
+    control for a resource that must never be replaced.
 
 ## Plan preview: applyPolicy Manual
 
 Set `spec.applyPolicy: Manual` on the `TerraformCluster` or its
 `TerraformClusterTemplate` to review every change except the first apply.
-Switching back to `Automatic` applies whatever was waiting.
+Switching back to `Automatic` makes a waiting plan moot, and the apply runs.
 
-1. A change plans first. `ApplyJobSucceeded` becomes
-   `Unknown`/`PlanAwaitingApproval` and `status.plan` fills in. Nothing
-   applies.
-2. Review `status.plan` (counts, and up to 50 resources with their actions)
-   and the plan Job's log, which has the human-readable plan:
-
-    ```sh
-    kubectl get terraformcluster <name> -n <namespace> -o jsonpath='{.status.plan}'
-    kubectl logs job/<plan-job> -n <namespace> -c source
-    ```
-
-3. Approve by naming the plan hash, `status.plan.planHash`:
-
-    ```sh
-    kubectl annotate terraformcluster <name> -n <namespace> \
-      captf.io/approve-plan=<plan-hash> --overwrite
-    ```
-
-4. The apply plans again and applies only if the new plan has the same
-   hash. If anything changed, it stops with `PlanChanged` and a new plan to
-   approve. See [Manual plan
+1. A change plans first. The manager creates a `TerraformPlan` with the
+   reason `Manual`, and `ApplyJobSucceeded` becomes
+   `Unknown`/`PlanAwaitingApproval`. Nothing applies. A plan with no change
+   creates no object and applies at once.
+2. Find, review and approve the plan as above.
+3. If anything changed, the apply stops with `PlanChanged`: the approved plan
+   becomes `Failed`, and a new `Manual` plan waits for approval. See [Manual
+   plan
    approval](../concepts/approvals/manual-approval.md#when-the-plan-changes).
-5. After the approved apply succeeds, the controller removes the
-   annotation, clears `status.plan` and emits `PlanApplied`.
 
 !!! warning "Approving a plan also approves its deletes and replacements"
 
-    `captf.io/approve-destructive-plan` is not needed under `Manual`. A
-    plan with no changes needs no approval. A plan that only changes
-    outputs, or only imports or moves, does.
+    A `Manual` plan needs no separate destructive approval. A plan with no
+    changes needs no approval. A plan that only changes outputs, or only
+    imports or moves, does.
 
 ### Caveats
 
@@ -100,26 +130,35 @@ Switching back to `Automatic` applies whatever was waiting.
   so a plan with different values needs its own approval. It reveals no
   value; read values in the plan Job's log. See [What the plan hash
   binds](../concepts/approvals/fingerprint.md).
-- An approval is consumed only when the approved apply succeeds. A stale one
-  can approve a later plan with the same hash. Remove it with
-  `kubectl annotate terraformcluster <name> -n <namespace>
-  captf.io/approve-plan-`.
-- Hashes start with `p2:`. After an upgrade from a release with `p1:`
-  hashes, a waiting plan is planned again and needs a new approval.
-- `status.plan` is status, not durable state: after `clusterctl move` the
-  controller plans again, and an approval still on the annotation applies if
-  the new plan hashes the same.
-- In a GitOps setup, the annotation is set by a person, or by a pipeline
-  after its own review of `status.plan` and the plan Job's log. Do not keep
-  it in Git: a controller that syncs annotations from Git would re-add a
-  consumed approval.
+- A failed step of the approved apply keeps the plan `Approved`: the apply is
+  retried with the same expected plan.
+- Hashes start with `p2:`.
+- Plans are objects of their own: they move with their target through
+  `clusterctl move`, and the moved plan still gates the apply, even though
+  Jobs and status do not move.
+- Finished plans are kept for history. The manager keeps the 10 newest
+  finished plans of each target.
+- In a GitOps setup, do not keep `TerraformPlan` objects in Git: the manager
+  creates them. A person approves one, or a pipeline does after its own
+  review of the plan and the plan Job's log.
+
+## Automate approvals
+
+Because a plan is an object, a pipeline or a bot can list, watch and approve
+plans like any Kubernetes object, using the same patch. Limit what it may
+approve with RBAC on `terraformplans`, and with a
+`ValidatingAdmissionPolicy` that lets a bot approve non-destructive plans
+while a destructive plan needs a human group. See [Tiered
+auto-approval](../concepts/approvals/operating.md#tiered-auto-approval) for
+the policy and its binding.
 
 ## What is not guarded
 
 Neither gate applies to a `TerraformMachine`, and a `TerraformMachinePool` is
 guarded only when its apply renders a changed set of cluster exports (see
 [Machine pools](../concepts/approvals/destructive-guard.md#machine-pools)).
-Destroy, restore, refresh and drift Jobs are never gated. See
+A pool's plan has the reason `ExportsChange`, and you approve it the same
+way. Destroy, restore, refresh and drift Jobs are never gated. See
 [Approvals and Gates](../concepts/approvals/README.md#scaling-is-not-gated)
 and [Limits](../concepts/approvals/limits.md).
 
@@ -127,18 +166,20 @@ and [Limits](../concepts/approvals/limits.md).
 
 !!! success ""
 
-    - After approving a destructive plan, `kubectl describe terraformcluster
-      <name> -n <namespace>` shows `ApplyJobSucceeded` back to `True` and the
-      `captf.io/approve-destructive-plan` annotation gone.
-    - After approving a plan under `Manual`, `status.plan` is empty and
-      `ApplyJobSucceeded` is `True`/`ApplySucceeded`.
+    - After approving a plan, `kubectl get terraformplan <plan> -n
+      <namespace>` shows the phase `Approved`, then `Applied` once the apply
+      succeeds.
+    - `kubectl describe terraformcluster <name> -n <namespace>` shows
+      `ApplyJobSucceeded` back to `True`/`ApplySucceeded`, and
+      `status.pendingPlanRef` is gone.
 
 !!! related "See also"
 
     - [Approvals and Gates](../concepts/approvals/README.md), the chapter
       behind this page.
-    - [Operating the gates](../concepts/approvals/operating.md) for conditions,
-      events and RBAC.
+    - [Operating the gates](../concepts/approvals/operating.md) for the plan
+      lifecycle, conditions, events and RBAC.
+    - [TerraformPlan](../reference/resources/terraformplan.md).
     - [Drift](drift.md) for `drift.action: Remediate`, which the
       destructive-plan guard also covers.
     - [Reconcile Lifecycle](../concepts/lifecycle.md).

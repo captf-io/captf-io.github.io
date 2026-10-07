@@ -82,13 +82,16 @@ What the guard does not cover:
     Still make a pool module defensive with `lifecycle { prevent_destroy = true }`
     on what must never go: it fails even an approved plan.
 
-## Approving is a patch on the object
+## Approving is a patch on the plan
 
-Approval authority is Kubernetes RBAC, by design (see [Who can
-approve](operating.md#who-can-approve)). The consequence is that whoever may
-`patch` the cluster can both change its spec and approve the change. Keep that
-right with the people who should hold both, and route everyone else's spec
-changes through a reviewed path.
+Approval authority is Kubernetes RBAC on `terraformplans`, by design (see [Who
+can approve](operating.md#who-can-approve)). Approving needs no right on the
+target, so the right to edit a spec and the right to approve can be held by
+different people, and should be. Two things to keep in mind. `create` on
+`terraformplans` equals approve, so grant it only to the manager and the
+identity that runs `clusterctl move`. And RBAC alone cannot tell a harmless
+plan from a destructive one; for that, add an admission policy (see
+[Tiered auto-approval](operating.md#tiered-auto-approval)).
 
 ## Approvals do not cover state surgery
 

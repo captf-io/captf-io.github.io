@@ -1,5 +1,5 @@
 ---
-description: How the always-on destructive-plan guard blocks a TerraformCluster apply that deletes or replaces a resource until you approve its inputs hash.
+description: How the always-on destructive-plan guard blocks a TerraformCluster apply that deletes or replaces a resource until you approve its TerraformPlan.
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 2, 2026"
 git_creation_date_iso: "2026-10-01"
@@ -30,10 +30,10 @@ flowchart TD
     B -->|no changes| S["Skip the apply step,<br/>Job succeeds"]
     B -->|changes| D{"Does any change<br/>delete or replace?"}
     D -->|no| AP["Apply the saved plan"]
-    D -->|yes| H{"Is the inputs hash<br/>approved?"}
+    D -->|yes| H{"Is a TerraformPlan of<br/>exactly this plan approved?"}
     H -->|yes| AP
-    H -->|no| BL["Stop: nothing applied<br/>DestructivePlanBlocked"]
-    BL -->|"approve-destructive-plan<br/>names the inputs hash"| A
+    H -->|no| BL["Stop: nothing applied<br/>TerraformPlan Pending<br/>DestructivePlanBlocked"]
+    BL -->|"approve the TerraformPlan"| A
 ```
 
 The guarded apply runs `init`, `validate`, `plan -detailed-exitcode -out`,
@@ -47,30 +47,37 @@ The guarded apply runs `init`, `validate`, `plan -detailed-exitcode -out`,
   apply would.
 - If the plan only creates or updates in place, it applies without any
   approval.
-- If it deletes or replaces anything and the current inputs hash is not
-  approved, the Job stops before the apply step. Nothing changes and the
-  state is untouched.
+- If it deletes or replaces anything and no approved `TerraformPlan` names
+  exactly this plan, the Job stops before the apply step. Nothing changes and
+  the state is untouched. The runner reports the plan, and the manager
+  creates a `TerraformPlan` with the reason `Destructive`, in the phase
+  `Pending`, with `spec.inputsHash` set to the inputs hash of that apply.
 
 The guard applies to every reason for an apply on a `TerraformCluster`: the
 first apply, changed inputs, a retry, a drift remediation and a state with
 no inputs hash. Under `Manual` it is replaced by the plan approval: a plan
-you approved is run as it is.
+you approved is run as it is, and the plan has the reason `Manual`.
 
 ## What a block looks like
 
 - `status.lastRun.error.kind` is `blocked`.
 - `ApplyJobSucceeded` is `False`/`DestructivePlanBlocked`. The message names
   the affected addresses and actions (`<address> (delete)` or `(replace)`),
-  says nothing was applied, and gives the inputs hash and the command to
-  approve it.
+  says nothing was applied, and names the `TerraformPlan` to approve with
+  the command to do it. `status.pendingPlanRef.name` names the same plan.
 - A `DestructivePlanBlocked` warning event is emitted once per blocked Job,
-  in place of the generic failure event.
-- The Job is annotated `captf.io/destructive-plan-blocked`.
+  in place of the generic failure event, and names the plan and the command.
+- The Job is annotated `captf.io/destructive-plan-blocked`, and, once it is
+  bookkept, `captf.io/plan-hash` with the hash of the plan it made.
 - A blocked Job counts toward neither the retry backoff nor the
   remediation failure cap, and does not mark the last apply as failed.
 
 While the newest apply of the current inputs hash is blocked, no apply of
 that hash starts, and the controller re-checks at least every ten minutes.
+The apply waits for the plan's approval even when no Job exists any more:
+after `clusterctl move`, which moves plans but not Jobs, the moved plan
+still gates the apply. A blocked apply whose result has no plan creates no
+`TerraformPlan` and is retried after `RetryMax` (ten minutes).
 What else pauses depends on why the apply was due:
 
 - A blocked **input change** pauses drift and health checks too, since they
@@ -78,48 +85,34 @@ What else pauses depends on why the apply was due:
 - A blocked **drift remediation** leaves drift and health checks running.
 
 A new inputs hash starts a new guarded apply at once, and so does approving
-the blocked one. Editing the annotation re-triggers the reconcile at once.
+the blocked one. The old plan is superseded as soon as the inputs no longer
+hash to its `spec.inputsHash`.
 
 ## Approving
 
 Read the plan first: `kubectl logs job/<name> -c source` has its
 human-readable output, and the condition message lists what it deletes or
-replaces. Then name the **inputs hash** from the message:
+replaces. Then approve the `TerraformPlan` the message names:
 
 ```sh
-kubectl annotate terraformcluster <name> -n <namespace> \
-  captf.io/approve-destructive-plan=<inputs-hash> --overwrite
+kubectl patch terraformplan <plan> -n <namespace> --type merge \
+  -p '{"spec":{"approved":true,"approvedBy":"<your username>"}}'
 ```
 
-The value is an inputs hash, not a plan hash. It is the hash of everything
-the apply renders (the image reference and every module input; see [Job
-Inputs](../inputs.md)), so it approves exactly those inputs, never the
-object. Any later change produces a new hash that the annotation does not
-name, and the next destructive plan is blocked again without anyone removing
-the approval.
+The approval binds **the exact plan**, not only the inputs. The apply runs
+with `--expect-plan=<spec.planHash>`: it plans again and applies only if the
+new plan hashes the same. Two
+things follow:
 
-Two things follow from approving inputs rather than a plan:
-
-- The approval covers the plan computed when the approved apply runs, not
-  the plan you read. Something that changed in the meantime is covered too.
-  If that matters, use `applyPolicy: Manual`, which binds the plan.
-- The controller passes the approval to the runner only when the annotation
-  equals the hash it rendered, and the runner compares it again. Any other
-  value approves nothing and is not an error.
-
-### Consumption
-
-After any successful apply of the approved inputs hash, the controller
-removes the annotation, in its own patch with an optimistic lock, emits a
-`DestructivePlanApprovalConsumed` event and counts it in
-`captf_destructive_plan_approvals_consumed_total`. 
-
-!!! warning "An approval is consumed even when the plan was not destructive"
-
-    A drift remediation re-applies the inputs the state already records,
-    so an approval left behind would also cover a later destructive
-    remediation of the same inputs. After consumption that remediation is
-    blocked again and needs its own approval.
+- If something changed in the meantime and the approved apply finds a
+  different plan, nothing is applied. The plan becomes `Failed`, and the
+  next guarded apply plans again. If that plan is still destructive, it
+  blocks again and creates a new `TerraformPlan` to approve.
+- An approval is consumed with its plan: once the plan is `Applied`,
+  `Superseded` or `Failed` it cannot be approved again, so a later
+  destructive plan of the same inputs always needs its own approval. A
+  drift remediation, which re-applies inputs the state already records, is
+  no exception.
 
 ## Machine pools
 
@@ -138,17 +131,22 @@ existed](#pools-that-applied-before-the-record-existed).
 
 ### The approval hash
 
-A pool's approval names its **approval hash**: the inputs hash without
-`bootstrap_data`. It survives bootstrap rotations, which change
-`bootstrap_data` roughly every few minutes, and changes on any other input
-change. `ApplyJobSucceeded` shows the current hash and the command:
+A pool's plan has the reason `ExportsChange`, and its `spec.inputsHash` is
+the pool's **approval hash**: the inputs hash without `bootstrap_data`. It
+survives bootstrap rotations, which change `bootstrap_data` roughly every few
+minutes, and changes on any other input change. Unlike a cluster's, a pool's
+approval binds the approval hash, not the exact plan: once approved, the
+apply runs with `--allow-deletes-hash=<approval hash>`, so a rotation in the
+meantime does not invalidate it. `ApplyJobSucceeded` names the plan and the
+command, and `status.pendingPlanRef.name` of the pool names it too:
 
 ```sh
-kubectl annotate terraformmachinepool <name> -n <namespace> \
-  captf.io/approve-destructive-plan=<approval-hash> --overwrite
+kubectl patch terraformplan <plan> -n <namespace> --type merge \
+  -p '{"spec":{"approved":true,"approvedBy":"<your username>"}}'
 ```
 
-Approval is RBAC only: whoever may `patch` the pool may set it. It is removed
+Approval is RBAC on `terraformplans`; see [Who can
+approve](operating.md#who-can-approve). The approval ends with the plan,
 after the successful apply it approved.
 
 ### When it is blocked: the change is held
@@ -165,15 +163,26 @@ A blocked apply of a change of the exports is **held**, not retried:
 - One `Warning` event, `DestructivePlanBlocked`, is emitted per blocked Job.
 - The change is recorded in the durable Secret
   (`captf.io/pending-cluster-outputs`).
+- The pool holds only as long as the plan's approval hash is the current
+  one.
 
 ### Withdrawn and superseded
 
 - **Withdrawn.** If the exports return to the applied ones, nothing waits. The
   condition reports the last apply's real outcome and names the withdrawn Job,
-  and an approval of that change is removed. If the change comes back, it is
-  held again and needs a fresh approval.
-- **Superseded.** If the exports move to a different change, the old change's
-  approval is removed. An approval is for one change.
+  and the plan is `Superseded`, so an approval of that change is ignored. If
+  the change comes back, it is held again and needs a new plan and a fresh
+  approval.
+- **Superseded.** If the exports move to a different change, or the pool's
+  spec changes the approval hash, the old plan is `Superseded`. An approval is
+  for one change.
+
+!!! warning "A spec edit of a held pool makes it re-guard"
+
+    The tradeoff of binding the approval hash: an edit of the pool's spec
+    while a change is held changes the hash. The pool then re-guards: a new
+    guarded apply blocks again and creates a new `TerraformPlan`, which
+    supersedes the old one, instead of keeping the old approval.
 
 ### Partly applied
 
@@ -249,8 +258,9 @@ above).
 ### Limits
 
 - A deleting pool applies nothing: its condition says no apply runs.
-- `clusterctl move` does not carry Jobs or status, so the move re-runs the
-  blocked plan once.
+- `clusterctl move` does not carry Jobs or status, but it carries the
+  `TerraformPlan`, so a plan that waits for approval still gates the apply on
+  the target cluster.
 
 ## Blocked after a failed apply
 

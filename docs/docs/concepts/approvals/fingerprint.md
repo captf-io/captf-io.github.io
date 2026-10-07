@@ -13,7 +13,7 @@ subtitle: "What an approval is tied to"
 
 # What the Plan Hash Binds
 
-The value you approve under `applyPolicy: Manual` is `status.plan.planHash`,
+The plan you approve under `applyPolicy: Manual` carries a `spec.planHash`,
 a string that starts with `p2:`. It is a fingerprint of what the plan will
 do. This page defines what goes into it and why, so you can tell what an
 approval covers.
@@ -39,7 +39,7 @@ when its change is not a no-op.
 
 The HMAC key is the per-object plan key (see [Run inputs and the plan
 key](../secret-management/run-inputs.md#the-plan-key)). Because the hash is
-keyed, reading `status.plan.planHash` reveals nothing about any value, and
+keyed, reading `spec.planHash` reveals nothing about any value, and
 the same plan hashes differently for two objects. A plan or approved-apply
 Job whose key is missing or shorter than 32 bytes fails before any step
 runs, so it cannot produce an unkeyed hash.
@@ -90,7 +90,7 @@ other difference, so a plan whose only change is an `import` or a `moved`
 block waits for approval.
 
 **Output changes need approval.** An output that changes appears in the
-hash, and `status.plan.outputChanges` counts them. Cluster outputs feed
+hash, and `spec.summary.outputChanges` counts them. Cluster outputs feed
 machines and pools; see [Limits](limits.md#cluster-outputs-reach-pools-and-machines).
 
 ## What the hash does not bind
@@ -107,9 +107,8 @@ A plan with no change at all has a fixed hash (`p2:` followed by the SHA-256
 of the empty string), and an apply for it needs no approval.
 
 A hash that does not start with `p2:` is a plan recorded by an older
-release (`p1:`). The controller re-plans it automatically and the approval
-is then given again, against the new hash. An approval annotation written for
-a `p1:` hash does not match.
+release (`p1:`). The controller plans again automatically and the approval
+is then given again, against the new plan.
 
 ## Drift is classified separately
 

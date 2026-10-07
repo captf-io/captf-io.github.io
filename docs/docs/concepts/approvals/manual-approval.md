@@ -1,6 +1,6 @@
 ---
 title: "Manually Approving a Terraform Plan"
-description: How applyPolicy Manual plans every change first and applies it only after a person approves the plan hash, and what happens when the plan changes.
+description: How applyPolicy Manual plans every change first and applies it only after a person approves its TerraformPlan, and what happens when the plan changes.
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"
 git_creation_date_iso: "2026-10-01"
@@ -8,7 +8,7 @@ git_revision_date_iso: "2026-10-01"
 authors:
   - "The CAPTF Authors"
 icon: lucide/hand
-subtitle: "Approve by annotating the object"
+subtitle: "Approve a plan object"
 ---
 
 # Manual Plan Approval
@@ -16,10 +16,10 @@ subtitle: "Approve by annotating the object"
 With `spec.applyPolicy: Manual` on a `TerraformCluster` (or on its
 `TerraformClusterTemplate`), the controller plans every change first and
 applies it only after a person approves that plan. `Automatic` is the
-default. `applyPolicy` is mutable: switching back to `Automatic` applies
-whatever was waiting and clears `status.plan`. The first apply of a new
-cluster is not gated, since there is no state yet to damage. This page
-describes the flow; the commands are in [Plan
+default. `applyPolicy` is mutable: switching back to `Automatic` makes a
+waiting `Manual` plan moot, so it is superseded and the apply runs. The first
+apply of a new cluster is not gated, since there is no state yet to damage.
+This page describes the flow; the commands are in [Plan
 Approval](../../user-guide/plan-approval.md).
 
 ## The flow
@@ -32,18 +32,18 @@ sequenceDiagram
     C->>J: plan Job with the plan key
     J->>J: validate, plan, fingerprint
     J-->>C: counts, resources, plan hash
-    C->>C: record status.plan, set PlanAwaitingApproval
-    U->>C: annotate approve-plan with the plan hash
+    C->>C: create TerraformPlan (Pending), set PlanAwaitingApproval
+    U->>C: patch the TerraformPlan: approved true
     C->>J: apply Job with expect-plan
     J->>J: plan again with refresh, fingerprint
     alt hash matches
         J->>J: apply the saved plan
         J-->>C: success
-        C->>C: clear status.plan, remove approve-plan
+        C->>C: plan Applied
     else hash differs
         J-->>C: stop before applying, new plan
-        C->>C: update status.plan, set PlanChanged
-        U->>C: approve the new hash
+        C->>C: plan Failed, new plan Pending, set PlanChanged
+        U->>C: approve the new plan
     end
 ```
 
@@ -55,43 +55,46 @@ sequenceDiagram
    disk or to a log; only the binary plan file exists in the working
    directory.
 2. **Record.** The runner reports counts, a list of changed resources and
-   the plan hash. The controller records them in `status.plan` (below), sets
-   `ApplyJobSucceeded` to `Unknown`/`PlanAwaitingApproval` with a message
-   that contains the exact `kubectl annotate` command, and emits one
-   `PlanReady` event.
+   the plan hash. For a non-empty plan, the manager creates a
+   [`TerraformPlan`](../../reference/resources/terraformplan.md) with the
+   reason `Manual` in the phase `Pending` and names it in
+   `status.pendingPlanRef`. It sets `ApplyJobSucceeded` to
+   `Unknown`/`PlanAwaitingApproval`, with a message that names the plan, its
+   counts and the exact `kubectl patch` command, and emits one `PlanReady`
+   event.
 3. **Wait.** Nothing applies. The condition is `Unknown`, not `False`, so
    waiting never makes `Ready` false. The controller re-checks at least
-   every ten minutes, and a changed annotation or new inputs trigger it at
-   once. Drift and health checks continue while a plan waits.
-4. **Approve.** You set `captf.io/approve-plan` to
-   `status.plan.planHash`.
+   every ten minutes, and an approval or new inputs trigger it at once.
+   Drift and health checks continue while a plan waits.
+4. **Approve.** You set `spec.approved` and `spec.approvedBy` on the plan.
+   It becomes `Approved`, and the controller emits `PlanApproved` on the
+   target, naming `approvedBy`.
 5. **Apply.** The controller starts the apply Job with
-   `--expect-plan=<hash>`, the same plan key mount, and the Job annotation
-   `captf.io/approved-plan`, and emits `PlanApproved`. The runner plans
-   again, this time including the refresh, and computes the hash of that
-   fresh plan.
+   `--expect-plan=<spec.planHash>`, the same plan key mount, and the Job
+   annotations `captf.io/approved-plan` and `captf.io/plan` (the plan's
+   name). The runner plans again, this time including the refresh, and
+   computes the hash of that fresh plan.
     - If it equals the approved hash, the runner applies exactly the saved
       plan file.
     - If it differs, the runner stops before changing anything and reports
       the new plan. See [When the plan changes](#when-the-plan-changes).
-6. **Done.** After the approved apply succeeds, the controller removes
-   `captf.io/approve-plan`, clears `status.plan` and emits `PlanApplied`.
-   The removal is its own patch with an optimistic lock, so a newer value
-   that someone wrote in the meantime survives; on a conflict the
-   reconcile requeues and tries again.
+6. **Done.** After the approved apply succeeds, the plan becomes `Applied`
+   and the controller emits `PlanApplied`. Bookkeeping finds the plan
+   through the Job's `captf.io/plan` annotation.
 
-## What `status.plan` holds
+## What the plan holds
+
+The counts and resources are in the plan's `spec.summary`, not in the
+target's status:
 
 | Field | Meaning |
 | --- | --- |
-| `inputsHash` | The inputs hash the plan was made for. A plan is bound to it: new inputs make a new plan |
-| `job` | The plan Job |
-| `planHash` | The `p2:` hash to approve (see [What the plan hash binds](fingerprint.md)) |
-| `create`, `update`, `replace`, `delete`, `import`, `move`, `forget` | Counts of planned resource changes; a replacement counts only in `replace` |
-| `outputChanges` | How many outputs change |
-| `resources` | Up to 50 entries of `<address> (<labels>)`, sorted by address, never a value |
-| `truncated` | Set when more than 50 resources changed |
-| `createdAt` | When the controller recorded the plan |
+| `spec.inputsHash` | The inputs hash the plan was made for. A plan is bound to it: new inputs make the plan moot |
+| `spec.planHash` | The `p2:` hash the apply must reproduce (see [What the plan hash binds](fingerprint.md)) |
+| `spec.summary.create`, `update`, `replace`, `delete`, `import`, `move`, `forget` | Counts of planned resource changes; a replacement counts only in `replace` |
+| `spec.summary.outputChanges` | How many outputs change |
+| `spec.summary.resources` | Up to 50 entries of `<address> (<labels>)`, sorted by address, never a value |
+| `spec.summary.truncated` | Set when more than 50 resources changed |
 
 The labels in a `resources` entry are the action (`create`, `update`,
 `delete`, `replace`, `read` or `forget`), followed by `import` and then
@@ -99,7 +102,7 @@ The labels in a `resources` entry are the action (`create`, `update`,
 move)`. Imports, moves and forgets are not counted in `create`, `update`, `replace`
 or `delete`.
 
-!!! note "Plan values never reach status, events or logs"
+!!! note "Plan values never reach the plan object, events or logs"
 
     They carry counts, addresses and the keyed hash only. The values are in
     the plan Job's own log, which the `source` container prints in
@@ -113,16 +116,16 @@ or `delete`.
 - **Output changes.** A plan that changes only outputs, or only imports or
   moves, is not an empty plan and waits for approval.
 - **Not an empty plan.** A plan with no resource, output, import or move
-  change has a fixed hash, and the apply proceeds without approval (no
-  `PlanApproved` event). It still plans again first, and stops if the plan
-  is no longer empty.
+  change creates no `TerraformPlan`, and the apply runs at once with
+  `--expect-plan` of the empty plan (no `PlanApproved` event). It still plans
+  again first, and stops if the plan is no longer empty.
 
 !!! warning "Approving a plan also approves the deletes and replacements it lists"
 
-    You saw them in `status.plan.resources`, and the apply runs only that
-    plan. `captf.io/approve-destructive-plan` is not needed under
-    `Manual`. `lifecycle { prevent_destroy = true }` in the module still
-    fails an approved plan.
+    You saw them in `spec.summary.resources`, and the apply runs only that
+    plan. A `Manual` target needs no separate destructive approval.
+    `lifecycle { prevent_destroy = true }` in the module still fails an
+    approved plan.
 
 ## When the plan changes
 
@@ -132,33 +135,35 @@ apply changed things, the Job stops before the apply step:
 
 - `status.lastRun.error.kind` is `plan-changed` and the Job is annotated
   `captf.io/plan-changed`;
-- `status.plan` is replaced by the new plan;
-- `ApplyJobSucceeded` becomes `Unknown`/`PlanChanged`, with the new
-  command, and a `PlanChanged` warning event is emitted;
+- the approved plan becomes `Failed`, and the new plan becomes a new
+  `Manual` `TerraformPlan` in the phase `Pending`;
+- `ApplyJobSucceeded` becomes `Unknown`/`PlanChanged`, with the failed
+  plan, the new plan and the approve command, and a `PlanChanged` warning
+  event is emitted;
 - the change counts toward neither retry backoff nor the remediation failure
-  cap, and the apply waits for approval of the new hash.
+  cap, and the apply waits for approval of the new plan.
 
 A plan that comes back empty after you approved a non-empty one is a changed
-plan too.
+plan too. `Failed` happens only in this case.
 
 ## Retries and stale approvals
 
-An approval is consumed only when the approved apply succeeds. After a
-failed apply the annotation stays, so a retry whose new plan hashes the
-same runs without another approval, with the usual retry backoff. If the
-failed apply changed something, the plan differs and needs a new approval.
+A failed step of the approved apply, or a deadline, does not fail the plan:
+it stays `Approved`, and the apply is retried with the same expected plan
+after the usual retry backoff. It runs without another approval if the new
+plan hashes the same. If the failed apply changed something, the plan
+differs: the plan becomes `Failed` and the new plan needs its own approval.
 
-!!! warning "A leftover approval still approves a later plan with the same hash"
-
-    This covers, for example, a plan that changed again or inputs that
-    changed before the apply ran. Remove a stale one with
-    `kubectl annotate terraformcluster <name> -n <ns> captf.io/approve-plan-`.
-    Because the hash binds values, a leftover approval matches only a plan
-    that changes the same attributes to the same values.
+An approval cannot outlive its plan. A plan is superseded when it becomes
+moot, and a superseded plan can no longer be approved or applied; see [Operating
+the gates](operating.md#the-terraformplan-lifecycle). Because the plan hash
+binds values, a new approval matches only a plan that changes the same
+attributes to the same values.
 
 !!! related "See also"
 
     - [What the plan hash binds](fingerprint.md).
     - [Operating the gates](operating.md).
     - [Plan Approval](../../user-guide/plan-approval.md).
+    - [TerraformPlan](../../reference/resources/terraformplan.md).
     - [Run inputs and the plan key](../secret-management/run-inputs.md#the-plan-key).
