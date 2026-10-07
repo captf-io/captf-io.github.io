@@ -71,12 +71,12 @@ the backend gzips the state first and then cuts the compressed bytes into
 pieces of exactly 1 MiB. The size is hard-coded.
 
 ```mermaid
-flowchart LR
+flowchart TD
     S[state JSON] --> G[gzip]
-    G --> P0["piece 0<br/>tfstate-default-SUFFIX"]
-    G -- "past 1 MiB" --> P1["piece 1<br/>…-part-1"]
-    G -- "past 2 MiB" --> P2["piece 2<br/>…-part-2"]
-    G -. "and so on" .-> PN["piece N<br/>…-part-N"]
+    G -- "first 1 MiB" --> P0["piece 0<br/>tfstate-default-SUFFIX"]
+    P0 -- "past 1 MiB" --> P1["piece 1<br/>…-part-1"]
+    P1 -- "past 2 MiB" --> P2["piece 2<br/>…-part-2"]
+    P2 -. "and so on" .-> PN["piece N<br/>…-part-N"]
 ```
 
 Piece 0 goes in the base Secret. Every further piece goes in

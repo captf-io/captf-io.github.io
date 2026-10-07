@@ -147,32 +147,29 @@ selects on (see [What the manager caches](../../operator-guide/secrets.md#what-t
 ## How they connect
 
 ```mermaid
-flowchart LR
+flowchart TD
     subgraph ops[Operator]
-        SRC["Identity source Secret"]
-        ID["TerraformClusterIdentity"]
+        ID["TerraformClusterIdentity"] --> SRC["Identity source Secret"]
     end
     subgraph mgr[Manager]
         MIR["captf-creds-identity<br/>(mirror)"]
         DUR["captf-inputs-kind-name<br/>(durable inputs)"]
         RUN["captf-run-job<br/>(per-run inputs)"]
-        KEY["captf-plankey-kind-name"]
-        BAK["captf-state-backup-...<br/>(backups)"]
+        KEY["captf-plankey-<br/>kind-name"]
+        DUR -->|"copied at<br/>Job start"| RUN
     end
     subgraph job[Job pod]
-        R["Runner"]
-        TF["Terraform or OpenTofu"]
+        R["Runner"] --> TF["Terraform or<br/>OpenTofu"]
     end
     ST["tfstate-default-suffix<br/>(state)"]
-    LK["lock-tfstate-default-suffix<br/>(Lease)"]
+    LK["lock-tfstate-<br/>default-suffix<br/>(Lease)"]
+    BAK["captf-state-backup-...<br/>(backups)"]
 
-    ID --> SRC
-    SRC -->|"copied on every reconcile"| MIR
-    MIR -->|"envFrom and files"| R
-    DUR -->|"copied at Job start"| RUN
+    SRC -->|"copied on every<br/>reconcile"| MIR
+    SRC ~~~ DUR
+    MIR -->|"envFrom<br/>and files"| R
     RUN -->|"/captf/config"| R
     KEY -->|"/captf/plan-key"| R
-    R --> TF
     TF -->|"reads and writes"| ST
     TF -->|"holds"| LK
     ST -->|"new serial seen"| BAK

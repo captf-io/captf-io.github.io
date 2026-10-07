@@ -122,9 +122,12 @@ page CSS cannot size it. The site's type size and spacing are set once,
 in `overrides/assets/javascripts/mermaid.js`; don't add a `%%{init}%%`
 line to a diagram. Each diagram sits in a panel and fits the column; one
 the column shrinks gets an expand button that opens it full size. Keep
-diagrams near the column's width (about 690px) so they read without it:
-prefer `flowchart LR` for a short pipeline, and `flowchart TD` for a
-decision tree or a chain of more than four or five steps.
+diagrams near the column's width (about 690px) so they read without it,
+and vertical: use `flowchart TD`, never `LR` or `RL`. A horizontal flow
+outgrows the column after three or four boxes, and a phone's column is
+about 320px. Where a TD diagram still spreads sideways, give it fewer
+side-by-side boxes: break long labels with `<br/>`, chain steps instead
+of fanning them out, and stack groups with an invisible link (`A ~~~ B`).
 
 **Wide tables.** A page built around tables of five or more columns with
 sentence-length cells (inventories, reference lookups) hides the

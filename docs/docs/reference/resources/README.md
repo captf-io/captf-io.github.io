@@ -81,16 +81,19 @@ with its type, default, validation and what it does.
 | [`TerraformClusterIdentity`](terraformclusteridentity.md) | Cluster | Nothing; its Secret feeds the others' Jobs | The others' `spec.identityRef` |
 
 ```mermaid
-flowchart LR
+flowchart TD
     Cluster --> TC[TerraformCluster]
     Machine --> TM[TerraformMachine]
     MachinePool --> TMP[TerraformMachinePool]
-    TCT[TerraformClusterTemplate] -. cloned into .-> TC
-    TMT[TerraformMachineTemplate] -. cloned into .-> TM
-    TMPT[TerraformMachinePoolTemplate] -. cloned into .-> TMP
+    TC -. cloned from .-> TCT["TerraformCluster<br/>Template"]
+    TM -. cloned from .-> TMT["TerraformMachine<br/>Template"]
+    TMP -. cloned from .-> TMPT["TerraformMachinePool<br/>Template"]
     TC --> ID[TerraformClusterIdentity]
     TM --> ID
     TMP --> ID
+    TCT ~~~ ID
+    TMT ~~~ ID
+    TMPT ~~~ ID
 ```
 
 Every kind is in the `cluster-api` category, so

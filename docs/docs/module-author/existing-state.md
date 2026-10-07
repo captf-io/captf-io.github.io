@@ -17,7 +17,7 @@ values forward to machines and pools, and running a later Terraform root
 (here a Helm add-on) that builds on what CAPTF created.
 
 ```mermaid
-flowchart LR
+flowchart TD
     infra["Existing infrastructure<br/>(VPC, subnets, DNS)"] -->|data sources| cluster
     upstream["Existing Terraform state<br/>(platform network)"] -->|terraform_remote_state| cluster
     cluster["Cluster module<br/>(TerraformCluster)"] -->|exports| machines["Machine and pool modules"]

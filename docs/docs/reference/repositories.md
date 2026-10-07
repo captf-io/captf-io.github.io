@@ -23,7 +23,7 @@ provider's own image copies the `/runner` binary into a shared volume, and
 the main container runs your module image with that runner as its command.
 
 ```mermaid
-flowchart LR
+flowchart TD
     base["opentofu-base / terraform-base<br/>runtime at /captf/runtime"]
     mod["module image<br/>module + provider mirror"]
     prov["cluster-api-provider-terraform image<br/>manager + /runner"]

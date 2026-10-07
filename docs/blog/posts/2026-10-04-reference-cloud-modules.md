@@ -123,7 +123,7 @@ and its own release cycle: 14 cloud modules and the three no-op ones, 17 in
 all. A release is a signed tag, and from there two things happen:
 
 ```mermaid
-flowchart LR
+flowchart TD
     R["terraform-aws-cluster<br/>signed tag v0.2.0"] --> TR["Terraform Registry<br/>captf-io/cluster/aws"]
     R --> MI["module-images<br/>verifies the tag, builds both runtimes"]
     MI --> I["ghcr.io/captf-io/module-images/aws-cluster<br/>v0.2.0-opentofu, v0.2.0-terraform"]

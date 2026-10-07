@@ -105,7 +105,7 @@ infrastructure logic to keep in sync with the module that already exists.
 ## How it fits together
 
 ```mermaid
-flowchart LR
+flowchart TD
     subgraph capi["CAPI objects"]
         Cluster["Cluster, Machine, MachinePool"]
     end
