@@ -340,9 +340,8 @@ What a change does, per kind:
   compares the freshly rendered inputs' hash against the state's recorded
   hash on every reconcile and starts a new apply Job when they differ. A
   cluster apply that would delete or replace a resource is blocked
-  (`ApplyJobSucceeded=False/DestructivePlanBlocked`) until the
-  `captf.io/approve-destructive-plan` annotation names that exact inputs
-  hash, and with `spec.applyPolicy: Manual` every re-apply also waits for a
+  (`ApplyJobSucceeded=False/DestructivePlanBlocked`) until its
+  `TerraformPlan` is approved, and with `spec.applyPolicy: Manual` every re-apply also waits for a
   plan approval; see [Plan Approval](../user-guide/plan-approval.md).
 - **TerraformMachine (immutable).** Nothing, in the sense that matters: a
   machine's inputs hash is recorded at apply time like any kind's, but

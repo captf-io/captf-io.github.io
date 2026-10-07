@@ -113,7 +113,7 @@ spec:
    `control_plane_endpoint` output here once. It is immutable after that.
 3. This cluster is checked every 15 minutes and drift is reverted
    automatically.
-4. Every change is planned first and waits for `captf.io/approve-plan`.
+4. Every change is planned first and waits for the approval of a `TerraformPlan`.
 5. Inherited by this cluster's machines and pools. It never applies to
    the `TerraformCluster` itself.
 
@@ -190,12 +190,11 @@ when, and [Drift](../../user-guide/drift.md) for how to use it.
 
 With `Automatic`, every change to the inputs, and every drift
 remediation, applies as soon as the controller sees it. Only a plan that
-deletes or replaces resources waits, for the
-`captf.io/approve-destructive-plan` annotation. With `Manual`, the
-controller runs a plan Job first, publishes the result in
-[`status.plan`](#status), and applies it only when the
-`captf.io/approve-plan` annotation names `status.plan.planHash`. The apply
-runs only if it plans exactly the same changes again. The first apply of
+deletes or replaces resources waits, for the approval of a `Destructive`
+[`TerraformPlan`](terraformplan.md). With `Manual`, the controller runs a plan
+Job first, creates a `Manual` `TerraformPlan` for a non-empty result, and
+applies it only when `spec.approved` is set on that plan. The apply runs only
+if it plans exactly the same changes again (`spec.planHash`). The first apply of
 a new cluster, which has no state yet, is never gated. See
 [Plan approval](../../user-guide/plan-approval.md#plan-preview-applypolicy-manual)
 and [Manual approval](../../concepts/approvals/manual-approval.md).
@@ -252,21 +251,8 @@ list, and `clusterctl move` does not carry status over.
 | `status.failureDomains[].controlPlane` | boolean | Whether control-plane machines may use this domain. |
 | `status.failureDomains[].attributes` | map | Free-form string attributes the module reports for the domain. |
 | `status.exports` | any JSON value | A copy of the module's `exports` output, published for consumers outside CAPTF to read through the Kubernetes API. Absent or null exports publish `{}`. Not published, and the field cleared, when the compact JSON exceeds 64 KiB (65536 bytes); the manager then emits the `ExportsNotPublished` Warning event. Not set for an externally managed cluster. Readable by anyone who can `get` the object, so it must never hold secrets. The controller never reads it back. |
-| `status.plan` | object | The change waiting for approval under `spec.applyPolicy: Manual`. Empty when none waits. Approve it by setting `captf.io/approve-plan` to `status.plan.planHash`. |
-| `status.plan.inputsHash` | string | **Required** when a plan is set. The hash of the inputs the plan was made for. **Range:** 1 to 128 characters. |
-| `status.plan.job` | string | **Required** when a plan is set. The Job that made the plan: a plan Job, or an approved apply that found the plan changed. **Range:** 1 to 63 characters. |
-| `status.plan.planHash` | string | **Required** when a plan is set. A fingerprint of the plan's changes, and the value that approves it. **Range:** 1 to 128 characters. |
-| `status.plan.create` | integer | Resources the plan creates. **Range:** 0 or more. |
-| `status.plan.update` | integer | Resources the plan updates in place. **Range:** 0 or more. |
-| `status.plan.replace` | integer | Resources the plan replaces: deletes and creates again. A replacement counts here only. **Range:** 0 or more. |
-| `status.plan.delete` | integer | Resources the plan deletes, not counting replacements. **Range:** 0 or more. |
-| `status.plan.import` | integer | Resources the plan imports into the state. **Range:** 0 or more. |
-| `status.plan.move` | integer | Resources a `moved` block moves to a new address. **Range:** 0 or more. |
-| `status.plan.forget` | integer | Resources the plan removes from the state without destroying them. **Range:** 0 or more. |
-| `status.plan.outputChanges` | integer | Root module outputs the plan changes. An output change alone needs approval, because cluster exports feed every machine and pool module. **Range:** 0 or more. |
-| `status.plan.resources` | array of strings | `<address> (<labels>)` of each changed resource, sorted by address, at most 50, each 1 to 600 characters. The labels are the action (`create`, `update`, `delete`, `replace`, `read` or `forget`), or `import` or `move` for an otherwise unchanged resource, comma-separated: `aws_instance.a (import)`. Values are never shown. |
-| `status.plan.truncated` | boolean | `true` when `status.plan.resources` lists fewer resources than the plan changes. |
-| `status.plan.createdAt` | time | When the plan was made. |
+| `status.pendingPlanRef` | object | The cluster's live [`TerraformPlan`](terraformplan.md), in the phase `Pending` or `Approved`. Omitted when no plan is live. Approve it by patching that plan; see [Plan approval](../../user-guide/plan-approval.md). |
+| `status.pendingPlanRef.name` | string | **Required** when the reference is set. The name of the `TerraformPlan`, in the cluster's namespace. **Range:** 1 to 253 characters. |
 
 `status` must set at least one property when present.
 
@@ -283,7 +269,7 @@ list, and `clusterctl move` does not carry status over.
         - type: ApplyJobSucceeded
           status: Unknown
           reason: PlanAwaitingApproval
-          message: Plan awaits approval; see status.plan
+          message: Plan demo-3f9a1c07be awaits approval; see status.pendingPlanRef
           observedGeneration: 3
           lastTransitionTime: "2026-10-02T11:40:12Z"
         - type: EndpointAvailable

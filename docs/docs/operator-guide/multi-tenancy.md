@@ -139,24 +139,31 @@ subject. See [Custom ServiceAccounts](rbac.md#custom-serviceaccounts-and-the-run
 
 ## Who writes specs and who approves
 
-Approval is Kubernetes RBAC, by design: the approval annotations
-(`captf.io/approve-plan`, `captf.io/approve-destructive-plan`) and the
-manual-action annotations (`captf.io/restore-state`,
-`captf.io/abandon-infrastructure`) are authorized by who may `patch` the
-object, and the webhooks do not restrict them. RBAC cannot separate a patch
-that sets an annotation from one that edits the spec, so whoever holds `patch`
-on a `TerraformCluster` can do both.
+Approval is Kubernetes RBAC, by design. An approval is a patch of a
+`TerraformPlan` (`spec.approved`), so it is authorized by who may `patch`
+`terraformplans`, not by any right on the target. The manual-action
+annotations (`captf.io/restore-state`, `captf.io/abandon-infrastructure`) are
+authorized by who may `patch` the object, and the webhooks do not restrict
+them. Whoever holds `patch` on a `TerraformCluster` can edit its spec and set
+those annotations.
+
+`create` on `terraformplans` equals approve, because the webhook accepts a plan
+created approved (`clusterctl move` creates plans again). Grant it only to the
+manager and the identity that runs `clusterctl move`.
 
 The pattern for a tenant, from [Operating the
 gates](../concepts/approvals/operating.md#who-can-approve):
 
-- **Approvers** hold `patch` on `terraformclusters` in the tenant namespace.
+- **Approvers** hold `get`, `list`, `watch` and `patch` on `terraformplans` in
+  the tenant namespace, and no more.
 - **Spec changes** come from a pipeline's ServiceAccount, through a reviewed
   change (GitOps). People hold read-only access otherwise.
-- **Machines and pools are never gated**, so the split protects only the
-  cluster module. See [Limits](../concepts/approvals/limits.md).
-- An optional admission policy that guards the annotations is outside CAPTF;
-  see that page.
+- **Machines and pools are mostly not gated**, so the split protects the
+  cluster module and a pool's exports changes. See
+  [Limits](../concepts/approvals/limits.md).
+- An optional `ValidatingAdmissionPolicy` can let a bot approve non-destructive
+  plans while destructive ones need a human group; see [Tiered
+  auto-approval](../concepts/approvals/operating.md#tiered-auto-approval).
 
 Which fields a spec writer can change also differs by kind. A
 `TerraformMachine`'s source, identity and variables are immutable; its

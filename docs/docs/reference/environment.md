@@ -269,9 +269,9 @@ other flags keep their defaults; see [Runner CLI](runner-cli.md).
 | `--backend-config=labels` | the state Secret labels, as an HCL object | The labels the backend puts on the state Secrets it manages. |
 | `--force-unlock` | a stale lock ID | Set only when the controller found a stale backend lock. The runner force-unlocks it after `init`. |
 | `--guard-deletes` | no value | Set for every `TerraformCluster` apply, and for a `TerraformMachinePool` apply that renders a change of the cluster's exports. The runner stops before a plan that deletes or replaces a resource unless that is approved. |
-| `--inputs-hash` | the approval hash of the rendered inputs | Set with `--guard-deletes`. It is the hash an approval must name: a cluster's inputs hash, or a pool's inputs hash without `bootstrap_data`. |
-| `--allow-deletes-hash` | an approved hash | Set with `--guard-deletes` when the object carries `captf.io/approve-destructive-plan`. It allows a destructive plan for that exact input set. |
-| `--expect-plan` | an approved plan hash | Set with `--guard-deletes` under `applyPolicy: Manual`, from the cluster's `captf.io/approve-plan`. The apply plans again and applies only if the plan matches. |
+| `--inputs-hash` | the approval hash of the rendered inputs | Set with `--guard-deletes`. It is the `spec.inputsHash` of the `TerraformPlan` the apply would create: a cluster's inputs hash, or a pool's inputs hash without `bootstrap_data`. |
+| `--allow-deletes-hash` | an approved hash | Set with `--guard-deletes` for a `TerraformMachinePool` apply of an approved `ExportsChange` `TerraformPlan`, with the plan's approval hash. It allows a destructive plan for that exact input set. |
+| `--expect-plan` | an approved plan hash | Set with `--guard-deletes` for an apply of an approved `TerraformPlan` of a cluster, with the plan's `spec.planHash` (or the empty plan's hash when a `Manual` plan was empty). The apply plans again and applies only if the plan matches. |
 | `--restore-chunks` | the chunk count | Restore Jobs only: how many backup state chunks the config volume projects. |
 | `--restore-resources` | the managed resource count | Restore Jobs only: the backup's recorded count. The restore fails if `state list` shows none when this is not `0`. |
 | `--plan-key-file` | `/captf/plan-key/key` | Plan and apply Jobs only: the file that holds the key of the plan fingerprint. |

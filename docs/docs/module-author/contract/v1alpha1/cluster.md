@@ -167,8 +167,7 @@ planned replacement.
 Every TerraformCluster apply (a re-apply, a new image tag, a drift
 remediation) stops before a plan that deletes or replaces any resource,
 sets `ApplyJobSucceeded=False/DestructivePlanBlocked` with the affected
-addresses, and applies it only once the `captf.io/approve-destructive-plan`
-annotation names that apply's inputs hash; see
+addresses, and applies it only once the `TerraformPlan` it creates is approved; see
 [Plan Approval](../../../user-guide/plan-approval.md) for the destructive-plan
 guard. With `spec.applyPolicy: Manual` every re-apply instead waits for the
 approval of its plan, which covers its deletes; see

@@ -84,7 +84,7 @@ labels, created the first time a plan needs it and never rotated. Cleanup
 deletes it, and it moves by its owner reference.
 
 The runner uses it as the key of an HMAC when it fingerprints a plan, so
-the `p2:` plan hash in `status.plan.planHash` reveals nothing about the
+the `p2:` plan hash in a `TerraformPlan`'s `spec.planHash` reveals nothing about the
 planned values (see [What the plan hash
 binds](../approvals/fingerprint.md)).
 The key is mounted, read-only at `/captf/plan-key/key` with mode `0440`

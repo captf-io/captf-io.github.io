@@ -10,7 +10,10 @@ A `TerraformPlan` is one plan that the manager made for a
 [`TerraformCluster`](terraformcluster.md) or a
 [`TerraformMachinePool`](terraformmachinepool.md) and that waits for an
 approval before it is applied. The manager creates it and owns it; you
-approve it by setting `spec.approved`. Because it is an object of its own, an
+approve it by setting `spec.approved`. The name is derived from the Job that
+made the plan and the plan hash, so it is deterministic per Job: a recurring
+identical plan, such as the same drift planned again later, is a new object.
+A target names its live plan in `status.pendingPlanRef.name`. Because it is an object of its own, an
 approval can be listed, selected, watched, audited and automated like any
 other Kubernetes object, and it moves with its target through `clusterctl
 move`.
@@ -25,7 +28,7 @@ value, only addresses, actions and counts.
 | API version | `infrastructure.cluster.x-k8s.io/v1alpha1` |
 | Kind | `TerraformPlan` |
 | Scope | Namespaced, in the namespace of its target |
-| Created by | The manager. You never write the plan fields |
+| Created by | The manager, named `<target name>-<10 hex chars>`. You never write the plan fields |
 | Owned by | Its target (`spec.targetRef`), through a controller owner reference |
 | Finalizer | none |
 | Short names | none |
@@ -136,19 +139,39 @@ property when present.
 | `Pending` | The plan waits for an approval. | yes |
 | `Approved` | The plan was approved and its apply has not finished. | yes |
 | `Applied` | The plan was approved and its apply succeeded. | no |
-| `Superseded` | A newer plan replaced it, or it became moot, before it was applied. | no |
-| `Failed` | The plan was approved, but its apply failed or planned other changes. | no |
+| `Superseded` | A newer plan of the target replaced it, or it became moot, before it was applied. | no |
+| `Failed` | The plan was approved, but its apply planned other changes and stopped. | no |
 
-A target has at most one live plan. `Applied`, `Superseded` and `Failed` are
-terminal: a terminal plan can no longer be approved, and it is kept for
-history until the manager prunes the oldest finished plans of the target.
+A target has at most one live plan: creating a plan supersedes the previous
+live one. A plan becomes moot when the target's inputs no longer hash to
+`spec.inputsHash`, when no apply is due any more, when the `applyPolicy`
+changed, or, for a pool, when the change of the cluster's exports was
+withdrawn or replaced. A failed step of the apply, or a deadline, keeps the
+plan `Approved`: the apply is retried with the same expected plan.
+
+`Applied`, `Superseded` and `Failed` are terminal: a terminal plan can no
+longer be approved. The manager keeps the 10 newest finished plans of each
+target and deletes older ones. It never prunes a live plan, and prunes
+nothing while the target is paused or deleting.
 
 ### Conditions
 
-| Type | `True` | `False` |
-| --- | --- | --- |
-| `Ready` | The plan is live, or its apply succeeded. | The plan failed or was superseded. |
-| `Approved` | `spec.approved` is `true`. | The plan waits for an approval. |
+| Type | Status | Reason | When |
+| --- | --- | --- | --- |
+| `Ready` | `True` | `Pending` | The plan is live and waits for an approval. |
+| `Ready` | `True` | `Approved` | The plan is approved and its apply has not finished. |
+| `Ready` | `True` | `Applied` | The apply succeeded. |
+| `Ready` | `False` | `Superseded` | The plan was superseded. |
+| `Ready` | `False` | `Failed` | The approved apply planned other changes. |
+| `Approved` | `True` | `Approved` | `spec.approved` is `true` (`Approved`, `Applied` or `Failed`). |
+| `Approved` | `False` | `Pending` | The plan is live and not approved. |
+| `Approved` | `False` | `NotApproved` | The plan is finished and was never approved. |
+| `Approved` | `False` | `ApprovalIgnored` | The plan was approved, then superseded before it was applied. |
+
+An approval can land just before the plan is superseded. The webhook refuses
+an approval only when the plan's label is already terminal, so such an
+approval is ignored: `Approved` is `False` with the reason `ApprovalIgnored`,
+and the `PlanSuperseded` warning on the target names the current plan.
 
 `observedGeneration` on the object and on each condition tells an
 integration whether the status already reflects the latest spec.
@@ -207,6 +230,9 @@ An approval is a write to a `TerraformPlan`, so it is Kubernetes RBAC on
   mutating webhooks, so you write the field yourself: the command above fills
   it from `kubectl auth whoami`.
 
+See [Who can approve](../../concepts/approvals/operating.md#who-can-approve)
+for example Roles and a ValidatingAdmissionPolicy for tiered auto-approval.
+
 ## Validation
 
 The CRD schema and the validating admission webhook enforce these rules. The
@@ -240,12 +266,14 @@ Webhook rules, on update:
 
 - **Create.** When a change needs an approval, the manager runs a plan Job
   and creates one `TerraformPlan` for the result, with the plan's counts and
-  resources.
+  resources. A plan with no change creates no object.
 - **Approve.** Setting `spec.approved` moves the plan to `Approved`. The
-  target's apply runs only if it plans exactly the changes of `spec.planHash`.
-- **Finish.** A successful apply makes the plan `Applied`. A failed apply, or
-  an apply that found other changes, makes it `Failed`. A newer plan, or a
-  change that makes the plan moot, makes it `Superseded`.
+  target's apply runs with `--expect-plan=<spec.planHash>` and applies only if
+  it plans exactly those changes. A pool's `ExportsChange` plan binds the
+  approval hash in `spec.inputsHash` instead (`--allow-deletes-hash`).
+- **Finish.** A successful apply makes the plan `Applied`. An apply that found
+  other changes makes it `Failed`; a failed step keeps it `Approved`. A newer
+  plan, or a change that makes the plan moot, makes it `Superseded`.
 - **Delete.** The plan is owned by its target and is garbage-collected with
   it.
 - **Move.** `clusterctl move` carries the plan with its target through the

@@ -120,13 +120,15 @@ reconcile after it restarts on the new version:
   of whether anything uses the identity. Let the upgraded manager
   reconcile every identity once before deleting one, so this cleanup runs
   first; see [Identities and Credentials](../user-guide/identities.md).
-- **Re-approval of plans waiting under `captf.io/approve-plan`.** Plan
-  hashes now start with `p2:` and bind what each change does, plus output
-  changes, imports and moves. A plan that was waiting for approval under
-  an older `p1:` hash is not approved by the old annotation; approve the
-  new `status.plan.planHash` instead (see [Plan
-  Approval](../user-guide/plan-approval.md#caveats)). A `status.plan`
-  recorded under `p1:` is re-planned automatically.
+- **Re-approval of waiting plans.** Approvals are `TerraformPlan` objects
+  that the manager creates, and an approval cannot carry over from an older
+  release. Plan hashes start with `p2:` and bind what each change does, plus
+  output changes, imports and moves. A plan that was waiting for approval
+  under an older release is planned again automatically, and the new
+  `TerraformPlan` needs its own approval (see [Plan
+  Approval](../user-guide/plan-approval.md#caveats)). Grant approvers
+  `patch` on `terraformplans`; see [Who can
+  approve](../concepts/approvals/operating.md#who-can-approve).
 - **A one-time unknown baseline for pools that applied before exports were
   recorded.** A `TerraformMachinePool` that applied before CAPTF recorded its
   applied cluster exports has no baseline for the exports guard. On its first

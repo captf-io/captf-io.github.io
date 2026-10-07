@@ -109,20 +109,22 @@ cluster. These events say what an operation waits for. See
 ## Plans and approvals
 
 These events belong to the destructive-plan guard and to `applyPolicy:
-Manual`. See [Approvals](../concepts/approvals/README.md).
+Manual`, and are emitted on the target of a
+[`TerraformPlan`](resources/terraformplan.md). See
+[Approvals](../concepts/approvals/README.md).
 
 | Reason | Type | On | Fires when | Action |
 | --- | --- | --- | --- | --- |
-| `PlanReady` | Normal | `TerraformCluster` | A plan Job planned a change under `applyPolicy: Manual`. The note has the counts, the plan hash and the approve command. Once per plan Job. | Review the plan, then approve it. |
-| `PlanApproved` | Normal | `TerraformCluster` | The apply of an approved plan started. | None. |
-| `PlanApplied` | Normal | `TerraformCluster` | The approved plan was applied and its approval annotation removed. | None. |
-| `PlanChanged` | Warning | `TerraformCluster` | An approved apply planned other changes and stopped before applying them. Once per such Job. | Review the new plan and approve it again. |
-| `DestructivePlanBlocked` | Warning | `TerraformCluster` | An apply stopped before a plan that deletes or replaces resources. Once per blocked Job, in place of `JobFailed`. | Read the plan and approve it if the deletes are intended. See [Destructive guard](../concepts/approvals/destructive-guard.md). |
-| `DestructivePlanApprovalConsumed` | Normal | `TerraformCluster` | The approved destructive apply succeeded and its approval annotation was removed. | None. |
+| `PlanReady` | Normal | `TerraformCluster` | A `Manual` `TerraformPlan` was created, from a plan Job or as a new plan after `PlanChanged`. The note names the plan, its counts and the approve command. | Review the plan, then approve it. |
+| `PlanApproved` | Normal | `TerraformCluster`, `TerraformMachinePool` | A `TerraformPlan` of the target was approved. The note names the plan and `approvedBy`. | None. |
+| `PlanApplied` | Normal | `TerraformCluster`, `TerraformMachinePool` | The apply of an approved plan succeeded and the plan is `Applied`. | None. |
+| `PlanChanged` | Warning | `TerraformCluster` | An approved apply planned other changes and stopped before applying them; the plan is `Failed`. Once per such Job. | Review the new plan and approve it. |
+| `PlanSuperseded` | Normal, Warning when the plan was approved | `TerraformCluster`, `TerraformMachinePool` | A plan was superseded by a newer plan, or became moot. The note names why and the current plan. An approved plan's approval is ignored, hence the warning. | Review the current plan, if there is one. |
+| `DestructivePlanBlocked` | Warning | `TerraformCluster` | An apply stopped before a plan that deletes or replaces resources. Once per blocked Job, in place of `JobFailed`. The note names the `TerraformPlan` and the approve command. | Read the plan and approve it if the deletes are intended. See [Destructive guard](../concepts/approvals/destructive-guard.md). |
 
 `DestructivePlanBlocked` is also recorded for a `TerraformMachinePool`
 apply that would change the cluster's exports. The pool keeps applying with
-the exports of its last successful apply until you approve the change. If an
+the exports of its last successful apply until you approve the change's `TerraformPlan`. If an
 earlier apply may have left such a change partly applied, the pool waits for
 the approval, as a cluster does.
 

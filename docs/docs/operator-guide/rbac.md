@@ -79,6 +79,16 @@ namespaced install is not supported; the manager needs the ClusterRole as
 shipped. See [Multi-tenancy](multi-tenancy.md) for what this means when you
 share a management cluster.
 
+### Who approves a plan
+
+The manager creates and updates `TerraformPlan` objects; people only approve
+them. Approvers need `get`, `list`, `watch` and `patch` on `terraformplans`
+and nothing else on the targets. `create` on `terraformplans` equals approve,
+because the webhook accepts a plan created already approved (`clusterctl move`
+creates plans again as the mover), so grant it only to the manager and the
+identity that runs `clusterctl move`. See [Who can
+approve](../concepts/approvals/operating.md#who-can-approve) for example Roles.
+
 ## The leader-election Role
 
 `captf-leader-election-role` is a namespaced Role, scoped to the provider's

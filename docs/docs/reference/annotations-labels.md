@@ -1,5 +1,5 @@
 ---
-description: "Every annotation, label and finalizer CAPTF reads or sets: the keys you set to approve, restore or abandon, CAPTF's own bookkeeping keys and the captf_tags modules receive."
+description: "Every annotation, label and finalizer CAPTF reads or sets: the keys you set to restore or abandon, its own bookkeeping keys and the captf_tags modules receive."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 2, 2026"
 git_creation_date_iso: "2026-09-29"
@@ -12,8 +12,8 @@ subtitle: "Keys CAPTF reads and sets"
 
 # Annotations, Labels and Finalizers
 
-CAPTF reads a few keys that you set to approve a plan, restore a state or
-release a stuck deletion. It writes many more for its own bookkeeping, owns
+CAPTF reads a few keys that you set to restore a state or release a stuck
+deletion. (Plans are approved on a `TerraformPlan`, not with an annotation.) It writes many more for its own bookkeeping, owns
 three finalizers, and honors several Cluster API and clusterctl keys. This
 page lists all of them, grouped by who uses them.
 
@@ -21,8 +21,6 @@ page lists all of them, grouped by who uses them.
 
 | Key | Put it on | Value | Effect |
 | --- | --- | --- | --- |
-| `captf.io/approve-plan` | `TerraformCluster` with `applyPolicy: Manual` | Plan hash from `status.plan.planHash` | Applies that one plan |
-| `captf.io/approve-destructive-plan` | `TerraformCluster`, `TerraformMachine`, `TerraformMachinePool` | Hash from the `DestructivePlanBlocked` message | Lets one blocked apply delete or replace resources |
 | `captf.io/restore-state` | `TerraformCluster`, `TerraformMachine`, `TerraformMachinePool` | Serial from `status.stateBackups` | Pushes that backup back as the state |
 | `captf.io/abandon-infrastructure` | A deleting `Terraform*` object | The object's `metadata.uid` | Removes the finalizer without a destroy |
 | `captf.io/variables` | A `ConfigMap` or `Secret` | `true` | Allows it as a `variablesFrom` source |
@@ -30,69 +28,10 @@ page lists all of them, grouped by who uses them.
 
 ## Keys you set
 
-You set these on your own objects. Approvals and restores are one-shot:
-CAPTF removes the annotation after it acts, so a later change needs a new
-one.
-
-### `captf.io/approve-plan`
-
-Approves one plan of a `TerraformCluster` whose `spec.applyPolicy` is
-`Manual`. Only `TerraformCluster` has an `applyPolicy`, so only it accepts
-this key.
-
-| | |
-| --- | --- |
-| Kind | `TerraformCluster` |
-| Value | The plan hash in `status.plan.planHash` |
-| Removed by CAPTF | Yes, once the apply of that plan succeeds |
-
-The apply runs only if it plans exactly the same changes again. If the plan
-changed, the apply stops, `status.plan` shows the new plan, and the old
-approval no longer matches. Approving a plan also approves the deletes and
-replacements it lists, so you do not also need
-`captf.io/approve-destructive-plan`.
-
-```sh
-kubectl annotate terraformcluster <name> -n <namespace> \
-  captf.io/approve-plan=<plan-hash> --overwrite
-```
-
-`<plan-hash>` is `status.plan.planHash`; the `PlanAwaitingApproval`
-condition message prints the full command. See [Plan
-Approval](../user-guide/plan-approval.md) and [Manual Plan
-Approval](../concepts/approvals/manual-approval.md).
-
-### `captf.io/approve-destructive-plan`
-
-Approves one apply whose plan deletes or replaces resources, or one drift
-remediation that would.
-
-| | |
-| --- | --- |
-| Kinds | `TerraformCluster`, `TerraformMachine`, `TerraformMachinePool` |
-| Value | The inputs hash from the `DestructivePlanBlocked` message. On a pool, the approval hash |
-| Removed by CAPTF | Yes, after an apply of the approved hash succeeds |
-
-The value names the inputs the apply renders, not the object. Any later
-change to the inputs produces a different hash, so the approval stops
-matching and the next destructive plan is blocked again. A value that does
-not equal the hash CAPTF rendered approves nothing and is not an error.
-
-CAPTF consumes the approval after any successful apply of that hash, even
-one whose plan was not destructive, so a later destructive remediation of
-the same inputs needs a new approval. On a pool, CAPTF also removes the
-annotation when the cluster exports it approved a change of return to the
-exports the pool already applied.
-
-```yaml
-metadata:
-  annotations:
-    captf.io/approve-destructive-plan: <inputs-hash>
-```
-
-Approving needs only `patch` on the object. The `ApplyJobSucceeded`
-condition message prints the exact `kubectl annotate` command. See [The
-Destructive-Plan Guard](../concepts/approvals/destructive-guard.md#approving).
+You set these on your own objects. Restores are one-shot: CAPTF removes the
+annotation after it acts, so a later change needs a new one. Approvals are
+not annotations: you approve a plan by setting `spec.approved` on its
+[`TerraformPlan`](resources/terraformplan.md).
 
 ### `captf.io/restore-state`
 
@@ -273,7 +212,7 @@ an object. Unlike `status`, these annotations move with the Secret.
 | `captf.io/identity` | annotation | Durable inputs Secret, identity mirror | The `TerraformClusterIdentity` the credentials came from |
 | `captf.io/applied` | annotation | Durable inputs Secret | `true` once an apply succeeded or a state with an inputs hash was read, so a later missing state reads as lost, not never written |
 | `captf.io/interrupted-apply` | annotation | Durable inputs Secret of a cluster or pool | An apply Job that was deleted while it ran. It may have applied part of its change, so an apply stays due, and is guarded, until one started after it succeeds |
-| `captf.io/pending-cluster-outputs` | annotation | A pool's durable inputs Secret | A change of the cluster's exports whose pool apply was blocked before a destructive plan, as JSON. The pool keeps applying the exports of its last successful apply until you approve |
+| `captf.io/pending-cluster-outputs` | annotation | A pool's durable inputs Secret | A change of the cluster's exports whose pool apply was blocked before a destructive plan, as JSON. The pool keeps applying the exports of its last successful apply until you approve its `TerraformPlan` |
 | `captf.io/partial-cluster-outputs` | annotation | A pool's durable inputs Secret | A change of the cluster's exports whose pool apply failed, so the state may hold part of it, as JSON. Every apply is guarded until one succeeds |
 | `captf.io/applied-cluster-outputs-hash` | annotation | A pool's durable inputs Secret | The hash of the cluster exports the last successful pool apply rendered. A hash, never an exported value |
 
@@ -288,12 +227,14 @@ an object. Unlike `status`, these annotations move with the Secret.
 | `captf.io/drift-remediation` | annotation | Job | That the apply is a drift remediation, not an ordinary apply |
 | `captf.io/destructive-plan-blocked` | annotation | Job | That the apply stopped because its plan was destructive and unapproved |
 | `captf.io/plan-changed` | annotation | Job | That the apply stopped because a re-plan under `Manual` no longer matched the approved plan |
+| `captf.io/plan` | annotation | Apply Job | The name of the approved `TerraformPlan` the apply Job applies. Bookkeeping uses it to mark the plan `Applied` (the Job succeeded) or `Failed` (the plan changed) |
+| `captf.io/plan-hash` | annotation | Finished plan Job, blocked or plan-changed apply Job | The hash of the plan the Job made, written when the Job is bookkept. A plan Job whose plan is empty creates no `TerraformPlan`; this annotation tells the next passes that the inputs planned empty |
 | `captf.io/plan-unreadable` | annotation | Job | That the Job's plan result could not be parsed |
-| `captf.io/approved-plan` | annotation | Job | The plan hash an apply Job was created to satisfy under `Manual` |
+| `captf.io/approved-plan` | annotation | Job | The plan hash (`--expect-plan`) an apply Job was created to satisfy |
 | `captf.io/after-failed-apply` | annotation | Job | That the apply started while the newest apply had failed, so an earlier failure still counts and the apply waits for approval instead of being dropped |
 | `captf.io/after-interrupted-apply` | annotation | Job | The vanished apply Job that this apply started after. Its success removes the `captf.io/interrupted-apply` record |
 | `captf.io/restore-serial` | annotation | Restore Job | The backup serial the Job pushes |
-| `captf.io/approval-hash` | annotation | Pool apply Job | The approval hash of a pool apply guarded for a change of the cluster's exports: what `captf.io/approve-destructive-plan` must name |
+| `captf.io/approval-hash` | annotation | Pool apply Job | The approval hash of a pool apply guarded for a change of the cluster's exports: the `spec.inputsHash` of the `ExportsChange` `TerraformPlan`, and the value of `--allow-deletes-hash` |
 | `captf.io/cluster-outputs-hash` | annotation | Pool apply Job | The hash of the cluster exports the apply renders |
 | `captf.io/held-cluster-outputs` | annotation | Pool apply Job | That the apply rendered the exports of the last successful apply while a change waited for approval, so its success does not count as applying that change |
 

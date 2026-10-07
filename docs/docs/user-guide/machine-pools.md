@@ -407,16 +407,17 @@ the plan would delete or replace and the pool's approval hash. After you have
 read the plan, approve it:
 
 ```sh
-kubectl annotate terraformmachinepool <name> -n <namespace> \
-  captf.io/approve-destructive-plan=<approval-hash> --overwrite
+kubectl patch terraformplan <plan> -n <namespace> --type merge \
+  -p '{"spec":{"approved":true,"approvedBy":"<your username>"}}'
 ```
 
-The approval hash is the inputs hash without `bootstrap_data`, so it survives
-bootstrap rotations and changes on any other input change. Anyone who may patch
-the pool may approve it. The annotation is removed after the apply it approved
-succeeds. If the exports return to the applied ones, the change is withdrawn
-and its approval removed; if they move to another change, the old approval is
-removed. After a guarded apply fails part-way, every apply of the pool is
+`<plan>` is `status.pendingPlanRef.name` of the pool, and the message names it
+too. The plan (reason `ExportsChange`) binds the approval hash: the inputs hash
+without `bootstrap_data`, so it survives bootstrap rotations and changes on any
+other input change. Anyone who may patch `terraformplans` may approve it. If
+the exports return to the applied ones, the change is withdrawn and the plan is
+superseded; if they move to another change, or the spec changes the approval
+hash, the old plan is superseded and a new one is made. After a guarded apply fails part-way, every apply of the pool is
 guarded until one succeeds. See [The destructive-plan
 guard](../concepts/approvals/destructive-guard.md#machine-pools) for the full
 behavior and its limits.

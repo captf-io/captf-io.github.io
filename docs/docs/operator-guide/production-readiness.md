@@ -197,13 +197,14 @@ backups being taken. See [Metrics](../reference/metrics.md).
 !!! warning "Approval is Kubernetes RBAC, by design"
 
     **Approval is Kubernetes RBAC, by design.** Whoever may `patch` a
-    `TerraformCluster` may set its approval annotations
-    (`captf.io/approve-plan`, `captf.io/approve-destructive-plan`) and its manual
-    actions (`captf.io/restore-state`, `captf.io/abandon-infrastructure`). The
-    webhooks do not restrict them. RBAC cannot separate "sets the annotation" from
-    "edits the spec" on one object, so whoever holds `patch` can do both. Decide
-    who holds it: approvers get `patch`, and everyone else's spec changes come
-    through a reviewed path such as GitOps. See [Who can
+    `TerraformPlan` approves it, and needs nothing on the target. `create` on
+    `terraformplans` equals approve, so only the manager and the
+    `clusterctl move` identity get it. Whoever may `patch` a `TerraformCluster`
+    may set its manual actions (`captf.io/restore-state`,
+    `captf.io/abandon-infrastructure`), and the webhooks do not restrict them.
+    Decide who holds each: approvers get `patch` on `terraformplans`, and
+    everyone else's spec changes come through a reviewed path such as GitOps.
+    See [Who can
     approve](../concepts/approvals/operating.md#who-can-approve) for example Roles
     and [Multi-Tenancy](multi-tenancy.md).
 

@@ -43,12 +43,12 @@ An apply reason from 5 to 9 can still be turned into something else:
 
 - **Under `applyPolicy: Manual`** (a `TerraformCluster` only), every apply
   reason but `NoState` becomes the plan flow: a `plan` Job when no plan of
-  the current inputs is recorded, the apply with the approved plan hash once
-  the approval annotation names it (or the plan changes nothing), else a
+  the current inputs is live, the apply with `--expect-plan` of the approved
+  `TerraformPlan` once it is approved (or the plan changes nothing), else a
   wait. See [Approvals and Gates](../approvals/manual-approval.md).
 - **Otherwise**, an apply whose newest attempt was blocked before a
-  destructive plan, for the same inputs hash, waits for the approval
-  annotation or new inputs. See [The destructive-plan
+  destructive plan, for the same inputs hash, waits for the approval of its
+  `TerraformPlan` or new inputs. See [The destructive-plan
   guard](../approvals/destructive-guard.md).
 - **Backoff** replaces any `ActionJob` of an op that failed recently with a
   wait; see [Retries and backoff](retries.md).

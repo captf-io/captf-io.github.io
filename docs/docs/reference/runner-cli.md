@@ -232,7 +232,7 @@ bounded `tail` that summarizes the failure. The `kind` is one of:
 | `image-layout` | The image does not follow the [image contract](../module-author/image-contract.md): the module or runtime is not where the contract puts it. Fix the image. |
 | `step` | A runtime step (`init`, `plan`, `apply` and so on) failed, or the runner's own setup failed, such as preparing the work directory or assembling a restore. A bad flag also reports this kind, with step `flags`. |
 | `interrupted` | The Job was canceled while a step ran, for example by a drain, an eviction or a deletion. It does not count toward retry backoff. |
-| `blocked` | A guarded `apply` stopped before a plan that deletes or replaces resources, because no approval names the inputs hash. It changed nothing, carries the plan it stopped at, and the manager does not retry it until the inputs or the approval change. |
+| `blocked` | A guarded `apply` stopped before a plan that deletes or replaces resources, because no approval names the plan. It changed nothing, carries the plan it stopped at, and the manager does not retry it until the inputs change or its `TerraformPlan` is approved. |
 | `plan-changed` | An `apply` approved for one plan (`--expect-plan`) found a different plan. It changed nothing, carries the new plan and waits for it to be approved. |
 
 !!! note "Results are small by design"

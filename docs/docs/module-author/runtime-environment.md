@@ -197,9 +197,9 @@ is one of `image-layout`, `step`, `interrupted`, `blocked` (a guarded apply
 stopped before a plan that deletes or replaces a resource) or
 `plan-changed` (an approved apply whose new plan no longer matches the
 approved hash); `step` names the command that failed, when there is one. A
-`blocked` or `plan-changed` result changes nothing. A `plan-changed`
-result also carries a plan summary in `status.plan`; a `blocked` result's
-summary appears in the object's condition message instead. Both are
+`blocked` or `plan-changed` result changes nothing. Both carry a plan
+summary, which the manager turns into a `TerraformPlan` to approve (a blocked
+result with no plan creates none). Both are
 covered in [Plan Approval](../user-guide/plan-approval.md).
 
 The failure summary itself is built from the failing step's own output,
@@ -222,7 +222,7 @@ contributed to the summary.
 | --- | --- | --- |
 | Failure summary | 512 bytes | `status.lastRun.error.summary`, above |
 | Termination message | 4096 bytes | The whole result document; the kubelet truncates a longer one, so the runner drops fields in stages (resource-change counts, then the error tail, then plan and drift resource lists, then step history) to fit, keeping the plan's hash and counts last |
-| Plan resources listed | 50 | `status.plan.resources`; a plan with more sets `truncated: true` |
+| Plan resources listed | 50 | `spec.summary.resources` of the `TerraformPlan`; a plan with more sets `truncated: true` |
 | Drift resources listed | 20 | The drift check's resource address list |
 | Stderr kept in memory per step | 64 KiB | The tail a step's failure summary is built from; the log itself is not truncated |
 

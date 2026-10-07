@@ -61,7 +61,7 @@ what that page already says.
 **destructive plan**
 :   A plan that deletes or replaces at least one
     resource. A `TerraformCluster` stops before applying one until the
-    exact inputs hash it belongs to is approved. See
+    exact plan, as a `TerraformPlan`, is approved. See
     [Plan Approval](../user-guide/plan-approval.md#the-destructive-plan-guard).
 
 **drift**
@@ -119,9 +119,9 @@ what that page already says.
     the Job finishes. See [Job Inputs](../concepts/inputs.md).
 
 **plan hash**
-:   Under `applyPolicy: Manual`, the hash over a plan's
-    sorted, non-no-op changes that a `captf.io/approve-plan` annotation
-    names to approve it. See [Plan Approval](../user-guide/plan-approval.md).
+:   The hash over a plan's sorted, non-no-op changes, stored in
+    `spec.planHash` of a `TerraformPlan`. An approved apply runs only if it
+    plans the same hash again. See [Plan Approval](../user-guide/plan-approval.md).
 
 **provider mirror**
 :   The optional `/captf/providers` filesystem

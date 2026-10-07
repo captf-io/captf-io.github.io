@@ -209,6 +209,24 @@ compatibility guarantee (see [`README.md`](README.md#versioning)
 
 ### Changed
 
+- Approvals go through `TerraformPlan` (see
+  [Operating the gates](../../../concepts/approvals/operating.md#the-terraformplan-lifecycle)).
+  The manager creates one plan for each guarded wait, owned by its target,
+  named `<target>-<10 hex chars>`, with the reason `Manual`, `Destructive` or
+  `ExportsChange`. `TerraformCluster.status.pendingPlanRef` and
+  `TerraformMachinePool.status.pendingPlanRef` (`name`) name the live plan. A
+  target has one live plan: a newer plan, or a change that makes it moot,
+  supersedes it, and the manager keeps the 10 newest finished plans of each
+  target. The destructive guard now binds the exact plan (`--expect-plan`,
+  not the inputs hash); a pool's exports-change approval still binds its
+  approval hash (`--allow-deletes-hash`). `Failed` happens only when the
+  approved apply planned other changes. New event `PlanSuperseded`; the
+  events `PlanReady`, `PlanApproved`, `PlanApplied`, `PlanChanged` and
+  `DestructivePlanBlocked` name the plan; `captf_plan_approvals_total`
+  results are `created`, `approved`, `applied`, `superseded` and `failed`.
+  New Job annotations `captf.io/plan` and `captf.io/plan-hash`, and new
+  `TerraformPlan` condition reasons `Pending`, `Approved`, `Applied`,
+  `Superseded`, `Failed`, `NotApproved` and `ApprovalIgnored`.
 - Plan and drift counts are `create`, `update`, `replace` and `delete`, with
   a replacement counted in `replace` only, not as one add and one destroy.
   A plan also counts `import`, `move`, `forget` and `outputChanges`. The names
@@ -329,6 +347,13 @@ compatibility guarantee (see [`README.md`](README.md#versioning)
 
 ### Removed
 
+- Approval by annotation, replaced by `TerraformPlan` (the module contract
+  is unchanged). The annotations `captf.io/approve-plan` and
+  `captf.io/approve-destructive-plan`, the field `TerraformCluster.status.plan`
+  (the plan preview), the event `DestructivePlanApprovalConsumed` and the
+  metric `captf_destructive_plan_approvals_consumed_total` are gone, and so
+  is the controller removing an approval once the apply succeeded. You approve
+  a plan by setting `spec.approved` on its `TerraformPlan`.
 - `jobs.backoffLimit` (Jobs always get `backoffLimit: 0`) and
   `jobs.ttlSecondsAfterFinished` (Jobs never get a TTL): the controller
   owns retries, and backoff, digest pinning and conditions are derived

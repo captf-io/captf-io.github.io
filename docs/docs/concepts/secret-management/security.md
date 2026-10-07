@@ -44,7 +44,7 @@ plan keys of other objects, and the credential mirrors.
 The plan key is readable by the module (it is mounted into the Job that
 plans). The `p2:` plan hash is a keyed fingerprint: it detects that the
 plan changed between the review and the apply, and it hides the planned
-values from anyone who can read `status.plan`.
+values from anyone who can read a `TerraformPlan`.
 
 !!! warning "Review the module you approve, not only its plan"
 

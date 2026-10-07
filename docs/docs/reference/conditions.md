@@ -88,6 +88,7 @@ yet. In the `Ready` summary an absent input counts as `Unknown`, except
 | [`CapacityResolved`](#capacityresolved) | `TerraformMachineTemplate` | Normal | Capacity and node info were read from the image's labels. |
 | [`Paused`](#paused) | All three | State | The object or its Cluster is paused. |
 | [`Deleting`](#deleting) | All three | Negative | The object is being deleted. |
+| [`TerraformPlan` conditions](#terraformplan) | `TerraformPlan` | Normal | `Ready` and `Approved`: where a plan waiting for an approval is. |
 
 [troubleshooting]: ../operator-guide/troubleshooting/conditions.md
 
@@ -200,7 +201,7 @@ Jobs](../operator-guide/runbooks/job-failures.md).
 | `True` | `DestroySucceeded` | The destroy succeeded and cleanup follows. |
 | `False` | `ApplyFailed` | An apply Job failed, or disappeared while it ran because it was deleted before it finished. The message names the Job and the failed step. The controller retries with backoff. After a Job vanished, an apply of the current inputs stays due until one succeeds; this message outranks an older blocked or plan-changed apply. See [retries](../concepts/jobs/retries.md#an-apply-job-deleted-while-it-ran). |
 | `False` | `DestroyFailed` | A destroy Job failed, or a destroy cannot be rendered because the durable inputs Secret is missing. It retries until it succeeds. If it cannot, see [stuck destroy](../operator-guide/runbooks/stuck-destroy.md). |
-| `False` | `DestructivePlanBlocked` | An apply stopped before a plan that deletes or replaces resources, and no approval names it. On a `TerraformCluster`, which includes a drift remediation, the `captf.io/approve-destructive-plan` annotation does not name the inputs hash it renders, and no apply of that hash runs until it does or the inputs change. On a `TerraformMachinePool`, it is an apply of a change of the cluster's exports that stopped, and the annotation does not name its approval hash (the inputs hash without `bootstrap_data`). The reason stays while the change waits. The pool keeps applying everything else with the exports of its last successful apply, and the condition reports that apply, `True`, again once the change is approved, or the exports change or return to the applied ones. A pool that cannot fall back to those exports waits for approval as a cluster does, and the message says why. See the [destructive-plan guard](../concepts/approvals/destructive-guard.md#machine-pools). |
+| `False` | `DestructivePlanBlocked` | An apply stopped before a plan that deletes or replaces resources, and no approved `TerraformPlan` names exactly this plan. The message says what the apply would delete or replace, and names the `TerraformPlan` to approve with the command. On a `TerraformCluster`, which includes a drift remediation, no apply of the inputs runs until the plan is approved or the inputs change. On a `TerraformMachinePool`, it is an apply of a change of the cluster's exports that stopped, and the plan (reason `ExportsChange`) binds the pool's approval hash (the inputs hash without `bootstrap_data`). The reason stays while the change waits. The pool keeps applying everything else with the exports of its last successful apply, and the condition reports that apply, `True`, again once the change is approved, or the exports change or return to the applied ones. A pool that cannot fall back to those exports waits for approval as a cluster does, and the message says why. See the [destructive-plan guard](../concepts/approvals/destructive-guard.md#machine-pools). |
 | `False` | `IdentityNotAllowed` | No Job could be created because the identity does not allow the namespace or is gone. Allow the namespace again, or [abandon](../concepts/deletion/held.md#abandon) a deleting object. |
 | `False` | `ImageInvalid` | The runner reported an image-layout error: no `/captf/module` or a non-executable command. Rebuild the image to the [image contract](../module-author/image-contract.md). |
 | `False` | `ImagePullFailed` | The pod stayed in `ErrImagePull` or `ImagePullBackOff` past `activeDeadlineSeconds`. See [image pull failures](../operator-guide/runbooks/job-failures.md#image-pull-failures). |
@@ -208,8 +209,8 @@ Jobs](../operator-guide/runbooks/job-failures.md).
 | `False` | `JobDeadlineExceeded` | The Job hit `activeDeadlineSeconds`. See [deadlines](../concepts/jobs/deadlines.md). |
 | `False` | `JobPolicyInvalid` | The effective job policy, the object's own merged over the cluster defaults and the built-in defaults, gives a `lockTimeoutSeconds` that is not below `activeDeadlineSeconds`, so no Job starts. See [the merged-policy check](../concepts/jobs/deadlines.md#the-merged-policy-check). |
 | `Unknown` | `NoApplyYet` | No apply has completed yet. Check [`DependenciesReady`](#dependenciesready), [`IdentityAllowed`](#identityallowed) and the Jobs. |
-| `Unknown` | `PlanAwaitingApproval` | A `TerraformCluster` with `applyPolicy: Manual` waits for approval of the plan in `status.plan`, through the `captf.io/approve-plan` annotation naming its hash. See [manual approval](../concepts/approvals/manual-approval.md). |
-| `Unknown` | `PlanChanged` | An approved apply planned other changes than the approved plan and stopped before applying them. The new plan in `status.plan` waits for approval. See [manual approval](../concepts/approvals/manual-approval.md). |
+| `Unknown` | `PlanAwaitingApproval` | A `TerraformCluster` with `applyPolicy: Manual` waits for approval of a `Manual` [`TerraformPlan`](resources/terraformplan.md). The message names the plan, its counts and the approve command. See [manual approval](../concepts/approvals/manual-approval.md). |
+| `Unknown` | `PlanChanged` | An approved apply planned other changes than the approved plan and stopped before applying them. The failed plan, the new plan and the approve command are in the message, and the new `TerraformPlan` waits for approval. See [manual approval](../concepts/approvals/manual-approval.md). |
 | `Unknown` | `WaitingForClusterOperation` | A machine's or pool's apply or destroy waits for its `TerraformCluster`'s to finish. |
 | `Unknown` | `WaitingForMachineOperations` | A `TerraformCluster`'s apply or destroy waits for the applies and destroys of its machines and pools in flight. New ones wait behind it. |
 | `Unknown` | `WaitingForRunLease` | Another live Job, such as one another manager instance started, holds the object's run lease. No Job starts until it finishes. Never delete a Lease by hand. See [leases](../operator-guide/runbooks/slow-jobs.md#waiting-for-a-lease). |
@@ -411,6 +412,25 @@ can say what the destroy waits for. CAPTF sets it on the first visit.
 | --- | --- | --- |
 | `True` | `Deleting` | The `deletionTimestamp` is set and no more specific reason applies. Wait for the destroy. If the object does not delete, follow [my object will not delete](../concepts/deletion/troubleshooting.md). |
 | `False` | `NotDeleting` | The `deletionTimestamp` is not set. |
+
+## TerraformPlan
+
+Carried by [`TerraformPlan`](resources/terraformplan.md) only. Polarity:
+normal. The manager sets them; they do not feed the target's `Ready`. The
+condition type `Ready` is the same constant as above (`ReadyCondition`); the
+other type is `Approved` (`PlanApprovedCondition`).
+
+| Type | Status | Reason | Meaning |
+| --- | --- | --- | --- |
+| `Ready` | `True` | `Pending` | The plan is live and waits for an approval (`PlanPendingReason`). |
+| `Ready` | `True` | `Approved` | The plan is approved and its apply has not finished (`PlanApprovedReason`). |
+| `Ready` | `True` | `Applied` | The approved apply succeeded (`PlanAppliedReason`). |
+| `Ready` | `False` | `Superseded` | A newer plan replaced it, or it became moot (`PlanSupersededReason`). |
+| `Ready` | `False` | `Failed` | The approved apply planned other changes and stopped (`PlanFailedReason`). A failed step or a deadline does not fail the plan. |
+| `Approved` | `True` | `Approved` | `spec.approved` is `true`: the plan is `Approved`, `Applied` or `Failed` (`PlanApprovedReason`). |
+| `Approved` | `False` | `Pending` | The plan is live and not approved (`PlanPendingReason`). |
+| `Approved` | `False` | `NotApproved` | The plan is finished and was never approved (`PlanNotApprovedReason`). |
+| `Approved` | `False` | `ApprovalIgnored` | The plan was approved, then superseded before it was applied (`PlanApprovalIgnoredReason`). A `PlanSuperseded` warning names the current plan. |
 
 ## Ready summarization
 

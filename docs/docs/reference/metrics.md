@@ -204,15 +204,14 @@ captf_ready == 0
 | --- | --- | --- | --- | --- |
 | `captf_lock_force_unlocks_total` | counter | `kind` | unlocks | Stale state locks force-unlocked. |
 | `captf_lease_waits_total` | counter | `kind`, `reason` | waits | Operations that started waiting for a run lease, once per wait. |
-| `captf_plan_approvals_total` | counter | `kind`, `result` | approvals | Plans approved with `captf.io/approve-plan` under `applyPolicy: Manual`. |
-| `captf_destructive_plan_approvals_consumed_total` | counter | `kind` | approvals | Destructive-plan approvals removed after the approved apply succeeded. |
+| `captf_plan_approvals_total` | counter | `kind`, `result` | transitions | `TerraformPlan` transitions: created, approved, applied, superseded and failed. |
 
 Label values:
 
 | Label | Values |
 | --- | --- |
 | `lease_waits_total{reason}` | `run_lease` (another live Job of the object holds it), `cluster_operation` (a machine's apply or destroy waits for its `TerraformCluster`'s), `machine_operations` (a cluster's apply or destroy waits for its machines'). |
-| `plan_approvals_total{result}` | `approved` (the apply of the approved plan succeeded and the annotation was removed), `changed` (the approved apply planned other changes and stopped; the new plan waits for approval). |
+| `plan_approvals_total{result}` | `created` (a `TerraformPlan` was created), `approved` (a plan was approved), `applied` (the apply of an approved plan succeeded), `superseded` (a plan was superseded) and `failed` (the approved apply planned other changes and stopped; the new plan waits for approval). |
 
 See [Leases](../concepts/jobs/leases.md) and
 [Approvals](../concepts/approvals/README.md).
