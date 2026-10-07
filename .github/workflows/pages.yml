@@ -52,6 +52,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The whole history: tools/git_dates.py dates each page from it.
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
       - name: Check the generated files are current
         run: |
@@ -60,8 +63,9 @@ jobs:
             echo "::error::make gen changed files: run it and commit the result"
             exit 1
           }
-      - name: Build the site
-        run: make build
+      # After the check above: this rewrites the pages' front matter.
+      - name: Build the site, dated from git
+        run: make build-pages
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         with:

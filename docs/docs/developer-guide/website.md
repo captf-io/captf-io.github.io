@@ -139,6 +139,24 @@ overwrites the change.
 Search, the RSS and JSON feeds, the sitemap, the social cards, `llms.txt`
 itself and a Markdown copy of every page are built with the site.
 
+## Page dates
+
+A page's "Updated" date, its `dateModified` and `article:modified_time`,
+and its `<lastmod>` in the sitemap all come from the `git_*_date_*` keys
+of its front matter; Zensical has no git-dates plugin of its own. In the
+repository those keys hold the dates of the page's history before this
+repo, copied once by `tools/import_git_meta.py`. The published build,
+`make build-pages`, brings them up to date first: `tools/git_dates.py`
+sets each page's revision date to its last commit that changed the page
+body, below the front matter, so a sweep over bylines or titles dates
+nothing. It then builds the site and writes each page's date into the
+sitemap.
+
+The dates are written into the working tree that CI builds from and
+discards, never committed, because a commit cannot carry its own date.
+Plain `make build` shows the stored dates. To preview the published
+dates, run `CI=1 make build-pages`, then `git checkout docs/docs`.
+
 ## The theme
 
 The site uses Zensical's own theme, with templates under `overrides/`
@@ -146,7 +164,7 @@ replacing some of its parts:
 
 | Override | What it changes |
 | --- | --- |
-| `main.html` | Page metadata (Open Graph, structured data, feeds), the browser title, the banner |
+| `main.html` | Page metadata (Open Graph, structured data, feeds), the browser title, the banner, the self-hosted fonts (`overrides/assets/fonts/`) and the deferred scripts |
 | `home.html` | The landing page |
 | `partials/header.html` | The header: brand, the Home, Docs and Blog links, search |
 | `partials/tabs.html`, `partials/tabs-item.html` | The docs tab row, its icons and the contract chip |

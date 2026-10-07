@@ -115,6 +115,7 @@ link to it, inside the site and out, would break.
 | Command | What it does |
 | --- | --- |
 | `make build` | Builds the site in strict mode; any warning fails it, including a broken link or anchor and a missing snippet file |
+| `CI=1 make build-pages` | The build CI publishes: page dates and the sitemap's `<lastmod>` from git. It rewrites front matter, so run `git checkout docs/docs` after it |
 | `make gen` | Rewrites the generated parts of `zensical.toml` and the redirect stubs; run it after adding, moving or re-describing a page or post, and commit what it changes |
 | `uv run --with playwright python tools/layout_audit.py` | With `make serve` running: tables squeezed too narrow and font sizes, at desktop, laptop and phone widths |
 | `uv run --with playwright python tools/mobile_audit.py <dir>` | With `make serve` running: the header, tab row and navigation drawer at 25 phone, tablet and desktop sizes, with a screenshot of each state in `<dir>` |
