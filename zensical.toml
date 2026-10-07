@@ -506,14 +506,17 @@ object's inputs, runs the module image in a runner Job, keeps Terraform state in
 next to the object, and reads the module's outputs back from that state. A module is written to the \
 `v1alpha1` module contract and linted with `tfcapi-lint`.
 
-Status: pre-release. Every kind and the module contract are `v1alpha1`; the contract is frozen for \
-implementation but may change. There are no end-to-end tests yet, and the reference cloud modules \
-(AWS, Google Cloud, Azure, OCI, OpenStack) have not yet been applied to a real cloud.
+Status: pre-alpha. v0.1.0 and v0.1.1 are released. Every kind and the module contract are `v1alpha1`; \
+the contract is frozen for implementation but may change. Two opt-in end-to-end suites run on a local \
+kind cluster, one of them driving the no-op modules through real Cluster API objects, but they are not \
+yet part of CI. Nothing has been applied to a real cloud, including the reference cloud modules (AWS, \
+Google Cloud, Azure, OCI, OpenStack).
 
 Using this index: the docs are organized by reader. Overview and Start here for evaluators; User Guide \
 and Cloud Modules for people running clusters; Module Authors for people writing modules (the \
 contract is normative); Operations and Troubleshooting for people running the manager; How It Works \
-for internals; Reference for generated API, conditions, events, metrics, flags and environment. \
+for internals; Reference for the API, conditions, events, alerts, metrics, flags and environment, \
+written by hand and checked against the provider's source. \
 Every page is also available as Markdown at its URL followed by `index.md`, and \
 https://captf.io/llms-full.txt is the whole site in one file. News: https://captf.io/feed_rss_created.xml.
 """
