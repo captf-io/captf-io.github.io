@@ -731,6 +731,32 @@
     border-color: var(--captf-blue);
 }
 
+/* Instant previews (hovering a link) show the target's first section
+ * without its wrappers, so the docs home's hero buttons arrive with the
+ * theme's defaults: a primary button filled with the page's own color, and
+ * a row too wide for the 400px card, which wrapped its last button. Here
+ * they are compact, on one row, and colored as on the page. */
+.md-tooltip2__inner p:has(> .md-button) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.md-tooltip2__inner .md-button {
+    margin: 0;
+    padding: 0.35em 0.9em;
+    border: 1px solid var(--md-default-fg-color--lighter);
+    background-color: var(--md-default-fg-color--lightest);
+    color: var(--md-default-fg-color);
+    white-space: nowrap;
+}
+
+.md-tooltip2__inner .md-button--primary {
+    border-color: var(--captf-blue);
+    background-color: var(--captf-blue);
+    color: #FFFFFF;
+}
+
 .md-typeset .grid.cards > ul > li,
 .md-typeset .grid > .card {
     font-size: 0.7rem;
