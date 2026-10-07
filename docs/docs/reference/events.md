@@ -195,7 +195,7 @@ See [Deletion](../concepts/deletion/README.md).
 | `ReplicasWrittenBack` | Normal | `TerraformMachinePool` | An autoscaled pool's observed `replicas` output was written to `MachinePool.spec.replicas`. The note reads `X → Y`. | None. |
 | `ReplicasManagedExternally` | Warning | `TerraformMachinePool` | The autoscaler annotations are valid, but another owner holds `replicas-managed-by`. CAPTF does not write `spec.replicas` back. | Decide which controller owns the replica count. |
 | `CapacityResolved` | Normal | `TerraformMachineTemplate` | The template's `capacity` or `nodeInfo` changed from its image labels. | None. |
-| `ImageInspectFailed` | Warning | `TerraformMachineTemplate` | The registry could not be read for capacity. | Check registry access and credentials. |
+| `ImageInspectFailed` | Warning | `TerraformMachineTemplate` | The registry could not be read for capacity, was refused by the image-inspection egress policy, or served an image config over 1 MiB. | Check registry access and credentials. |
 
 ## Runner events
 

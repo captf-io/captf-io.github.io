@@ -376,7 +376,7 @@ Whether a template's capacity and node info were read from its image's labels.
 | --- | --- | --- | --- | --- | --- |
 | `True` | `CapacityResolved` | Both labels parsed. | The normal state. | Nothing. | [Templates](../../user-guide/clusterclass.md) |
 | `True` | `CapacityNotDeclared` | The image carries neither label. | Not every image declares capacity. | Nothing, unless a ClusterClass autoscaler needs it. | [Templates](../../user-guide/clusterclass.md) |
-| `False` | `ImageInspectFailed` | The registry fetch or authentication failed. | A wrong reference, a registry outage or missing credentials. | Fix the reference or credentials. A `Warning` event is emitted. | [Templates](../../user-guide/clusterclass.md) |
+| `False` | `ImageInspectFailed` | The registry fetch or authentication failed, the egress policy refused the registry, or the image config is too large. | A wrong reference, a registry outage or missing credentials; a registry at a private address without `--image-inspect-allow-private-registries`, or outside `--image-inspect-allowed-registries` ("not allowed by the manager's image-inspection egress policy"); an image config over 1 MiB ("the image config is too large"). | Fix the reference or credentials, or set the manager flags. A `Warning` event is emitted. | [Templates](../../user-guide/clusterclass.md) |
 | `False` | `CapacityLabelInvalid` | A label is present but invalid. | A malformed capacity or node-info label on the image. | Fix the label in the image. | [Image contract](../../module-author/image-contract.md) |
 
 ## VariablesValid

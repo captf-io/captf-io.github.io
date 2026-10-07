@@ -106,14 +106,30 @@ Integration](../module-author/control-planes/README.md).
   and a restored Secret that still names an old UID can be garbage-collected
   before the first reconcile. See [Disaster Recovery](disaster-recovery.md).
 
+## Image inspection
+
+- **The variables check at admission is best-effort.** On a cache miss the
+  webhook reads the registry itself, capped at 2 seconds and authenticating
+  with the object's own `jobs.imagePullSecrets`. If the read fails (the
+  registry is down or slow, or auth comes only from cluster defaults, or
+  from a `TerraformCluster`'s `spec.defaults.jobs`) the object is admitted and
+  the failure is remembered for one minute. Required variables and
+  `variablesFrom` are checked by the controller only, before any Job.
+- **Concurrent admissions for the same uncached image each read the
+  registry.** Up to two seconds each, until one failure is cached.
+- **Proxied inspection can be rebound.** See [Image inspection and
+  egress](../concepts/secret-management/security.md#image-inspection-and-egress).
+
 ## Jobs and leases
 
 - **The lease grace gap.** If a `TerraformCluster`'s inputs change while it
   waits for machine operations, the old leases are held by a Job that will
   never exist, and the new Job waits out the one-minute grace. It resolves
   itself. See [The known gap](../concepts/jobs/leases.md#the-known-gap).
-- **No flag caps running Jobs.** The concurrency flags cap reconciles per
-  kind, not Jobs. The bounds are one Job per object and your quotas.
+- **Job limits are soft.** `--max-active-jobs` and `--cluster-max-active-jobs`
+  cap the Jobs that run at once, counted from the Job cache, so they can be
+  exceeded by a few. The concurrency flags cap reconciles per kind, not Jobs.
+  See [Job limits](../concepts/jobs/README.md#job-limits).
 - **No quota-specific condition.** A ResourceQuota refusal shows as a
   reconcile error or a Job that never starts. See [Production
   Readiness](production-readiness.md#runner-jobs).

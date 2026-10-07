@@ -78,6 +78,13 @@ provide.
   open, so deletes and namespace removal still work. See [Webhook
   Unavailable](runbooks/webhook-unavailable.md).
 
+- [ ] **Module images on a private registry.** The manager reads image configs
+  and refuses a registry at a loopback, link-local, private or CGNAT address
+  unless you set `--image-inspect-allow-private-registries`. An in-cluster or
+  on-prem registry needs it, and `--image-inspect-allowed-registries` can then
+  restrict inspection to the hosts you trust. See [Image inspection and
+  egress](../concepts/secret-management/security.md#image-inspection-and-egress).
+
 ## Sizing
 
 - [ ] **Manager resources.** The shipped requests are 10m CPU and 128Mi of

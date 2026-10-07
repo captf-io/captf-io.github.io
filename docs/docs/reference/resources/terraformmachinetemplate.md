@@ -100,11 +100,15 @@ machines only through a rollout: see [Validation](#validation).
 
 ## Status
 
-The controller resolves the status once for each image reference, from the
-image's config labels. Tags are not polled again: a new image is a new
-template. When `spec.template.spec.source.image` differs from
-`status.capacitySource.image`, or `spec.capacity` no longer matches
-`status.capacity`, the controller resolves it again.
+The controller resolves the status from the image's config labels. A mutable
+tag is inspected again every 10 minutes and the template requeues for it, so a
+re-pushed tag's capacity and node-info labels are picked up; a digest
+reference is never polled again. When `spec.template.spec.source.image` differs
+from `status.capacitySource.image`, or `spec.capacity` no longer matches
+`status.capacity`, the controller resolves it at once. The variables are
+re-checked on every reconcile against the cached schema; the registry is read
+only when the capacity status does not describe the spec or the tag binding
+lapsed.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -216,7 +220,7 @@ no `Ready` condition. `CapacityResolved`:
 | `True` | [`CapacityResolved`](../conditions.md#capacityresolved) | Every label the image carries parsed; `capacity` and `nodeInfo` are set from them. |
 | `True` | [`CapacityResolved`](../conditions.md#capacityresolved) | With `spec.capacity` set and the image unreadable: the message starts "image not inspected" and names the failure class. `capacity` is set from the spec. |
 | `True` | [`CapacityNotDeclared`](../conditions.md#capacityresolved) | The image carries neither label. Both fields stay unset. This is not an error. |
-| `False` | [`ImageInspectFailed`](../conditions.md#capacityresolved) | The registry could not be read: authentication failed, the image was not found, or the registry was unreachable. The previous values stay. The message names the class of failure, never the registry's own text. The manager retries, doubling the delay from 30 seconds to at most 10 minutes. |
+| `False` | [`ImageInspectFailed`](../conditions.md#capacityresolved) | The registry could not be read: authentication failed, the image was not found, or the registry was unreachable. The previous values stay. The message names the class of failure, never the registry's own text. The manager retries, doubling the delay from the first failure (30 seconds to at most 10 minutes), dated by the `VariablesValid=Unknown`/`VariablesSchemaUnavailable` transition, also with `spec.capacity` set. Two further messages: the registry is outside `--image-inspect-allowed-registries` or at a non-public address (the egress policy), and the image config is larger than 1 MiB ("the image config is too large"). |
 | `False` | [`CapacityLabelInvalid`](../conditions.md#capacityresolved) | A label is present but invalid. That field is unset; a valid other label is still applied. The manager does not retry the same image, because the tag is not polled again. |
 
 `VariablesValid` says whether the template's `variables` and
@@ -230,7 +234,7 @@ reads it from the same image config, in the same pass:
 | `True` | [`VariablesValid`](../conditions.md#variablesvalid) | The variables fit the schema. |
 | `True` | [`VariablesSchemaNotDeclared`](../conditions.md#variablesvalid) | The image has no usable schema; nothing is checked. |
 | `False` | [`VariablesRejected`](../conditions.md#variablesvalid) | A variable is unknown, required and not set, or of the wrong type. The message names the variable, never the value. |
-| `Unknown` | [`VariablesSourcePending`](../conditions.md#variablesvalid), [`VariablesSchemaUnavailable`](../conditions.md#variablesvalid) | A source is missing, or the image could not be read. The manager retries. |
+| `Unknown` | [`VariablesSourcePending`](../conditions.md#variablesvalid), [`VariablesSchemaUnavailable`](../conditions.md#variablesvalid) | A source is missing, or the image could not be read. The manager retries, and the check is repeated whenever a labeled source named in `variablesFrom` changes. |
 
 The manager emits a `CapacityResolved` Normal event when the values change and
 an `ImageInspectFailed` Warning event on the first failure. See

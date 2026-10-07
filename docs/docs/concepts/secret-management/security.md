@@ -93,6 +93,42 @@ credential Secret cannot steer Terraform itself (see
 [Credentials](credentials.md#delivery-to-the-runtime)); that is a guard
 against a mistake, not a boundary against the module.
 
+## Image inspection and egress
+
+The manager reads image configs itself: for a `TerraformMachineTemplate`'s
+capacity and node info, for the variables schema, and in the webhook. The
+registry is named by a tenant in `spec.source.image`, so the read is guarded:
+
+- **Address check.** The check runs at dial time, after DNS, so redirects,
+  bearer-token realms and DNS rebinding are covered for direct connections.
+  Without `--image-inspect-allow-private-registries` the manager refuses a
+  registry that resolves to a loopback, link-local (cloud metadata), private,
+  CGNAT, multicast or unspecified address. See [Manager
+  flags](../../reference/manager-flags.md#captf).
+- **Allowed registries.** `--image-inspect-allowed-registries` narrows
+  inspection to the hosts you list; an image elsewhere is not inspected
+  and reports `ImageInspectFailed`. It checks the registry in the image
+  reference, not token-realm hosts.
+- **Proxies.** `HTTPS_PROXY`, `HTTP_PROXY` and `NO_PROXY` are honored. The
+  proxy itself is exempt from the address check, since you configure it and
+  it is often private. For a proxied request the manager resolves the
+  destination first and refuses it, before handing it to the proxy, if any
+  address is non-public. The proxy resolves the name again, so DNS
+  rebinding between the manager's check and the proxy's lookup is not
+  caught in proxied mode: close it with a proxy-side egress policy.
+- **Size cap.** An image config blob declared larger than 1 MiB, or with a
+  negative size, is refused before it is fetched ("the image config is too
+  large"). The client reads a blob in full, sized by the registry's own
+  manifest, so a tenant's registry could otherwise exhaust the manager's
+  memory. Module image configs are a few KiB.
+- **One deadline.** Trying several pull-Secret credentials shares one 30
+  second timeout.
+- **A schema cache per namespace.** Pull Secrets are namespace-local, so a
+  namespace is answered from the cache only for a reference it read itself
+  (tag bindings last ten minutes, digest bindings do not lapse). The schema
+  data is shared by digest. A private image's variable names and types do
+  not leak to another tenant through admission or `VariablesValid`.
+
 ## Rotation is not instant
 
 A change to the source Secret reaches the mirror on the next reconcile of an

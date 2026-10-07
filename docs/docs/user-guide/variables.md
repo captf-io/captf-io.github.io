@@ -145,21 +145,30 @@ parse are not checked: the apply then behaves as before.
 
 Where it is checked:
 
-- **At admission**, for inline `spec.variables`, only when the manager has
-  already read that image's schema (a controller inspected it earlier). The
-  webhook never contacts a registry, and an image it has not seen is
-  allowed; the controller checks before the Job. A required variable is not
+- **At admission**, for inline `spec.variables`, as a best-effort check.
+  Every replica serves admission. On a cache miss the webhook reads the
+  registry itself, capped at 2 seconds, with the object's own
+  `jobs.imagePullSecrets` from its namespace. If that read fails (the registry
+  is down or slow, or the credentials come only from cluster defaults), the
+  object is admitted and the failure is remembered for a minute; the
+  controller checks the merged variables before the Job. A required variable is not
   reported at admission, because `variablesFrom` may supply it. An update
   that changes neither the image nor the variables is never rejected on
   this ground.
 - **In the controller**, for the merged variables, on every reconcile that
-  builds inputs, using the image's schema from a cache keyed by digest. A
-  tag is re-resolved after ten minutes.
+  builds inputs, using the image's schema from a cache keyed by digest. The
+  cache is per namespace for the reference it read (pull Secrets are
+  namespace-local), so a private image's schema is not shared across tenants.
+  A tag is re-resolved after ten minutes.
 - **On a `*Template`**, the controller resolves the template's variables
   and records the result in the
-  [`VariablesValid`](../reference/conditions.md#variablesvalid) condition,
-  so a ClusterClass author sees the error as soon as the template is
-  created, not when the first machine fails.
+  [`VariablesValid`](../reference/conditions.md#variablesvalid) condition on
+  every reconcile, against the cached schema. It also watches the labeled
+  ConfigMaps and Secrets named in `variablesFrom`, so fixing a source clears
+  `VariablesValid=False` (and breaking one sets it) without waiting for a
+  resync. A ClusterClass author sees the error as soon as the template is
+  created, not when the first machine fails, and `False` is not final: it
+  clears once the variables or the source are fixed.
 
 Values from a `variablesFrom` source with format `String` are always JSON
 strings, which Terraform converts, so they are checked leniently: an

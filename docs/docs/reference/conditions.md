@@ -418,7 +418,7 @@ labels. See [Templates](../user-guide/clusterclass.md).
 | `True` | `CapacityNotDeclared` | The image carries neither label. Fine unless a ClusterClass autoscaler needs the capacity. |
 | `True` | `CapacityResolved` | Both labels parsed. |
 | `False` | `CapacityLabelInvalid` | A label is present but invalid. Fix the label in the image; see the [image contract](../module-author/image-contract.md). |
-| `False` | `ImageInspectFailed` | The registry fetch or authentication failed. Fix the image reference or the credentials. The controller also emits a `Warning` event. |
+| `False` | `ImageInspectFailed` | The registry fetch or authentication failed, the registry is refused by the image-inspection egress policy (a non-public address, or a host outside `--image-inspect-allowed-registries`), or the image config exceeds 1 MiB. Fix the image reference or the credentials, or the manager's flags. The controller also emits a `Warning` event. |
 
 ## VariablesValid
 
