@@ -52,6 +52,13 @@ compatibility guarantee (see [`README.md`](README.md#versioning)
   then `spec.defaults`, then the cluster's own field, then the built-in
   default ([the inheritance rule](../../../concepts/kinds.md#the-inheritance-rule)).
   Machines and pools watch their `TerraformCluster`.
+- Machines and pools inherit the `TerraformCluster`'s own `spec.jobs` and
+  `spec.drift` (interval and, for pools, action), field by field, after
+  `spec.defaults.jobs` and `spec.defaults.drift`; the RBAC sweep follows
+  the same chain for the runner ServiceAccount.
+- A deleting machine or pool without its own `spec.deletionPolicy` whose
+  `TerraformCluster` cannot be found holds with `Deleting`
+  `True`/`DeletionPolicyUnresolved` instead of assuming `Destroy`.
 
 - Machinepool role, including native autoscaling (additive
   within v1alpha1; `machinepool.md`, `README.md` "Roles and CAPI

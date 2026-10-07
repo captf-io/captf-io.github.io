@@ -156,13 +156,16 @@ cloud credentials — see [The security model](../concepts/security-model.md).
 ## Inheriting from a cluster's defaults
 
 A `TerraformMachine`'s or `TerraformMachinePool`'s `spec.jobs` is merged
-field by field with its `TerraformCluster`'s `spec.defaults.jobs`: a field
-the machine or pool sets wins, an unset one falls back to the cluster's
-default, and a field neither sets gets the built-in default above. Two
+field by field with its `TerraformCluster`'s `spec.defaults.jobs`, and
+those with the `TerraformCluster`'s own `spec.jobs`: a field the machine
+or pool sets wins, an unset one falls back to the cluster's default, then
+to the cluster's own policy, and a field none sets gets the built-in
+default above. So a cluster's own `spec.jobs` reaches its machines and
+pools too, unless `spec.defaults.jobs` or the object overrides it. Two
 fields merge instead of falling back as a whole:
 
 - `env` is merged by name — the machine's or pool's entries first, then
-  any of the cluster default's entries whose name they do not already use.
+  any of the inherited entries whose name they do not already use.
 - `imagePullSecrets` is the union of both lists, without duplicates, the
   machine's or pool's first.
 
@@ -174,8 +177,8 @@ individual keys inside it. See
 for how this fits the rest of `spec.defaults`.
 
 Defaults are resolved at reconcile time and never persisted, so raising a
-cluster's `spec.defaults.jobs` reaches every existing machine and pool on
-their next reconcile.
+cluster's `spec.defaults.jobs` or `spec.jobs` reaches every existing
+machine and pool at once: they watch their `TerraformCluster`.
 
 ## Confirm it worked
 

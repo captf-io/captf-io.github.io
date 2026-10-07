@@ -102,11 +102,12 @@ spec:
 
 1. Falls back to the `TerraformCluster`'s `spec.defaults.identityRef`, then
    its `spec.identityRef`, when unset.
-2. Merged field by field over the cluster's `spec.defaults.jobs`.
+2. Merged field by field over the cluster's `spec.defaults.jobs`, then the
+   cluster's own `spec.jobs`.
 3. The inline value wins over `variablesFrom` on the same key. The names
    `captf_*` and the role's contract inputs are reserved.
-4. Both sub-fields fall back to the cluster's `spec.defaults.drift`. A pool's
-   drift cannot be turned off.
+4. Both sub-fields fall back to the cluster's `spec.defaults.drift`, then
+   the cluster's own `spec.drift`. A pool's drift cannot be turned off.
 5. How often CAPTF refreshes the group's membership between applies.
 6. Set by the controller from the module's `provider_id` output. You do not
    write it.
@@ -127,10 +128,10 @@ The fields embedded from the shared workspace spec are documented in depth on
 | --- | --- | --- |
 | `spec.source` | object | The machinepool module image and pull policy. See [Source](common-fields.md#source). **Required.** **Mutable.** Never inherited from the cluster. |
 | `spec.identityRef` | object | The `TerraformClusterIdentity` whose credentials the pool's Jobs use. See [Identity reference](common-fields.md#identity-reference). **Mutable.** **Default:** the owning `TerraformCluster`'s `spec.defaults.identityRef`, else its `spec.identityRef`. |
-| `spec.jobs` | object | Tuning of the Jobs that run the module. See [Jobs](common-fields.md#jobs). **Mutable.** **Default:** merged field by field over the cluster's `spec.defaults.jobs`, then the built-in per-field defaults. |
+| `spec.jobs` | object | Tuning of the Jobs that run the module. See [Jobs](common-fields.md#jobs). **Mutable.** **Default:** merged field by field over the cluster's `spec.defaults.jobs`, then the cluster's own `spec.jobs`, then the built-in per-field defaults. |
 | `spec.variables` | object | Inline module variables, a JSON object. See [Variables](common-fields.md#variables). **Mutable.** A change re-applies the pool. Wins over `spec.variablesFrom`. |
 | `spec.variablesFrom` | list | ConfigMaps and Secrets that supply module variables. See [Variable sources](common-fields.md#variable-sources). **Mutable.** |
-| `spec.deletionPolicy` | string | `Destroy` or `Retain`: whether deleting the pool destroys its group or keeps it, with its state, for a later adoption. **Default:** the cluster's `spec.defaults.deletionPolicy`, else the `TerraformCluster`'s `spec.deletionPolicy`, else `Destroy`. See [Deletion policy](common-fields.md#deletion-policy). **Mutable.** |
+| `spec.deletionPolicy` | string | `Destroy` or `Retain`: whether deleting the pool destroys its group or keeps it, with its state, for a later adoption. **Default:** the cluster's `spec.defaults.deletionPolicy`, else the `TerraformCluster`'s `spec.deletionPolicy`, else `Destroy`. When neither the pool sets one nor its `TerraformCluster` can be found, the deletion holds. See [Deletion policy](common-fields.md#deletion-policy). **Mutable.** |
 | `spec.adoptRetainedState` | boolean | Adopt the state an earlier `TerraformMachinePool` of this name retained. See [Deletion policy](common-fields.md#deletion-policy). **Mutable.** |
 | `spec.providerID` | string | The scaling group's provider ID. See [Provider IDs](#provider-ids). |
 | `spec.providerIDList` | list of strings | The provider IDs of every non-terminated member. See [Provider IDs](#provider-ids). |
@@ -153,13 +154,14 @@ field is immutable.
 ### Drift
 
 `spec.drift` is merged field by field over the cluster's
-`spec.defaults.drift`. A field you leave unset inherits the cluster's value.
+`spec.defaults.drift`, then the cluster's own `spec.drift`. A field you
+leave unset inherits the cluster's value.
 See [Drift](../../user-guide/drift.md) for the task guide and
 [Drift and Health](../../concepts/drift-and-health.md) for how a check runs.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `spec.drift.intervalSeconds` | integer | Seconds between drift checks. **Mutable.** **Default:** the cluster's `spec.defaults.drift.intervalSeconds` when positive, else the manager's `--drift-default-interval` (30 minutes; see [Manager Flags](../manager-flags.md)). **Range:** 1 or more. |
+| `spec.drift.intervalSeconds` | integer | Seconds between drift checks. **Mutable.** **Default:** the cluster's `spec.defaults.drift.intervalSeconds`, else its own `spec.drift.intervalSeconds`, when positive, else the manager's `--drift-default-interval` (30 minutes; see [Manager Flags](../manager-flags.md)). **Range:** 1 or more. |
 | `spec.drift.action` | string | What CAPTF does when a check finds changes. **Mutable.** **Default:** the cluster's `spec.defaults.drift.action`, else the `TerraformCluster`'s own `spec.drift.action`, else `Report`. **Allowed values:** `Report` records the difference in the `DriftDetected` condition only; `Remediate` applies the pool's current inputs to remove it. |
 
 A pool's drift cannot be disabled, so `0` is rejected for

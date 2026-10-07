@@ -134,8 +134,8 @@ to bind the `ServiceAccount` to the runner `ClusterRole`; it is never
 inferred. Fix: label the `ServiceAccount` (`kubectl label serviceaccount
 -n <ns> <name> captf.io/runner=true`), create it if it does not exist, or
 remove the override from `spec.jobs.serviceAccountName` (and the
-cluster's `spec.defaults.jobs.serviceAccountName`, if that is where it
-came from) to use the default `captf-runner` instead. See
+cluster's `spec.defaults.jobs.serviceAccountName` or own
+`spec.jobs.serviceAccountName`, if that is where it came from) to use the default `captf-runner` instead. See
 [Job tuning](../../user-guide/job-tuning.md) for
 `spec.jobs.serviceAccountName` and its default inheritance.
 

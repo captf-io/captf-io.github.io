@@ -178,17 +178,21 @@ infrastructure is a decision about one object.
 | Field | Own | `spec.defaults` | The cluster's own field | Built-in |
 | --- | --- | --- | --- | --- |
 | `identityRef` | yes | `identityRef` | `spec.identityRef` | none |
-| `jobs` | merged field by field, see [Tuning Jobs](../user-guide/job-tuning.md#inheriting-from-a-clusters-defaults) | `jobs` | none | the Job builder's |
-| `drift.intervalSeconds` | yes | `drift.intervalSeconds` | none | the manager's `--drift-default-interval` |
+| `jobs` | merged field by field, see [Tuning Jobs](../user-guide/job-tuning.md#inheriting-from-a-clusters-defaults) | `jobs` | `spec.jobs` | the Job builder's |
+| `drift.intervalSeconds` | yes | `drift.intervalSeconds` | `spec.drift.intervalSeconds` | the manager's `--drift-default-interval` |
 | `drift.action` (pools only) | yes | `drift.action` | `spec.drift.action` | `Report` |
 | `remediation` (machines only) | merged field by field | `remediation` | none | `annotateMachine: false`, threshold 3, interval 300 seconds |
 | `membershipRefreshIntervalSeconds` (pools only) | yes | `membershipRefreshIntervalSeconds` | none | 60 seconds |
 | `deletionPolicy` | yes | `deletionPolicy` | `spec.deletionPolicy` | `Destroy` |
 
 A machine's drift is always reported, never remediated, so it takes no
-`drift.action` from anywhere. When the `TerraformCluster` cannot be found
-(a machine whose `Machine` is gone, for example), only the object's own
-fields and the built-in defaults apply.
+`drift.action` from anywhere. A pool never takes an inherited
+`intervalSeconds` of 0 as disabled. When the `TerraformCluster` cannot be
+found (an ownerRef that does not resolve, for example), only the object's
+own fields and the built-in defaults apply, with one exception: an
+inherited `deletionPolicy` is never assumed. A deleting object that sets
+none then holds with `Deleting` `DeletionPolicyUnresolved` until you set
+`spec.deletionPolicy` on it.
 
 !!! note "The pool exception"
 

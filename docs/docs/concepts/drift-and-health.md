@@ -46,8 +46,8 @@ drift Job is retried under the reconciler's normal backoff; see
 general.
 
 A drift check runs on a schedule: `spec.drift.intervalSeconds`, inherited
-from the `TerraformCluster`'s `spec.defaults.drift` for a machine or pool
-that sets none, else the manager's `--drift-default-interval` (30
+from the `TerraformCluster`'s `spec.defaults.drift`, then its own
+`spec.drift`, for a machine or pool that sets none, else the manager's `--drift-default-interval` (30
 minutes by default; see [Manager flags](../reference/manager-flags.md)).
 The first check after provisioning is due one interval after the last
 successful apply, not immediately; each object's schedule is jittered

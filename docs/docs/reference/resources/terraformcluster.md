@@ -206,9 +206,9 @@ and [Manual approval](../../concepts/approvals/manual-approval.md).
 `spec.defaults` holds values the cluster's `TerraformMachine` and
 `TerraformMachinePool` objects inherit field by field: a value a machine
 or pool sets wins, an unset one comes from here, and where the
-`TerraformCluster` has a field of the same name (`identityRef`,
-`drift.action`, `deletionPolicy`) an unset default falls back to that
-field before the built-in default. The values never apply to the
+`TerraformCluster` has a field of the same name (`identityRef`, `jobs`,
+`drift`, `deletionPolicy`) an unset default falls back to that field,
+field by field, before the built-in default. The values never apply to the
 `TerraformCluster` itself. Module inputs (`source`, `variables`,
 `variablesFrom`) and `adoptRetainedState` are never inherited: every role
 names its own image. See [the inheritance
@@ -219,9 +219,9 @@ rule](../../concepts/kinds.md#the-inheritance-rule).
 | `spec.defaults` | object | Optional. **Mutable.** |
 | `spec.defaults.identityRef` | object | The identity of machines and pools that set no `identityRef`. **Default:** `spec.identityRef`. Same shape as [Identity reference](common-fields.md#identity-reference). |
 | `spec.defaults.identityRef.name` | string | The name of the `TerraformClusterIdentity`. |
-| `spec.defaults.jobs` | object | A Job policy merged field by field under each machine's or pool's own `jobs`. Same type as `spec.jobs`; see [Jobs](common-fields.md#jobs). It is validated like `spec.jobs`. |
-| `spec.defaults.drift` | object | A drift policy merged field by field under each machine's or pool's own `drift`. |
-| `spec.defaults.drift.intervalSeconds` | integer | **Default:** the manager's `--drift-default-interval`. **Range:** 0 or more. `0` disables a machine's drift checks but not a pool's, which then uses the manager default. |
+| `spec.defaults.jobs` | object | A Job policy merged field by field under each machine's or pool's own `jobs`, and over this cluster's own `spec.jobs`. Same type as `spec.jobs`; see [Jobs](common-fields.md#jobs). It is validated like `spec.jobs`. |
+| `spec.defaults.drift` | object | A drift policy merged field by field under each machine's or pool's own `drift`, and over this cluster's own `spec.drift`. |
+| `spec.defaults.drift.intervalSeconds` | integer | **Default:** `spec.drift.intervalSeconds`, else the manager's `--drift-default-interval`. **Range:** 0 or more. `0` disables a machine's drift checks but not a pool's, which then uses the manager default. |
 | `spec.defaults.drift.action` | string | The drift action of pools that set none. **Default:** `spec.drift.action`, else `Report`. **Allowed values:** `Report`, `Remediate`. Machines ignore it: a machine's drift is always reported. |
 | `spec.defaults.remediation` | object | A remediation policy merged field by field under each machine's own `remediation`. Pools have none. Same shape as a machine's [Remediation](terraformmachine.md#remediation). |
 | `spec.defaults.remediation.annotateMachine` | boolean | Whether machines that do not set it annotate their `Machine` for remediation. A machine's own `false` wins. |

@@ -412,6 +412,7 @@ can say what the destroy waits for. CAPTF sets it on the first visit.
 | Status | Reason | Meaning |
 | --- | --- | --- |
 | `True` | `Deleting` | The `deletionTimestamp` is set and no more specific reason applies. Wait for the destroy. If the object does not delete, follow [my object will not delete](../concepts/deletion/troubleshooting.md). |
+| `True` | `DeletionPolicyUnresolved` | A deleting `TerraformMachine` or `TerraformMachinePool` sets no `spec.deletionPolicy`, and the `TerraformCluster` it inherits one from cannot be found. An inherited policy is never guessed, so neither a destroy nor a Retain runs. Set `spec.deletionPolicy` on the object to proceed. See [Deletion policy](resources/common-fields.md#deletion-policy). |
 | `False` | `NotDeleting` | The `deletionTimestamp` is not set. |
 
 ## TerraformPlan

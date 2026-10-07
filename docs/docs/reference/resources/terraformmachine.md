@@ -103,7 +103,8 @@ spec:
 5. A Secret in this namespace labeled `captf.io/variables=true`. Inline
    `variables` win over it on the same key.
 6. Check for drift every 15 minutes. Without it, the cluster's
-   `spec.defaults.drift.intervalSeconds`, then the manager's
+   `spec.defaults.drift.intervalSeconds`, then the cluster's own
+   `spec.drift.intervalSeconds`, then the manager's
    `--drift-default-interval`, applies.
 7. Ask Cluster API to replace the Machine after 5 unhealthy samples. Needs a
    `MachineHealthCheck`; see [Remediation](#remediation).
@@ -125,12 +126,12 @@ The workspace fields below are shared with other kinds and documented on
 | `spec.providerID` | string | The instance's provider ID, set by the controller. See [Provider ID](#provider-id). **Optional.** **Immutable** once set. **Range:** 1 to 512 characters. |
 | `spec.source` | object | The machine-role module image and its pull policy ([Source](common-fields.md#source)). **Required.** **Immutable.** Never inherited from the cluster. |
 | `spec.identityRef` | object | The `TerraformClusterIdentity` whose credentials the Jobs use ([Identity reference](common-fields.md#identity-reference)). **Optional.** **Immutable.** **Default:** the owning `TerraformCluster`'s `spec.defaults.identityRef`, else its `spec.identityRef`. |
-| `spec.jobs` | object | Tuning of the Jobs that run the module ([Jobs](common-fields.md#jobs)). **Optional.** **Mutable.** **Default:** merged field by field over the `TerraformCluster`'s `spec.defaults.jobs`; fields neither sets take the built-in defaults. |
+| `spec.jobs` | object | Tuning of the Jobs that run the module ([Jobs](common-fields.md#jobs)). **Optional.** **Mutable.** **Default:** merged field by field over the `TerraformCluster`'s `spec.defaults.jobs`, then its own `spec.jobs`; fields none sets take the built-in defaults. |
 | `spec.variables` | object | Inline module variables, a JSON object ([Variables](common-fields.md#variables)). **Optional.** **Immutable.** |
 | `spec.variablesFrom` | list | ConfigMaps and Secrets that supply module variables ([Variable sources](common-fields.md#variable-sources)). **Optional.** **Immutable.** |
-| `spec.deletionPolicy` | string | `Destroy` or `Retain`: whether deleting the machine destroys its instance or keeps it, with its state, for a later adoption. **Default:** the cluster's `spec.defaults.deletionPolicy`, else the `TerraformCluster`'s `spec.deletionPolicy`, else `Destroy`. See [Deletion policy](common-fields.md#deletion-policy). **Optional.** **Mutable.** |
+| `spec.deletionPolicy` | string | `Destroy` or `Retain`: whether deleting the machine destroys its instance or keeps it, with its state, for a later adoption. **Default:** the cluster's `spec.defaults.deletionPolicy`, else the `TerraformCluster`'s `spec.deletionPolicy`, else `Destroy`. When neither the machine sets one nor its `TerraformCluster` can be found, the deletion holds. See [Deletion policy](common-fields.md#deletion-policy). **Optional.** **Mutable.** |
 | `spec.adoptRetainedState` | boolean | Adopt the state an earlier `TerraformMachine` of this name retained. See [Deletion policy](common-fields.md#deletion-policy). **Optional.** **Mutable.** |
-| `spec.drift` | object | How often drift is checked. See [Drift](#drift). **Optional.** **Mutable.** **Default:** merged over the `TerraformCluster`'s `spec.defaults.drift`. |
+| `spec.drift` | object | How often drift is checked. See [Drift](#drift). **Optional.** **Mutable.** **Default:** merged over the `TerraformCluster`'s `spec.defaults.drift`, then its own `spec.drift`. |
 | `spec.remediation` | object | How an unhealthy instance is signaled to Cluster API. See [Remediation](#remediation). **Optional.** **Mutable.** |
 
 ### Provider ID
@@ -169,7 +170,7 @@ health](../../concepts/drift-and-health.md).
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `spec.drift.intervalSeconds` | integer (int32) | Seconds between drift checks. **Optional.** **Mutable.** **Range:** 0 or more; 0 disables drift checks. **Default:** the `TerraformCluster`'s `spec.defaults.drift.intervalSeconds`, else the manager's `--drift-default-interval` (30 minutes), applied at reconcile. |
+| `spec.drift.intervalSeconds` | integer (int32) | Seconds between drift checks. **Optional.** **Mutable.** **Range:** 0 or more; 0 disables drift checks. **Default:** the `TerraformCluster`'s `spec.defaults.drift.intervalSeconds`, else its own `spec.drift.intervalSeconds`, else the manager's `--drift-default-interval` (30 minutes), applied at reconcile. |
 
 !!! note "Disabling drift also stops health sampling"
 

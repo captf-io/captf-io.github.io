@@ -33,8 +33,9 @@ unset, it uses the manager's `--drift-default-interval` flag (30 minutes
 by default; see [Manager Flags](../reference/manager-flags.md)).
 
 A `TerraformMachine` and a `TerraformMachinePool` inherit an interval from
-the owning `TerraformCluster`'s `spec.defaults.drift.intervalSeconds`
-when they set none of their own:
+the owning `TerraformCluster`'s `spec.defaults.drift.intervalSeconds`,
+else from its own `spec.drift.intervalSeconds`, when they set none of
+their own:
 
 === "TerraformCluster"
 

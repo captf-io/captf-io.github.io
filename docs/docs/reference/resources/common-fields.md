@@ -217,9 +217,10 @@ see the linked Kubernetes API reference for each.
 ### Inheritance
 
 A `TerraformMachine` or `TerraformMachinePool` merges its `spec.jobs` field
-by field over its cluster's `spec.defaults.jobs`. A field the object sets
-wins; an unset one comes from the defaults; a field neither sets gets the
-built-in default. Defaults are resolved at reconcile time and never
+by field over its cluster's `spec.defaults.jobs`, and those over the
+`TerraformCluster`'s own `spec.jobs`. A field the object sets wins; an
+unset one comes from the defaults, then from the cluster's own policy; a
+field none sets gets the built-in default. Defaults are resolved at reconcile time and never
 persisted, so raising a cluster's `spec.defaults.jobs` reaches existing
 machines and pools on their next reconcile, as does a provider upgrade that
 changes a built-in default.
@@ -375,9 +376,12 @@ Adopt](../../concepts/deletion/retain.md) for the whole story.
 `spec.defaults.deletionPolicy`, else from the `TerraformCluster`'s own
 `spec.deletionPolicy`, else `Destroy`. A `TerraformCluster` uses only its
 own value. Because the cluster's fields are mutable, setting `Retain` there
-reaches machines whose template is immutable without a rollout. When the
-`TerraformCluster` cannot be found, a machine or pool uses only its own
-value.
+reaches machines whose template is immutable without a rollout. An
+inherited policy is never guessed: when a deleting machine or pool sets
+none and its `TerraformCluster` cannot be found, neither a destroy nor a
+Retain runs, and `Deleting` is `True` with reason
+`DeletionPolicyUnresolved` until you set `spec.deletionPolicy` on the
+object.
 
 **While deleting.** Setting `Retain` on an object that is already being
 deleted releases it on the next reconcile, whatever holds it: a lost or

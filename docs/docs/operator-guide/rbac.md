@@ -195,7 +195,8 @@ A namespace that still holds objects keeps its runner ServiceAccount and
 RoleBinding, but the RoleBinding's subjects are pruned to the
 ServiceAccounts still in use: a `Terraform*` object's own
 `spec.jobs.serviceAccountName`, else, for a machine or pool, its cluster's
-`spec.defaults.jobs.serviceAccountName`, else `captf-runner`. This is how
+`spec.defaults.jobs.serviceAccountName`, else the cluster's own
+`spec.jobs.serviceAccountName`, else `captf-runner`. This is how
 switching `spec.jobs.serviceAccountName` from one opted-in ServiceAccount to
 another eventually drops the old one's Secret access, rather than leaving it
 bound until the whole namespace empties out. When a machine or pool's

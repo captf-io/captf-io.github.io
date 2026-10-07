@@ -85,6 +85,7 @@ the destroy waits for.
 | Status | Reason | Meaning | Likely cause | What to do | See |
 | --- | --- | --- | --- | --- | --- |
 | `True` | `Deleting` | The object has a deletion timestamp. | A delete, usually through Cluster API. The message may read `The destroy Job waits for its credentials`, or `Deletion waits until the object is unpaused` when the object or its Cluster is paused: a paused object keeps its finalizer, starts no Job and never runs a destroy, so that `clusterctl move` can delete source objects safely. | Wait for the destroy. If the message says unpaused, unpause. Otherwise follow the flowchart. | [My object will not delete](../../concepts/deletion/troubleshooting.md) |
+| `True` | `DeletionPolicyUnresolved` | A deleting machine or pool sets no `spec.deletionPolicy`, and the `TerraformCluster` it inherits one from cannot be found, so neither a destroy nor a Retain runs. | An ownerRef that does not resolve to a Machine of a Cluster with a `TerraformCluster`, or a `TerraformCluster` deleted before its machines. | Set `spec.deletionPolicy` (`Destroy` or `Retain`) on the object. | [Deletion policy](../../reference/resources/common-fields.md#deletion-policy) |
 | `False` | `NotDeleting` | The object has no deletion timestamp. | The normal state. | Nothing. | [Deletion and Teardown](../../concepts/deletion/README.md) |
 
 ## DependenciesReady
