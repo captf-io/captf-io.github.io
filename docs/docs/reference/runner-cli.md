@@ -139,7 +139,7 @@ not.
 | `--inputs-hash` | `string` | | The hash of the inputs the Job renders. An approval of a destructive plan must name it. |
 | `--allow-deletes-hash` | `string` | | The hash approved for a destructive plan. |
 | `--expect-plan` | `string` | | For `apply`: the approved plan hash. Stops with error kind `plan-changed` unless the plan's hash matches. |
-| `--plan-key-file` | `string` | `/captf/plan-key/key` | For `plan` and an approved `apply`: the file with the key of the plan fingerprint. Both fail when it cannot be read. |
+| `--plan-key-file` | `string` | `/captf/plan-key/key` | For `plan`, a guarded `apply` and an approved `apply`: the file with the key of the plan fingerprint. All three fail when it cannot be read. |
 
 See [The Destructive-Plan Guard](../concepts/approvals/destructive-guard.md)
 and [Manual Plan Approval](../concepts/approvals/manual-approval.md) for
@@ -206,10 +206,10 @@ parses it, so the field names are fixed. `version` is `1`.
 | `image` | `ref`, the `--image` value as given (the resolved digest comes from the Pod status), and `providersMirror`, whether the image ships a provider mirror. |
 | `runtime` | `command`, the runtime invocation, and `version`, the runtime version. |
 | `steps` | One entry per command that ran: `name`, `exit` (the command's own exit code; a step killed by a signal or never started is recorded as `1`) and `seconds`. |
-| `drift` | For a drift check: `detected`, the `add`, `change` and `destroy` counts, and `resources`, a list of addresses. `null` for other operations. |
+| `drift` | For a drift check: `detected`, the `create`, `update`, `replace` and `delete` counts (a replacement counts only in `replace`), and `resources`, a list of addresses. `null` for other operations. |
 | `error` | `null` on success, otherwise `kind`, `step` (the failing step, or `null`) and `tail`. |
 | `changes` | Optional. The `add`, `change`, `destroy` and, when present, `import` counts from the runtime's final summary line of an apply or destroy. Absent when the step printed none. |
-| `plan` | Optional. The plan summary of a plan Job, or of an apply whose plan changed. |
+| `plan` | Optional. The plan summary of a plan Job, of a guarded apply that blocked, or of an apply whose plan changed: `hash`, the `create`, `update`, `replace`, `delete`, `import`, `move`, `forget` and `outputChanges` counts, and `resources`. |
 
 `error.tail` is a curated summary, not raw output, and is capped at 512
 bytes. For `validate` it comes from the step's JSON diagnostics; for every
@@ -232,7 +232,7 @@ bounded `tail` that summarizes the failure. The `kind` is one of:
 | `image-layout` | The image does not follow the [image contract](../module-author/image-contract.md): the module or runtime is not where the contract puts it. Fix the image. |
 | `step` | A runtime step (`init`, `plan`, `apply` and so on) failed, or the runner's own setup failed, such as preparing the work directory or assembling a restore. A bad flag also reports this kind, with step `flags`. |
 | `interrupted` | The Job was canceled while a step ran, for example by a drain, an eviction or a deletion. It does not count toward retry backoff. |
-| `blocked` | A guarded `apply` stopped before a plan that deletes or replaces resources, because no approval names the inputs hash. It changed nothing, and the manager does not retry it until the inputs or the approval change. |
+| `blocked` | A guarded `apply` stopped before a plan that deletes or replaces resources, because no approval names the inputs hash. It changed nothing, carries the plan it stopped at, and the manager does not retry it until the inputs or the approval change. |
 | `plan-changed` | An `apply` approved for one plan (`--expect-plan`) found a different plan. It changed nothing, carries the new plan and waits for it to be approved. |
 
 !!! note "Results are small by design"

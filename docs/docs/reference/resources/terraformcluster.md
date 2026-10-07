@@ -256,9 +256,13 @@ list, and `clusterctl move` does not carry status over.
 | `status.plan.inputsHash` | string | **Required** when a plan is set. The hash of the inputs the plan was made for. **Range:** 1 to 128 characters. |
 | `status.plan.job` | string | **Required** when a plan is set. The Job that made the plan: a plan Job, or an approved apply that found the plan changed. **Range:** 1 to 63 characters. |
 | `status.plan.planHash` | string | **Required** when a plan is set. A fingerprint of the plan's changes, and the value that approves it. **Range:** 1 to 128 characters. |
-| `status.plan.add` | integer | Resources the plan creates. **Range:** 0 or more. |
-| `status.plan.change` | integer | Resources the plan updates in place. **Range:** 0 or more. |
-| `status.plan.destroy` | integer | Resources the plan destroys, counting replacements. **Range:** 0 or more. |
+| `status.plan.create` | integer | Resources the plan creates. **Range:** 0 or more. |
+| `status.plan.update` | integer | Resources the plan updates in place. **Range:** 0 or more. |
+| `status.plan.replace` | integer | Resources the plan replaces: deletes and creates again. A replacement counts here only. **Range:** 0 or more. |
+| `status.plan.delete` | integer | Resources the plan deletes, not counting replacements. **Range:** 0 or more. |
+| `status.plan.import` | integer | Resources the plan imports into the state. **Range:** 0 or more. |
+| `status.plan.move` | integer | Resources a `moved` block moves to a new address. **Range:** 0 or more. |
+| `status.plan.forget` | integer | Resources the plan removes from the state without destroying them. **Range:** 0 or more. |
 | `status.plan.outputChanges` | integer | Root module outputs the plan changes. An output change alone needs approval, because cluster exports feed every machine and pool module. **Range:** 0 or more. |
 | `status.plan.resources` | array of strings | `<address> (<labels>)` of each changed resource, sorted by address, at most 50, each 1 to 600 characters. The labels are the action (`create`, `update`, `delete`, `replace`, `read` or `forget`), or `import` or `move` for an otherwise unchanged resource, comma-separated: `aws_instance.a (import)`. Values are never shown. |
 | `status.plan.truncated` | boolean | `true` when `status.plan.resources` lists fewer resources than the plan changes. |

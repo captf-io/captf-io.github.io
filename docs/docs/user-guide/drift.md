@@ -147,7 +147,7 @@ kubectl get terraformcluster <name> -n <namespace> \
 ```
 
 Its message names the drift Job and, when changes were found, the counts
-of resources to add, change and destroy. `status.lastRun.drift` carries
+of resources to create, update, replace and delete. `status.lastRun.drift` carries
 the same counts as separate fields plus up to 20 affected resource
 addresses, and `status.lastDriftCheck` is when the last successful check
 completed. `DriftJobSucceeded` separately reports whether the check (or

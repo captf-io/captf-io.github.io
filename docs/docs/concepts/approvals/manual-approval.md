@@ -87,7 +87,7 @@ sequenceDiagram
 | `inputsHash` | The inputs hash the plan was made for. A plan is bound to it: new inputs make a new plan |
 | `job` | The plan Job |
 | `planHash` | The `p2:` hash to approve (see [What the plan hash binds](fingerprint.md)) |
-| `add`, `change`, `destroy` | Counts of planned resource changes; a replacement counts as both an add and a destroy |
+| `create`, `update`, `replace`, `delete`, `import`, `move`, `forget` | Counts of planned resource changes; a replacement counts only in `replace` |
 | `outputChanges` | How many outputs change |
 | `resources` | Up to 50 entries of `<address> (<labels>)`, sorted by address, never a value |
 | `truncated` | Set when more than 50 resources changed |
@@ -96,8 +96,8 @@ sequenceDiagram
 The labels in a `resources` entry are the action (`create`, `update`,
 `delete`, `replace`, `read` or `forget`), followed by `import` and then
 `move` where they apply: `aws_lb.x (import)`, `aws_instance.b (update,
-move)`. Imports and moves are not counted in `add`, `change` or `destroy`,
-so an entry is the way to see them.
+move)`. Imports, moves and forgets are not counted in `create`, `update`, `replace`
+or `delete`.
 
 !!! note "Plan values never reach status, events or logs"
 

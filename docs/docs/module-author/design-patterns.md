@@ -159,7 +159,7 @@ and the [`autoscaling` input](contract/v1alpha1/machinepool.md#autoscaling-input
 ## `import` and `moved` blocks
 
 CAPTF does not block `import` and `moved` blocks. The runner reads a plan's
-imports and moves, counts them separately from adds, changes and destroys,
+imports and moves, counts them separately from creates, updates, replaces and deletes,
 shows them as `address (import)` or `address (update, move)`, and folds them
 into the plan fingerprint. What that means in practice:
 

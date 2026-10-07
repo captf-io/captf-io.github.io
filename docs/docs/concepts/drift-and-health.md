@@ -32,7 +32,7 @@ Two kinds of Job read an object's infrastructure after it is provisioned:
   reality and produces a fresh health reading, but plans nothing and
   finds no drift.
 - A **drift Job** does the same refresh, then plans with `-refresh=false`:
-  a plan with no changes means no drift, and any add, change or destroy
+  a plan with no changes means no drift, and any create, update, replace or delete
   in the plan is drift. A cluster or pool plans against its freshly
   rendered current inputs (falling back to the durable inputs Secret only
   when the current ones can't be built); a machine, being immutable,

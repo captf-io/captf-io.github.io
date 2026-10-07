@@ -82,7 +82,7 @@ Label values:
 | `result` | `succeeded`, `failed`, `deadline`, `interrupted` (stopped from outside: a drain, eviction or deletion), `blocked` (a guarded apply stopped before a plan that deletes or replaces resources, awaiting approval), `plan_changed` (an approved apply planned other changes and stopped). |
 | `step` | `init`, `force-unlock`, `validate`, `plan`, `show-json`, `apply`, `apply-refresh-only`, `destroy`, `state-push`, `state-list`, `prepare`; anything else is `other`. On `captf_job_errors_total`, `none` when no step failed. |
 | `error_kind` | `step`, `image-layout`, `interrupted`, `blocked`, `plan-changed`; `deadline` or `unknown` when the Job left no result. |
-| `action` | `add`, `change`, `destroy`, `import`. |
+| `action` | `create`, `update`, `delete`, `import` on `captf_resources_changed_total`; `create`, `update`, `replace`, `delete` on `captf_drift_resources_total`. |
 
 Notes on how each series is built:
 
@@ -115,7 +115,7 @@ topk(5, histogram_quantile(0.9, sum by (le, kind, op, step) (
   rate(captf_job_step_duration_seconds_bucket[6h]))))
 
 # Resources destroyed by applies in the last 24 hours
-sum by (kind) (increase(captf_resources_changed_total{op="apply",action="destroy"}[24h]))
+sum by (kind) (increase(captf_resources_changed_total{op="apply",action="delete"}[24h]))
 ```
 
 ## Reconcile decisions
@@ -180,7 +180,7 @@ condition value: `1` for True, `0` for False and `-1` for Unknown.
 | `captf_ready` | gauge | `kind`, `namespace`, `name` | 1, 0 or -1 | The `Ready` condition. |
 | `captf_infrastructure_healthy` | gauge | `kind`, `namespace`, `name` | 1, 0 or -1 | The `InfrastructureHealthy` condition. |
 | `captf_drift_detected` | gauge | `kind`, `namespace`, `name` | 1 or 0 | 1 while `DriftDetected` is True, else 0. |
-| `captf_drift_resources_total` | counter | `kind`, `action` | resources | Resources a drift Job that found drift would `add`, `change` or `destroy`. |
+| `captf_drift_resources_total` | counter | `kind`, `action` | resources | Resources a drift Job that found drift would `create`, `update`, `replace` or `delete`. |
 | `captf_last_success_timestamp_seconds` | gauge | `kind`, `namespace`, `name`, `op` | Unix seconds | When the newest successful Job of an op finished. |
 | `captf_unhealthy_samples` | gauge | `namespace`, `name` | samples | A `TerraformMachine`'s consecutive unhealthy health samples (`status.unhealthySamples`). |
 | `captf_remediation_requests_total` | counter | `action` | requests | `cluster.x-k8s.io/remediate-machine` annotations set on (`requested`) or removed from (`withdrawn`) a `Machine`. |

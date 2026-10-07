@@ -440,9 +440,10 @@ succeeded or failed.
 | `status.lastRun.error.step` | `string` | The step that failed, for kind `step`. **Range:** 1 to 64 characters. |
 | `status.lastRun.error.summary` | `string` | The runner's short description of the failure. **Range:** 1 to 512 bytes. It is not raw stderr: anyone who can get the object can read status, so the full output stays in the Job's logs. |
 | `status.lastRun.drift` | `object` | Set when a drift run found changes. |
-| `status.lastRun.drift.add` | `integer` | Resources the plan would create. **Range:** 0 or more. |
-| `status.lastRun.drift.change` | `integer` | Resources the plan would update in place. **Range:** 0 or more. |
-| `status.lastRun.drift.destroy` | `integer` | Resources the plan would destroy, counting replacements. **Range:** 0 or more. |
+| `status.lastRun.drift.create` | `integer` | Resources the plan would create. **Range:** 0 or more. |
+| `status.lastRun.drift.update` | `integer` | Resources the plan would update in place. **Range:** 0 or more. |
+| `status.lastRun.drift.replace` | `integer` | Resources the plan would replace: delete and create again. A replacement counts here only. **Range:** 0 or more. |
+| `status.lastRun.drift.delete` | `integer` | Resources the plan would delete, not counting replacements. **Range:** 0 or more. |
 | `status.lastRun.drift.resources` | `[]string` | Addresses of the drifted resources. **Range:** 1 to 20 items of 1 to 512 characters. |
 
 ```yaml
@@ -458,9 +459,10 @@ status:
         exitCode: 2
         durationMilliseconds: 31877
     drift:
-      add: 0
-      change: 1
-      destroy: 0
+      create: 0
+      update: 1
+      replace: 0
+      delete: 0
       resources:
         - aws_security_group.nodes
 ```
