@@ -32,7 +32,7 @@ guide.
 | Created by | You, or Cluster API from a [`TerraformMachinePoolTemplate`](terraformmachinepooltemplate.md) through a ClusterClass |
 | Referenced by | `MachinePool.spec.template.spec.infrastructureRef` |
 | Finalizer | `terraformmachinepool.infrastructure.cluster.x-k8s.io` |
-| Short names | None |
+| Short names | `tfmp` |
 | Categories | `cluster-api` |
 | Status subresource | Yes |
 
@@ -335,7 +335,7 @@ module reports a health state other than `pending`. That does not require
 
 ## Printer columns
 
-`kubectl get terraformmachinepools` shows:
+`kubectl get terraformmachinepools` (or `kubectl get tfmp`) shows:
 
 | Column | Source |
 | --- | --- |
@@ -351,7 +351,8 @@ module reports a health state other than `pending`. That does not require
 The CRD schema and the validating webhook
 (`validation.terraformmachinepool.infrastructure.cluster.x-k8s.io`, on create
 and update, `failurePolicy: Fail`) enforce these rules. The webhook returns one
-`Invalid` error that lists every violation. It sets no defaults: all defaults
+`Invalid` error that lists every violation. A pool is fully mutable by design,
+so it has no CEL immutability rules. It sets no defaults: all defaults
 come from the controller at reconcile.
 
 - **Required.** `spec` must have at least one field, and `spec.source.image`

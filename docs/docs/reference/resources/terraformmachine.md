@@ -30,7 +30,7 @@ addresses, failure domain and health from the module's outputs.
 | Created by | Cluster API, from a [`TerraformMachineTemplate`](terraformmachinetemplate.md) |
 | Referenced by | `Machine.spec.infrastructureRef` |
 | Finalizer | `terraformmachine.infrastructure.cluster.x-k8s.io` |
-| Short names | none |
+| Short names | `tfm` |
 | Categories | `cluster-api` |
 | Status subresource | yes |
 
@@ -304,7 +304,7 @@ page covers what each type means for a machine.
 
 ## Printer columns
 
-`kubectl get terraformmachines` shows these columns. `-o wide` adds `Image` and `InputsApplied`.
+`kubectl get terraformmachines` (or `kubectl get tfm`) shows these columns. `-o wide` adds `Image` and `InputsApplied`.
 
 | Column | Source | Description |
 | --- | --- | --- |
@@ -319,8 +319,14 @@ page covers what each type means for a machine.
 
 ## Validation
 
-The admission webhook enforces these rules on create, update and delete. A
-rejected request lists every violation it found. The CRD schema declares no
+The admission webhook enforces these rules on create, update and delete (the
+delete check fails open, see [Webhook Unavailable](../../operator-guide/runbooks/webhook-unavailable.md)). A
+rejected request lists every violation it found. CRD CEL rules also enforce
+the immutability of `spec.source`, `spec.identityRef`, `spec.variables` and
+`spec.variablesFrom` and the set-once `spec.providerID`, so those hold without
+the webhook; a violation is refused with `422 Invalid`. The CEL rules sit on
+the kind, not the spec type, because `TerraformMachineTemplate` shares the spec
+type and its immutability stays webhook-only. The CRD schema declares no
 defaults; defaults come from the controller, the cluster and the manager flags
 as noted in the field tables.
 

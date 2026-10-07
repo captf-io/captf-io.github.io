@@ -71,9 +71,11 @@ provide.
   cache-lag checks make the resumed work idempotent. The webhooks run on
   every replica, so writes keep working while no manager leads. See
   [Leader election and failover](../concepts/jobs/leader-election.md).
-- [ ] **The webhook is on the write path.** All webhooks fail closed. If every
-  manager pod is down, creating or updating a `Terraform*` object fails,
-  including Cluster API's own writes. See [Webhook
+- [ ] **The webhook is on the write path.** Create and update webhooks fail
+  closed, with a 10 second timeout. If every manager pod is down, creating or
+  updating a `Terraform*` object fails, including Cluster API's own writes.
+  The `DELETE` guards of `TerraformMachine` and `TerraformClusterIdentity` fail
+  open, so deletes and namespace removal still work. See [Webhook
   Unavailable](runbooks/webhook-unavailable.md).
 
 ## Sizing

@@ -79,14 +79,31 @@ namespaced install is not supported; the manager needs the ClusterRole as
 shipped. See [Multi-tenancy](multi-tenancy.md) for what this means when you
 share a management cluster.
 
+### The user-facing ClusterRoles
+
+The install also ships three ClusterRoles for the people who use CAPTF, so you
+do not hand-write verbs:
+
+| ClusterRole | Grants | Aggregated into |
+| --- | --- | --- |
+| `captf-viewer-role` | `get`, `list`, `watch` on every CAPTF kind and their `/status` | `view`, `edit`, `admin` |
+| `captf-editor-role` | `create`, `update`, `patch`, `delete` on the six workload kinds (clusters, machines, pools and their templates). Nothing on `terraformplans` or `terraformclusteridentities` | `edit`, `admin` |
+| `captf-plan-approver-role` | `get`, `list`, `watch`, `update`, `patch` on `terraformplans` | Nothing: bind it with a `RoleBinding` in the plan's namespace |
+
+Write access to `TerraformClusterIdentity` is deliberately in no aggregated
+role, and neither is plan approval: having `edit` does not let anyone approve a
+plan. The editor role withholds `create` on plans for the same reason (see
+below).
+
 ### Who approves a plan
 
 The manager creates and updates `TerraformPlan` objects; people only approve
 them. Approvers need `get`, `list`, `watch` and `patch` on `terraformplans`
 and nothing else on the targets. `create` on `terraformplans` equals approve,
-because the webhook accepts a plan created already approved (`clusterctl move`
-creates plans again as the mover), so grant it only to the manager and the
-identity that runs `clusterctl move`. See [Who can
+because the webhook accepts a plan created already approved with `approvedBy`
+set to the creator (`clusterctl move` creates plans again as the mover), so
+grant it only to the manager and the identity that runs `clusterctl move`.
+Bind `captf-plan-approver-role` in the plan's namespace for approvers. See [Who can
 approve](../concepts/approvals/operating.md#who-can-approve) for example Roles.
 
 ## The leader-election Role

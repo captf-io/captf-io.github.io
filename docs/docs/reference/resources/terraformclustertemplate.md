@@ -27,7 +27,7 @@ its own `TerraformCluster`. Without a ClusterClass you create the
 | Module role | `cluster`, through the `TerraformCluster` it creates |
 | Referenced by | `ClusterClass.spec.infrastructure.templateRef` |
 | Finalizer | None |
-| Short names | None |
+| Short names | `tfct` |
 | Categories | `cluster-api` |
 | Status subresource | No |
 
@@ -86,7 +86,7 @@ and the controller applies them to the created object at reconcile.
 
 ## Printer columns
 
-`kubectl get terraformclustertemplates` shows:
+`kubectl get terraformclustertemplates` (or `kubectl get tfct`) shows:
 
 | Column | Source |
 | --- | --- |

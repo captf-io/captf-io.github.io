@@ -28,7 +28,7 @@ kinds.
 | Module role | `cluster` (see [Cluster role](../../module-author/contract/v1alpha1/cluster.md)) |
 | Referenced by | `Cluster.spec.infrastructureRef` |
 | Finalizer | `terraformcluster.infrastructure.cluster.x-k8s.io` |
-| Short names | None |
+| Short names | `tfc` |
 | Categories | `cluster-api` |
 | Status subresource | Yes |
 
@@ -364,7 +364,7 @@ After provisioning, `Ready` summarizes only `InfrastructureHealthy` and
 
 ## Printer columns
 
-`kubectl get terraformclusters` shows:
+`kubectl get terraformclusters` (or `kubectl get tfc`) shows:
 
 | Column | Source | Notes |
 | --- | --- | --- |
@@ -380,7 +380,11 @@ After provisioning, `Ready` summarizes only `InfrastructureHealthy` and
 
 The validating webhook (`validation.terraformcluster.infrastructure.cluster.x-k8s.io`)
 and the CRD schema enforce these rules on create and update. The webhook
-reports every violation it finds at once.
+reports every violation it finds at once. CRD CEL rules also enforce, without
+the webhook, that `spec.identityRef` is set (the CRD requires it on every
+update, including a finalizer removal) and that `spec.controlPlaneEndpoint` is
+immutable once it has a host and a port; a violation is refused with
+`422 Invalid`.
 
 **Required fields**
 

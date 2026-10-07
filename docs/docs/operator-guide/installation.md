@@ -119,6 +119,12 @@ namespace.
   first use, from the static `ClusterRole` `captf-runner`. See
   [RBAC](rbac.md) for what each role grants and for the per-namespace
   runner setup.
+- **User-facing ClusterRoles**: `captf-viewer-role` (read every CAPTF kind,
+  aggregated into the built-in `view`, `edit` and `admin`), `captf-editor-role`
+  (write the six workload kinds, aggregated into `edit` and `admin`) and
+  `captf-plan-approver-role` (approve plans, aggregated nowhere: bind it with a
+  `RoleBinding` in the plan's namespace). No aggregated role grants write
+  access to `TerraformClusterIdentity` or `TerraformPlan`.
 
 The manager pod tolerates the `node-role.kubernetes.io/control-plane:NoSchedule`
 taint, and has liveness (`/healthz`) and readiness (`/readyz`) probes on the
@@ -216,8 +222,11 @@ The rollout command returns once the manager pod is ready. The CRD list
 should show all eight kinds. The webhook configuration and the certificate
 must both exist and the certificate must report `Ready=True`, cert-manager
 was able to issue the webhook's serving certificate: without it, webhook
-calls from the API server fail closed (`failurePolicy: Fail`) and every
-`Terraform*` create or update is rejected.
+calls from the API server fail closed (`failurePolicy: Fail` on create and
+update) and every `Terraform*` create or update is rejected. Every webhook
+entry has `timeoutSeconds: 10`. The deletes of `TerraformMachine` and
+`TerraformClusterIdentity` are separate entries (`delete.validation.<kind>.infrastructure.cluster.x-k8s.io`)
+with `failurePolicy: Ignore`.
 
 If the manager pod sits in `ContainerCreating`, check the last command
 first: the pod mounts that Secret, and it does not exist until cert-manager
@@ -237,6 +246,17 @@ default is `monitoring/prometheus-k8s`).
 `clusterctl init` itself prints the components it installed; `clusterctl
 describe cluster` (once you have created one) reports whether CAPTF's
 objects are ready.
+
+## Uninstalling
+
+Delete the workloads first (the `Cluster` objects, and with them every
+`Terraform*` object, so each destroy Job can run), then the provider with
+`clusterctl delete`. Deleting the provider first leaves objects with finalizers
+and nothing to remove them. The delete guards on `TerraformMachine` and
+`TerraformClusterIdentity` do not block when the webhook is down (they fail
+open), so a namespace or the provider can always be removed; if you do remove
+the provider with objects still present, retain or clean up their state by
+hand as in [Stuck destroy](runbooks/stuck-destroy.md).
 
 !!! related "See also"
 

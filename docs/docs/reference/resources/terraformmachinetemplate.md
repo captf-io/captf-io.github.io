@@ -34,7 +34,7 @@ without a running node to measure.
 | Created by | You (or a cluster template or ClusterClass you apply) |
 | Referenced by | MachineDeployment, MachineSet, KubeadmControlPlane and ClusterClass `infrastructureRef` |
 | Finalizer | none |
-| Short names | none |
+| Short names | `tfmt` |
 | Categories | `cluster-api` |
 | Status subresource | yes |
 
@@ -238,7 +238,7 @@ an `ImageInspectFailed` Warning event on the first failure. See
 
 ## Printer columns
 
-`kubectl get terraformmachinetemplates` shows:
+`kubectl get terraformmachinetemplates` (or `kubectl get tfmt`) shows:
 
 | Column | Source | Description |
 | --- | --- | --- |

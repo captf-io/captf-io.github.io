@@ -173,13 +173,23 @@ CAPTF has no second list of approvers to keep in step; the Kubernetes
 authorization you already run decides.
 
 - **Approvers** need `get`, `list`, `watch` and `patch` on `terraformplans`.
-  They need no access to the target.
+  They need no access to the target. Bind the shipped
+  `captf-plan-approver-role` (`get`, `list`, `watch`, `update`, `patch` on
+  `terraformplans`) with a `RoleBinding` in the plan's namespace. It is not
+  aggregated into `edit`, so editing a spec never implies approving a plan.
 - **`create` equals approve.** The admission webhook accepts a plan created
   with `approved: true`, because `clusterctl move` creates plans again on the
-  target cluster as the mover. Grant `create` on `terraformplans` only to the
-  manager and to the identity that runs `clusterctl move`.
+  target cluster as the mover. A creator other than the manager must set
+  `approvedBy` to their own username, and may set the `captf.io/plan-phase`
+  label only to `Pending`, or to `Approved` on an approved plan. A plan
+  whose label is terminal (`Applied`, `Superseded`, `Failed`) is accepted with any
+  `approvedBy`: no controller selects it, so finished plans still move. Grant
+  `create` on `terraformplans` only to the manager and to the identity that
+  runs `clusterctl move`; the shipped `captf-editor-role` withholds it.
 - **`approvedBy` is verified.** The webhook requires `spec.approvedBy` to
-  equal the username of the request that sets `approved`. You write the field
+  equal the username of the request that sets `approved`, on create as on
+  update (and the CRD requires it whenever `approved` is `true`, and refuses
+  to withdraw or change an approval). You write the field
   yourself, because CAPTF has no mutating webhooks, and the webhook checks it
   against the admission request.
 
@@ -253,7 +263,8 @@ name and the group with your own.
 The policy checks `UPDATE` only. An approval is an update of `spec.approved`
 from unset or `false` to `true`; a plan created already approved is the
 `clusterctl move` path, and RBAC on `create terraformplans` governs it, since
-`create` equals approve.
+`create` equals approve. A move of an in-flight (`Pending` or `Approved`) plan
+fails unless the mover is the approver, so the mover approves it again.
 
 ```yaml title="captf-plan-approval-policy.yaml"
 apiVersion: admissionregistration.k8s.io/v1

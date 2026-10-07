@@ -54,6 +54,7 @@ carrying the move label.
 | State backups | The same label and owner reference | |
 | The durable inputs Secret | Owner reference | No move label; it carries the `captf.io/applied` marker and the pinned digest |
 | The plan key Secret | Owner reference | |
+| `TerraformPlan` objects | Owner reference | A finished plan (`Applied`, `Superseded`, `Failed`) moves with any `approvedBy`. An in-flight plan (`Pending`, `Approved`) is created again by the mover, so the webhook accepts it only when the mover is its approver: the mover re-approves it |
 | The credential mirror | Owner reference | Recreated if missing |
 | The `TerraformClusterIdentity` | Its CRD's `move-hierarchy` label | Cluster-scoped; the first namespace's move copies it, later ones skip it |
 

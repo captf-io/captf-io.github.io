@@ -66,7 +66,9 @@ sequenceDiagram
    waiting never makes `Ready` false. The controller re-checks at least
    every ten minutes, and an approval or new inputs trigger it at once.
    Drift and health checks continue while a plan waits.
-4. **Approve.** You set `spec.approved` and `spec.approvedBy` on the plan.
+4. **Approve.** You set `spec.approved` and `spec.approvedBy` on the plan;
+   `approvedBy` must be your own username. The right to approve is
+   `captf-plan-approver-role`, not `edit`.
    It becomes `Approved`, and the controller emits `PlanApproved` on the
    target, naming `approvedBy`, when bookkeeping first sees the approval.
 5. **Apply.** The controller starts the apply Job with

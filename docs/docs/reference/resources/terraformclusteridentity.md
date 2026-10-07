@@ -22,7 +22,7 @@ identity and mounts that copy into the Jobs it runs there.
 | Created by | A platform admin, with `kubectl apply` |
 | Referenced by | `TerraformCluster` (`spec.identityRef`, `spec.defaults.identityRef`), `TerraformMachine` and `TerraformMachinePool` (`spec.identityRef`), with `kind` unset or `TerraformClusterIdentity` |
 | Finalizers | None. The delete webhook protects an identity in use instead |
-| Short names | None |
+| Short names | `tfci` |
 | Categories | `cluster-api` |
 | Status subresource | Yes |
 
@@ -284,7 +284,7 @@ computed from the manager's cache. It also emits
 
 ## Printer columns
 
-`kubectl get terraformclusteridentities` shows:
+`kubectl get terraformclusteridentities` (or `kubectl get tfci`) shows:
 
 | Column | Source |
 | --- | --- |
@@ -296,8 +296,10 @@ computed from the manager's cache. It also emits
 ## Validation
 
 The CRD schema and the validating admission webhook enforce these rules. The
-webhook runs on create, update and delete, and a request fails if the webhook
-is unreachable.
+webhook runs on create, update and delete. A create or update fails if the
+webhook is unreachable; a delete does not (`failurePolicy: Ignore`), because
+the delete check is a best-effort guardrail and the reconciler revokes the
+mirrors of a deleted identity.
 
 Schema rules:
 

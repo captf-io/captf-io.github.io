@@ -178,8 +178,14 @@ cluster changing what a later destroy runs — not against a hostile image:
 the pinned digest is whichever image `spec.source.image` named when the
 apply succeeded, and that image's own runtime computed the plan and ran the
 providers. Approving a blocked destructive plan or a Manual-policy plan
-preview is exactly as privileged as setting `spec.source.image`, since both
-need `update` on the object; see
+preview is a write to a `TerraformPlan`, held apart from the right to edit the
+target: the shipped `captf-plan-approver-role` is aggregated into no built-in
+role, so `edit` does not imply approval. The webhook binds an approval to its
+creator: a plan created already approved must name the creating user in
+`approvedBy`, and only the manager may set the `captf.io/plan-phase` label
+beyond `Pending` (or `Approved` on an approved plan). Terminal-phase plans
+move with any `approvedBy`; an in-flight plan is re-approved by the mover.
+See
 [Plan Approval](../user-guide/plan-approval.md) and [who can
 approve](approvals/operating.md#who-can-approve).
 

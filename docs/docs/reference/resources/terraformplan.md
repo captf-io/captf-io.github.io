@@ -31,7 +31,7 @@ value, only addresses, actions and counts.
 | Created by | The manager, named `<target name>-<10 hex chars>`. You never write the plan fields |
 | Owned by | Its target (`spec.targetRef`), through a controller owner reference |
 | Finalizer | none |
-| Short names | none |
+| Short names | `tfplan` |
 | Categories | `cluster-api` |
 | Status subresource | yes |
 
@@ -198,7 +198,7 @@ kubectl get terraformplans -A \
 
 ## Printer columns
 
-`kubectl get terraformplans` shows:
+`kubectl get terraformplans` (or `kubectl get tfplan`) shows:
 
 | Column | Source |
 | --- | --- |
@@ -220,9 +220,9 @@ An approval is a write to a `TerraformPlan`, so it is Kubernetes RBAC on
 - **Approvers** need `get`, `list` and `watch` to find the plan, and `patch`
   (or `update`) to approve it. They need nothing on the target.
 - **`create` equals approve.** The admission webhook accepts a plan created
-  with `approved: true`, because `clusterctl move` creates plans again on the
-  target cluster as the mover. Whoever may create `terraformplans` can
-  therefore create an approved plan. Grant `create` only to the manager's
+  with `approved: true` and `approvedBy` set to the creator, because
+  `clusterctl move` creates plans again on the target cluster as the mover.
+  Whoever may create `terraformplans` can therefore create an approved plan. Grant `create` only to the manager's
   ServiceAccount and to the identity that runs `clusterctl move`.
 - **`approvedBy` is verified.** The webhook requires `spec.approvedBy` to
   equal the username of the request that sets `spec.approved` to `true`, so
@@ -235,9 +235,13 @@ for example Roles and a ValidatingAdmissionPolicy for tiered auto-approval.
 
 ## Validation
 
-The CRD schema and the validating admission webhook enforce these rules. The
-webhook runs on create and update, and a request fails if the webhook is
-unreachable.
+The CRD schema, CEL rules in the CRD and the validating admission webhook
+enforce these rules. The webhook runs on create and update, and a request
+fails if the webhook is unreachable. The CEL rules hold even then: `spec.targetRef`,
+`spec.planHash`, `spec.inputsHash`, `spec.reason` and `spec.summary` are
+immutable, `approvedBy` is required exactly when `approved` is `true`, and an
+approval can be neither withdrawn nor changed; a violation is refused with
+`422 Invalid`.
 
 Schema rules:
 
@@ -250,6 +254,13 @@ Webhook rules, on create:
 
 - `spec.approvedBy` is required when `spec.approved` is `true`, and refused
   when it is not.
+- Unless the manager creates the plan, `spec.approvedBy` must equal the
+  creating user when `spec.approved` is `true`. A plan whose
+  `captf.io/plan-phase` label is terminal (`Applied`, `Superseded` or
+  `Failed`) is accepted with any `approvedBy`, so `clusterctl move` still works
+  for finished plans.
+- A creator other than the manager may set the `captf.io/plan-phase` label
+  only to `Pending`, or to `Approved` on an approved plan.
 
 Webhook rules, on update:
 

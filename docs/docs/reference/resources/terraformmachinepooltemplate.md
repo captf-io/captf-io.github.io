@@ -27,7 +27,7 @@ capacity or node information to resolve.
 | Created by | You |
 | Referenced by | A ClusterClass `machinePools[].infrastructure.templateRef` |
 | Finalizer | None |
-| Short names | None |
+| Short names | `tfmpt` |
 | Categories | `cluster-api` |
 | Status subresource | No |
 
@@ -88,7 +88,7 @@ same CRD schema limits apply. Defaults and inheritance from the cluster's
 
 ## Printer columns
 
-`kubectl get terraformmachinepooltemplates` shows:
+`kubectl get terraformmachinepooltemplates` (or `kubectl get tfmpt`) shows:
 
 | Column | Source |
 | --- | --- |

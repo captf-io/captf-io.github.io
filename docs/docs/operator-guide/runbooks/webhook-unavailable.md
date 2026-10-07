@@ -16,10 +16,14 @@ subtitle: "Recover a failing webhook"
 CAPTF validates every `TerraformCluster`, `TerraformClusterIdentity`,
 `TerraformClusterTemplate`, `TerraformMachine`, `TerraformMachineTemplate`,
 `TerraformMachinePool` and `TerraformMachinePoolTemplate` write with an
-admission webhook, and every one of those webhook rules has
-`failurePolicy: Fail`: if the webhook cannot be reached, the write is
-refused rather than let through unchecked. This page covers recognizing
-that, and getting the webhook serving again.
+admission webhook. Every `CREATE` and `UPDATE` rule has `failurePolicy: Fail`:
+if the webhook cannot be reached, the write is refused rather than let
+through unchecked. Every webhook entry has `timeoutSeconds: 10`. The `DELETE`
+checks of `TerraformMachine` and `TerraformClusterIdentity` are separate entries
+(`delete.validation.<kind>.infrastructure.cluster.x-k8s.io`) with
+`failurePolicy: Ignore`: a delete goes through when the webhook is down or
+slow. This page covers recognizing the blocked writes, and getting the
+webhook serving again.
 
 !!! note "There is no dedicated alert"
 
@@ -48,16 +52,16 @@ person running `kubectl apply`:
   once deletion finishes, or writing back a resolved `providerID` or
   `controlPlaneEndpoint` — fail the same way, and surface as
   [CAPTFReconcileErrors](../../reference/alerts.md#captfreconcileerrors).
-- deleting a `TerraformClusterIdentity` or most `TerraformMachine`s is
-  also blocked: those two kinds validate `DELETE` as well as
-  `CREATE`/`UPDATE`. The identity's check normally refuses a delete while
+- deleting a `TerraformClusterIdentity` or a `TerraformMachine` is **not**
+  blocked: those two kinds validate `DELETE` as a best-effort guardrail, with
+  `failurePolicy: Ignore`. The identity's check normally refuses a delete while
   it is still in use or its credentials are still mirrored somewhere; the
-  machine's normally redirects a direct delete through its owner
-  `Machine` instead, to go through drain. Either check can also be the
-  thing *allowing* a delete that would otherwise be refused (an identity
-  no longer in use, a machine whose owner `Machine` is already gone), so
-  while the webhook is down those deletes are blocked outright rather
-  than falling back to permissive.
+  machine's normally redirects a direct delete through its owner `Machine`
+  instead, to go through drain. While the webhook is down or slow (10 second
+  timeout) those checks are skipped, so a direct delete goes through. This
+  keeps a namespace deletion, and removing the provider, from hanging when the
+  manager is gone; the reconciler revokes the mirrors of a deleted identity.
+  Delete workloads first, then the provider, so the guard is not needed.
 
 What keeps working: everything that only patches an object's `status`
 subresource — a Job finishing, `status.lastRun`, conditions, drift and
