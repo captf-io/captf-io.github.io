@@ -1,4 +1,5 @@
 ---
+title: "tfcapi-lint Command-Line Reference"
 description: "Look up the tfcapi-lint commands, flags, exit codes and every check it runs against a CAPTF module or image, with severity and fix."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 1, 2026"

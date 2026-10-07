@@ -1,4 +1,5 @@
 ---
+title: "Terraform and OpenTofu Base Images"
 description: "The CAPTF OpenTofu and Terraform base images: what they provide, how a module image builds FROM one, tags, digest pinning, updates and platforms."
 authors:
   - "The CAPTF Authors"

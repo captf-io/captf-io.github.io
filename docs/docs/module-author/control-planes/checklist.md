@@ -1,4 +1,5 @@
 ---
+title: "Control-Plane Integration Checklist"
 description: "Every port, health check and ordering rule a KCP or RCP cluster needs from a CAPTF cluster or machine module, grouped by topic."
 hide:
   - toc

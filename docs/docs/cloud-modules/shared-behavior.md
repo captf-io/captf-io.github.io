@@ -1,4 +1,5 @@
 ---
+title: "Shared Behavior of CAPTF Cloud Modules"
 description: "What all five cloud module sets have in common: the API endpoint, traffic rules, node identities, bootstrap data, health, tags and destroy."
 tags:
   - Cloud modules

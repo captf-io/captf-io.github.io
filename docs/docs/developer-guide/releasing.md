@@ -1,4 +1,5 @@
 ---
+title: "Releasing the CAPTF Provider"
 description: "Cut a CAPTF release by pushing a tag: what CI publishes, signing and verification, the manual fallback, and installing assets from a local repository."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

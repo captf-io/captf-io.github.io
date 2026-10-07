@@ -1,4 +1,5 @@
 ---
+title: "Secrets Inventory for CAPTF"
 description: "Inventory every Secret CAPTF reads or writes: name, namespace, owner, lifecycle, contents and sensitivity, plus what the manager caches and logs."
 status: encrypted
 hide:

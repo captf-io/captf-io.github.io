@@ -1,4 +1,5 @@
 ---
+title: "Using RKE2ControlPlane with CAPTF"
 description: "What RKE2ControlPlane and CAPRKE2 require of your CAPTF cluster and machine modules: listeners, addresses, lifecycle and a module checklist."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

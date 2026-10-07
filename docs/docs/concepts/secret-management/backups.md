@@ -1,4 +1,5 @@
 ---
+title: "Backing Up and Restoring CAPTF Secrets"
 description: Learn when the manager backs up state, how backups are named and pruned, and how a restore Job pushes one back.
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"

@@ -1,4 +1,5 @@
 ---
+title: "Runbook: State or Inputs Near Size Limit"
 description: Find the object whose state or rendered inputs approach the Secret size cap, and shrink what it stores.
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

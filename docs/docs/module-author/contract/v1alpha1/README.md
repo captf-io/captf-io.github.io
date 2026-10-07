@@ -1,4 +1,5 @@
 ---
+title: "Module Contract v1alpha1 Overview"
 description: "Overview of the v1alpha1 module contract: child-module rules, naming, null semantics, type conventions, injection mechanics and role summary."
 hide:
   - toc

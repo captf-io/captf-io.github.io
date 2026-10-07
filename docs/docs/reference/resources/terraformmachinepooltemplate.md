@@ -1,4 +1,5 @@
 ---
+title: "TerraformMachinePoolTemplate API Reference"
 description: "Every field, printer column and admission rule of the TerraformMachinePoolTemplate kind, the ClusterClass template for TerraformMachinePool."
 icon: lucide/copy
 subtitle: "A TerraformMachinePool to clone"

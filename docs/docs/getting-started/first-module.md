@@ -1,4 +1,5 @@
 ---
+title: "Writing Your First CAPTF Module"
 description: "Write, lint, package and reference a small machine-role module from scratch, ending with a lint-clean module image."
 tags:
   - Module authors

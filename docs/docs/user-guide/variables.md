@@ -1,4 +1,5 @@
 ---
+title: "Passing Variables to Terraform Modules"
 description: Pass your own module variables inline or from labeled ConfigMaps and Secrets, and understand merge order, limits and sensitivity.
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

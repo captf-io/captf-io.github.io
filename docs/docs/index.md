@@ -1,5 +1,5 @@
 ---
-title: Introduction
+title: "Introduction to Cluster API Terraform"
 description: Cluster API Provider Terraform runs your Terraform or OpenTofu modules as a Cluster API infrastructure provider.
 # The docs entry point keeps the sidebar (the Overview section's pages);
 # only the right-hand outline is hidden, to give the hero its width.

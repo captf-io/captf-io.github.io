@@ -1,4 +1,5 @@
 ---
+title: "CAPTF Status Conditions Reference"
 description: "Every status condition CAPTF sets, which kinds carry it, how to read its polarity, and what each reason means and what to do about it."
 hide:
   - toc

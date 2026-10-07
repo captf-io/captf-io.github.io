@@ -1,4 +1,5 @@
 ---
+title: "Upgrading the CAPTF Provider"
 description: "Upgrade the CAPTF provider with clusterctl, understand what an upgrade triggers on existing objects, and roll back."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 2, 2026"

@@ -1,4 +1,5 @@
 ---
+title: "TerraformMachinePool API Reference"
 description: "Every field, status value, condition, printer column and admission rule of the TerraformMachinePool kind, with examples."
 icon: lucide/boxes
 subtitle: "One native scaling group"

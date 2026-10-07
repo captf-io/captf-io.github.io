@@ -1,4 +1,5 @@
 ---
+title: "Testing the CAPTF Provider"
 description: "What make test runs, the unit and e2e tiers, coverage floors, golden files, the test environment, and how to run one package or one test."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

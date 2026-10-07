@@ -1,4 +1,5 @@
 ---
+title: "Runbook: Stale Terraform State Lock"
 description: Find a held state lock, tell a stale one from a live one and clear it with force-unlock.
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

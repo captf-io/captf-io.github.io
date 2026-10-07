@@ -1,4 +1,5 @@
 ---
+title: "TerraformMachineTemplate API Reference"
 description: "Reference for the TerraformMachineTemplate kind: the template Cluster API clones into TerraformMachines, and the scale-from-zero status read from the image."
 icon: lucide/copy
 subtitle: "A TerraformMachine to clone"

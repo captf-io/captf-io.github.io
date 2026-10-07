@@ -1,4 +1,5 @@
 ---
+title: "Security Model of the CAPTF Provider"
 description: What creating a Terraform* object grants, what its Job can read, and what CAPTF keeps out of status, events and logs.
 tags:
   - Evaluators

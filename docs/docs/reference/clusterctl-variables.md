@@ -1,4 +1,5 @@
 ---
+title: "clusterctl Variables for CAPTF"
 description: "Every variable the CAPTF clusterctl templates read, with required and default values, grouped by flavor, plus the ClusterClass topology variables."
 hide:
   - toc

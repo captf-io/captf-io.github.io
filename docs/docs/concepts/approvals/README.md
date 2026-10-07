@@ -1,4 +1,5 @@
 ---
+title: "Plan Approvals and Gates in CAPTF"
 description: The two approval gates on a TerraformCluster, what each stops and binds, what is not gated, and where to go next.
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 2, 2026"

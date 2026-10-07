@@ -1,4 +1,5 @@
 ---
+title: "Choosing the Terraform Operation"
 description: Read the priority order CAPTF uses to pick the next operation, the reasons it reports, and the refresh and drift schedule.
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"

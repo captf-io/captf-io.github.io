@@ -1,4 +1,5 @@
 ---
+title: "Condition Types, Reasons and Actions"
 description: Look up every CAPTF condition type, status and reason with its meaning, likely cause, action and a link to the deeper page.
 hide:
   - toc

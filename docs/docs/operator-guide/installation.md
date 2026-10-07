@@ -1,4 +1,5 @@
 ---
+title: "Installing the CAPTF Provider"
 description: "Install the CAPTF provider into a management cluster with clusterctl, set the runner image, add optional components and verify the install."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 1, 2026"

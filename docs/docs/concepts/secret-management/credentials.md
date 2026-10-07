@@ -1,4 +1,5 @@
 ---
+title: "Credentials in CAPTF Secret Management"
 description: Follow a credential from the source Secret through the per-namespace mirror to the Job, including rotation and revocation.
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"

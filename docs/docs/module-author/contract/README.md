@@ -1,4 +1,5 @@
 ---
+title: "Module Contract Specification"
 description: "The interface between the CAPTF controller and the Terraform or OpenTofu modules it runs, by contract version."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

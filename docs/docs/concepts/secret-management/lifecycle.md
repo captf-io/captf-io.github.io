@@ -1,4 +1,5 @@
 ---
+title: "Secret Lifecycle Walkthroughs"
 description: Follow the Secrets and Leases through create, refresh, change, delete, clusterctl move, namespace deletion and lost state.
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"

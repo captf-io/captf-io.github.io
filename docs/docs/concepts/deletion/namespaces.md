@@ -1,4 +1,5 @@
 ---
+title: "Deletion in a Terminating Namespace"
 description: What a deletion can still finish in a terminating namespace, why a destroy waits there, and what the namespace takes with it.
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"

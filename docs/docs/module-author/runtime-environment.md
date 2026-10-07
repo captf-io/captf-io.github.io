@@ -1,4 +1,5 @@
 ---
+title: "Module Runtime Environment in the Job"
 description: "What a module sees when the runner executes it: working directory, environment, provider mirror, command order, failure reporting and size limits."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

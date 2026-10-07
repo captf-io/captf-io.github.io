@@ -1,4 +1,5 @@
 ---
+title: "RBAC for the CAPTF Manager and Jobs"
 description: "Read every role CAPTF ships: what the manager and the runner can do, how a namespace gets its runner identity, and how the orphan sweep removes it."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

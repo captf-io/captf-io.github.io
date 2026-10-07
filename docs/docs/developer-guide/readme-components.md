@@ -1,4 +1,5 @@
 ---
+title: "README Components for CAPTF Repos"
 description: "The header, badges, status note and footer that every captf-io README is composed from, the images they load from captf.io, and how to change them."
 authors:
   - "The CAPTF Authors"

@@ -1,4 +1,5 @@
 ---
+title: "Held Deletions and Why They Wait"
 description: Understand why CAPTF holds a deletion when state is lost or unreadable, what ends the hold, and how the abandon annotation works.
 tags:
   - Troubleshooting

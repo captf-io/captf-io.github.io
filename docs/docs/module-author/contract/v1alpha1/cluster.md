@@ -1,4 +1,5 @@
 ---
+title: "Module Contract v1alpha1: Cluster Role"
 description: "The cluster role of the v1alpha1 module contract: inputs, outputs, provisioned rule, lifecycle, control-plane requirements and a skeleton."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

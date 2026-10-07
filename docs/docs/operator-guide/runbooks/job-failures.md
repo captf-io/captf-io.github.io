@@ -1,4 +1,5 @@
 ---
+title: "Runbook: Failing CAPTF Jobs"
 description: Diagnose a failing apply, destroy, drift check or refresh Job from the object's conditions, status and pod logs, and fix the cause.
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 1, 2026"

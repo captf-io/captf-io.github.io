@@ -1,4 +1,5 @@
 ---
+title: "Module Contract v1alpha1: Common Rules"
 description: "Inputs injected into every role, the user-variable rules, and the health output every module must declare."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 1, 2026"

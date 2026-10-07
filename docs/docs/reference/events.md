@@ -1,4 +1,5 @@
 ---
+title: "Kubernetes Events Emitted by CAPTF"
 description: "Look up every Kubernetes Event the CAPTF manager and runner record: reason, type, object, when it fires and what to do."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 2, 2026"

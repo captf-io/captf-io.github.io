@@ -1,4 +1,5 @@
 ---
+title: "Module Contract v1alpha1: MachinePool Role"
 description: "The machinepool role of the v1alpha1 module contract: inputs, autoscaling, outputs, lifecycle, bootstrap rotation and a skeleton."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

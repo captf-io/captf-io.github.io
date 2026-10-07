@@ -1,4 +1,5 @@
 ---
+title: "Deletion Order and Finalizers"
 description: The fixed order in which Cluster API, the admission webhook and the controller delete machines, pools and clusters, and when the finalizer comes off.
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"

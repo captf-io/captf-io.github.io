@@ -1,4 +1,5 @@
 ---
+title: "Using KubeadmControlPlane with CAPTF"
 description: "What KubeadmControlPlane and CABPK require of your CAPTF cluster and machine modules: endpoint, load balancer, lifecycle and a module checklist."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

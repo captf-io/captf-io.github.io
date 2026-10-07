@@ -1,4 +1,5 @@
 ---
+title: "Runbook: Webhook Unavailable"
 description: "Recognize writes blocked by an unreachable admission webhook and get it serving again: pods, Service, NetworkPolicy and certificate."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

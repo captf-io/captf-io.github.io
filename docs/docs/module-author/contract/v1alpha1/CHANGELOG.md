@@ -1,4 +1,5 @@
 ---
+title: "Module Contract v1alpha1 Changelog"
 description: "History of changes to the v1alpha1 module contract, newest first."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 1, 2026"

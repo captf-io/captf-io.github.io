@@ -1,4 +1,5 @@
 ---
+title: "CAPTF Custom Resources Reference"
 description: "Every CAPTF custom resource, one page each: what it is, YAML examples, and every spec and status field with its default, validation and behavior."
 icon: lucide/layers
 subtitle: "Every kind, field by field"

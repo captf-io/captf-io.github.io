@@ -1,4 +1,5 @@
 ---
+title: "TerraformClusterTemplate API Reference"
 description: "Field-by-field reference for the TerraformClusterTemplate kind: the template a ClusterClass uses to create a TerraformCluster, with its immutability rules."
 icon: lucide/copy
 subtitle: "A TerraformCluster to clone"

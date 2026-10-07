@@ -1,4 +1,5 @@
 ---
+title: "Releasing a CAPTF Module Version"
 description: "How CAPTF module images are tagged and published, how a module version reaches the Terraform Registry, and which image reference to put in spec.source.image."
 authors:
   - "The CAPTF Authors"

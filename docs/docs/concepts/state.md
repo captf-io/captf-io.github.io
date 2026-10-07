@@ -1,4 +1,5 @@
 ---
+title: "Terraform State Storage in CAPTF"
 description: Learn where CAPTF keeps Terraform state, how it names, reads, locks and backs it up, and what happens to it on deletion.
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 1, 2026"

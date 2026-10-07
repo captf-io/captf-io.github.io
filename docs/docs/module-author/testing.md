@@ -1,4 +1,5 @@
 ---
+title: "Testing a Terraform Module for CAPTF"
 description: "Test a CAPTF module and its image from fastest to slowest: format and validate, mocked unit tests, lint, image smoke test, and end-to-end on kind."
 authors:
   - "The CAPTF Authors"

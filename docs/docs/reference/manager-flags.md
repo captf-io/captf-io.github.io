@@ -1,4 +1,5 @@
 ---
+title: "CAPTF Manager Command-Line Flags"
 description: "Every flag of the CAPTF manager, grouped by purpose, with type, default, what it does and when to change it, plus how to set flags on the Deployment."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

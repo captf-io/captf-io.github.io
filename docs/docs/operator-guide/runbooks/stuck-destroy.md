@@ -1,4 +1,5 @@
 ---
+title: "Runbook: Stuck Destroy Job"
 description: "Recover from a destroy Job that cannot succeed: back up state, clean up cloud resources, then remove or abandon the finalizer."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 1, 2026"

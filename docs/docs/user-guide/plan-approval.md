@@ -1,4 +1,5 @@
 ---
+title: "Approve a Terraform Plan Before Apply"
 description: Review and approve a destructive plan or, under applyPolicy Manual, every plan, with the exact kubectl commands and caveats.
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 2, 2026"

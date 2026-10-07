@@ -1,4 +1,5 @@
 ---
+title: "Job Cache Lag and API Server Checks"
 description: See how the controller checks the API server directly so a stale Job cache never clears a block or drops a finalizer.
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"

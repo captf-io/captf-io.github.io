@@ -1,4 +1,5 @@
 ---
+title: "TerraformMachine API Reference"
 description: "Reference for the TerraformMachine kind: every spec and status field, conditions, printer columns, validation rules and lifecycle."
 icon: lucide/server
 subtitle: "One Machine's infrastructure"

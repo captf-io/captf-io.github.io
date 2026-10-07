@@ -1,4 +1,5 @@
 ---
+title: "CAPTF Kinds and Their Roles"
 description: How CAPTF's seven kinds relate to Cluster API's objects, what stays fixed once an object exists, and what a cluster passes down.
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 2, 2026"

@@ -1,4 +1,5 @@
 ---
+title: "Every CAPTF Event and What to Do"
 description: Read the Warning and informational events CAPTF emits, with what each means and what to do about it.
 hide:
   - toc

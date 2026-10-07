@@ -1,4 +1,5 @@
 ---
+title: "What the Approved Plan Hash Binds"
 description: "What goes into the p2: plan hash an approval names, what it binds and what it leaves out, so you know what an approval covers."
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 2, 2026"

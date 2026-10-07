@@ -1,4 +1,5 @@
 ---
+title: "Running tfcapi-lint in CI"
 description: "Run tfcapi-lint in CI with the GitHub Action or the container image: workflows, pinning, allowed warnings, private registries and troubleshooting."
 authors:
   - "The CAPTF Authors"

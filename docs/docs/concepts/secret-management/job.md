@@ -1,4 +1,5 @@
 ---
+title: "Secrets Inside the Terraform Job"
 description: See what a Job pod mounts, which environment and permissions it gets, and which runner steps run for each operation.
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"

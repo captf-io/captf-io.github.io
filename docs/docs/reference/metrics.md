@@ -1,4 +1,5 @@
 ---
+title: "Prometheus Metrics Exposed by CAPTF"
 description: "Look up every Prometheus metric the CAPTF manager exposes: type, labels and their values, unit and meaning, grouped by topic with example queries."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 2, 2026"

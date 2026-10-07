@@ -1,4 +1,5 @@
 ---
+title: "Tuning Terraform Job Behavior"
 description: Tune a Job's resources, deadlines, history, environment, pull secrets, ServiceAccount and security contexts, and how machines inherit cluster defaults.
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 1, 2026"

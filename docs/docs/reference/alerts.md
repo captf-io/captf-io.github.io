@@ -1,4 +1,5 @@
 ---
+title: "Prometheus Alerts Shipped with CAPTF"
 description: "Look up the eleven Prometheus alerts CAPTF ships: severity, PromQL expression, what each means, likely causes and where to look first."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 2, 2026"

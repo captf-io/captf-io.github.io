@@ -1,4 +1,5 @@
 ---
+title: "Production Readiness Checklist for CAPTF"
 description: "Check the CAPTF manager and its namespaces before go-live: availability, sizing, certificates, secrets, alerts, approvals, network policy and Jobs."
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"

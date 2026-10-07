@@ -1,4 +1,5 @@
 ---
+title: "Linting Modules with tfcapi-lint"
 description: "Install tfcapi-lint, lint a module or image against the CAPTF contracts, use strict mode and exit codes, and run it in CI."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

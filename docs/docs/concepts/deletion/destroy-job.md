@@ -1,4 +1,5 @@
 ---
+title: "The Destroy Job for Terraform Teardown"
 description: What runs when a deleting object has readable state, what does not gate the destroy, what it waits on, and how it fails and retries.
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"

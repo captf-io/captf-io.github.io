@@ -1,4 +1,5 @@
 ---
+title: "Manually Approving a Terraform Plan"
 description: How applyPolicy Manual plans every change first and applies it only after a person approves the plan hash, and what happens when the plan changes.
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"

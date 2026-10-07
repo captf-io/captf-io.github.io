@@ -1,4 +1,5 @@
 ---
+title: "CAPTF Runner Command-Line Reference"
 description: "Look up the runner binary's subcommands, flags, exit codes and result error kinds. The runner is the entrypoint of every CAPTF Job."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 2, 2026"

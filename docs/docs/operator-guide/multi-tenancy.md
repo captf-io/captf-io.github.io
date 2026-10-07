@@ -1,4 +1,5 @@
 ---
+title: "Multi-Tenancy with CAPTF Identities"
 description: "Lay out tenants on one management cluster: namespace isolation, identities, the runner's Secret access, quotas, network policy and an example."
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"

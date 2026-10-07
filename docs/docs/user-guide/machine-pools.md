@@ -1,4 +1,5 @@
 ---
+title: "Managing Machine Pools with CAPTF"
 description: Create a MachinePool backed by a TerraformMachinePool, choose fixed or autoscaled replicas, check members, and delete the group.
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 2, 2026"

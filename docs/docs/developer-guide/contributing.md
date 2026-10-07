@@ -1,4 +1,5 @@
 ---
+title: "Contributing to Cluster API Terraform"
 description: "Build, lint, test and verify CAPTF itself: repository layout, prerequisites, conventions and running the manager against a real cluster."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

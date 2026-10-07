@@ -1,4 +1,5 @@
 ---
+title: "Job Retries and Backoff in CAPTF"
 description: Learn what counts as a failed Job, how the retry delay grows, and which waits deliberately do not back off.
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 2, 2026"

@@ -1,4 +1,5 @@
 ---
+title: "TerraformCluster API Reference"
 description: "Field-by-field reference for the TerraformCluster kind: spec, status, conditions, printer columns, admission rules and lifecycle."
 icon: lucide/network
 subtitle: "One workload cluster"

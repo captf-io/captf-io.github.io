@@ -1,4 +1,5 @@
 ---
+title: "CAPTF and Cluster API Glossary"
 description: Short definitions of CAPTF terms and the Cluster API and Terraform terms its docs assume, each linked to the page that covers it.
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

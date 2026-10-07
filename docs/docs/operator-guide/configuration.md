@@ -1,4 +1,5 @@
 ---
+title: "Configuring the CAPTF Manager"
 description: "Change the CAPTF manager's flags and read what each group does: scoping, concurrency, leader election, sync period, runner image, backups and logging."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 1, 2026"

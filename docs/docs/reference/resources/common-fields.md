@@ -1,4 +1,5 @@
 ---
+title: "Common Fields in CAPTF Custom Resources"
 description: "Reference for the spec and status fields that TerraformCluster, TerraformMachine and TerraformMachinePool share: source, identity, Job policy, variables and run status."
 icon: lucide/component
 subtitle: "Fields the module kinds share"

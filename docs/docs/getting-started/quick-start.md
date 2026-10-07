@@ -1,4 +1,5 @@
 ---
+title: "Quick Start with Cluster API Terraform"
 description: Install CAPTF on a management cluster and bring up a TerraformCluster and control-plane TerraformMachine with the no-op modules.
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

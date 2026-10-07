@@ -1,4 +1,5 @@
 ---
+title: "Machine Remediation with CAPTF"
 description: Ask Cluster API to replace an unhealthy TerraformMachine through a MachineHealthCheck, tune the threshold, and confirm the request.
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 1, 2026"

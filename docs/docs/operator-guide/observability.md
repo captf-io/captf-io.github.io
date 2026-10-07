@@ -1,4 +1,5 @@
 ---
+title: "Observability: Metrics, Alerts and Logs"
 description: "Read the manager's metrics endpoint, enable Prometheus and the alerts, find what to check first for each alert, and read conditions, events and logs."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 1, 2026"

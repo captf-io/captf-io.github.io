@@ -1,4 +1,5 @@
 ---
+title: "Module Contract v1alpha1: Machine Role"
 description: "The machine role of the v1alpha1 module contract: inputs, outputs, Ready timeline, lifecycle, providerID matching and a skeleton."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 1, 2026"

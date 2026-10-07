@@ -1,4 +1,5 @@
 ---
+title: "Other Manual Actions on CAPTF Objects"
 description: "The manual actions besides plan approval: restore state, abandon an object, fix a Job policy, release a foreign lock and opt a ServiceAccount in."
 tags:
   - Operators

@@ -1,4 +1,5 @@
 ---
+title: "Secret Management in CAPTF"
 description: Inventory every Secret and Lease CAPTF keeps between Jobs, see how they connect, and find the page for each part.
 status: encrypted
 hide:

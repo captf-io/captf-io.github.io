@@ -1,4 +1,5 @@
 ---
+title: "CAPTF Architecture and Components"
 description: The manager, webhooks, runner Jobs, module image and state backend, and how one apply flows through them.
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

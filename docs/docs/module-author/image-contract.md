@@ -1,4 +1,5 @@
 ---
+title: "Module Image Contract: Paths and Labels"
 description: "The normative image contract: fixed paths, OCI labels, user, multi-arch publishing, and pointers to the base images."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"

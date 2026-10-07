@@ -1,4 +1,5 @@
 ---
+title: "Operating Plan Approval Gates"
 description: "Run the plan-approval gates day to day: what the conditions and events mean, how retries and upgrades behave, and who can approve."
 tags:
   - Operators

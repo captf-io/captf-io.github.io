@@ -1,4 +1,5 @@
 ---
+title: "Deletion and Teardown in CAPTF"
 description: How deleting a TerraformCluster, machine or pool runs a destroy Job, what holds a deletion, and what is left behind if you short-circuit it.
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"

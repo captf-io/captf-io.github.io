@@ -1,4 +1,5 @@
 ---
+title: "Disaster Recovery for CAPTF"
 description: "Recover from lost Terraform state, a lost namespace or a lost management cluster: what to back up outside the cluster, how to rebuild and how to rehearse."
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"

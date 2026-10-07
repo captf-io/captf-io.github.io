@@ -1,4 +1,5 @@
 ---
+title: "TerraformClusterIdentity API Reference"
 description: "Reference for the cluster-scoped TerraformClusterIdentity kind: its credentials Secret, allowed namespaces, status, conditions, validation and lifecycle."
 icon: lucide/key-round
 subtitle: "Credentials and who may use them"
