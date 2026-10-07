@@ -134,8 +134,9 @@ The full target list, grouped the same way, is in
     pages are written by hand (see
     [Reference pages](documentation.md#reference-pages)).
 - **Test tiers**: code that needs a real cluster carries the `e2e` build
-    tag and lives only in `test/e2e/` or `test/env/lifecycle/`;
-    `make verify-test-tiers` fails otherwise. See [Testing](testing.md).
+    tag and lives only in `test/e2e/` or `test/env/lifecycle/`; code that
+    needs only an API server carries the `envtest` tag and lives only in
+    `internal/envtest/`. `make verify-test-tiers` fails otherwise. See [Testing](testing.md).
 - **Coverage**: a package's coverage must not fall below its floor in
     `hack/coverage-floors.txt`. When a package's coverage rises, raise its
     floor in the same change; never lower one without a reason on its line.

@@ -1,6 +1,6 @@
 ---
 title: "Testing the CAPTF Provider"
-description: "What make test runs, the unit and e2e tiers, coverage floors, golden files, the test environment, and how to run one package or one test."
+description: "What make test runs, the unit, envtest and e2e tiers, coverage floors, golden files, the test environment, and how to run one package or one test."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "September 29, 2026"
 git_creation_date_iso: "2026-09-29"
@@ -14,7 +14,7 @@ subtitle: "Run unit and cluster tests"
 # Testing
 
 This page describes CAPTF's test suite: what `make test` runs, its tiers,
-the end-to-end test environment, coverage floors, golden files, and running
+the envtest tier, the end-to-end test environment, coverage floors, golden files, and running
 less than the whole suite.
 
 ## Running the tests
@@ -25,8 +25,9 @@ Kubernetes cluster, calls a real cloud API, or invokes `terraform` or
 `tofu`.
 
 - Controllers and webhooks run against the controller-runtime fake client,
-  never a real API server; there is no [envtest](https://book.kubebuilder.io/reference/envtest)
-  in this repository.
+  never a real API server. Behavior the fake client cannot show (CEL rules,
+  the admission chain, write conflicts) is covered by the separate
+  [envtest tier](#the-envtest-tier), which `make test` does not run.
 - Job execution is faked the same way: a reconciler test asserts on the
   `batch/v1.Job` CAPTF would create, and a runner test drives the runner's
   own logic directly, without a pod ever starting.
@@ -51,21 +52,24 @@ Kubernetes cluster, calls a real cloud API, or invokes `terraform` or
 | Tier | What | How it runs |
 | --- | --- | --- |
 | Unit | Everything above, including reconcilers driven through several packages at once against the fake client, such as `internal/controllers/shared`'s `TestBringUpJobCount`, which reconciles a whole cluster bring-up and asserts the resulting Job count. | `make test`, `make test-cover` and CI, always. |
+| Envtest | `internal/envtest/`, build tag `envtest`: the CRDs' CEL rules, the admission chain and write conflicts against a real kube-apiserver and etcd, with no kubelet and no controllers. | `make test-envtest` and the CI `envtest` job. |
 | E2E | `test/e2e/...` and `test/env/lifecycle`, against a real kind cluster on `podman` or `docker`. | Only through the `testenv-*` and `e2e-*` targets, or `go test -tags=e2e` with `-run`. CI does not run them yet. |
 
 Three guards keep the tiers apart:
 
 - **The build tag.** Every Go file under `test/e2e/` and
-  `test/env/lifecycle/` starts with `//go:build e2e`, so `go test ./...`
-  never compiles it. `make verify-test-tiers` (part of `make verify`, and
-  of CI) fails if one lacks the tag, or if any other Go file uses it.
+  `test/env/lifecycle/` starts with `//go:build e2e`, and every one under
+  `internal/envtest/` with `//go:build envtest`, so `go test ./...`
+  never compiles them. `make verify-test-tiers` (part of `make verify`, and
+  of CI) guards both tiers: it fails if a file in those directories lacks
+  its tag, or if any other Go file uses it.
   `hack/verify-test-tiers_test.sh` tests that script against fixtures; it
   is not part of `make test`, and `verify-test-tiers` runs it first.
 - **`-run`.** Each e2e package's `TestMain` refuses to run unless `-run`
   selects a test, so a bare `go test -tags=e2e ./...` does nothing.
 - **Compiled without running.** `make vet` and `make lint` add a
-  `-tags e2e` pass over the `test` module, so tagged code cannot rot
-  unnoticed.
+  `-tags envtest` pass over `internal/envtest` and a `-tags e2e` pass over the
+  `test` module, so tagged code cannot rot unnoticed.
 
 Besides `go test`, two `make verify` checks exercise the release assets
 without a real cloud: `make verify-templates` renders `templates/` with the
@@ -75,6 +79,28 @@ the release assets, offline. `hack/check-metadata_test.sh` and
 `hack/version_test.sh` test `hack/check-metadata.sh` and `hack/version.sh`
 against fixtures under `hack/testdata`; `make verify-metadata` and `make
 verify-version` run them before the check itself.
+
+## The envtest tier
+
+`make test-envtest` runs the suite in `internal/envtest/` (build tag
+`envtest`, with `-race`) against a real kube-apiserver and etcd. It lives in the
+root module, not `test/`, because it needs `internal/` packages. It takes
+about half a minute and needs no container engine.
+
+- `setup-envtest` (pinned in `hack/tools/versions.mk`, v0.24.1) downloads
+  kube-apiserver and etcd for `ENVTEST_K8S_VERSION` (1.36.2) into
+  `bin/envtest`. A CI cache keyed on `hack/tools/versions.mk` keeps them
+  between runs.
+- The suite starts three API servers: one with the CRDs only, one with the
+  CRDs and the real webhooks, and a second webhook server that one test
+  stops, to check the fail-open and fail-closed behavior.
+- There is no kubelet and no controller manager. Reconciles are driven by
+  hand, and minimal Cluster API `Machine` and `Cluster` CRDs in
+  `internal/envtest/testdata/crds/` stand in for the real ones.
+- It checks what the fake client cannot: the CEL rules on the CRDs answer with
+  a real `422 Invalid` (and answer before the webhooks), the webhook chain
+  denies as expected, and optimistic-lock conflicts (a finalizer or annotation
+  removal against a concurrent writer) come back as `Conflict`.
 
 ## End-to-end tests
 

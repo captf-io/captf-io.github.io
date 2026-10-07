@@ -76,6 +76,8 @@ in its row.
 | `WEBHOOK_CERT_DIR` | `bin/dev-webhook-certs` | Where `make run` keeps its self-signed webhook certificate. |
 | `ARGS` | | Extra flags that `make run` passes to the manager. |
 | `GOTESTSUM_FORMAT` | `pkgname` | The `gotestsum` output format of `test-cover`. CI sets `github-actions`. |
+| `ENVTEST_K8S_VERSION` | `1.36.2` (pinned in `hack/tools/versions.mk`) | The Kubernetes version of the kube-apiserver and etcd that `test-envtest` downloads. |
+| `ENVTEST_BIN_DIR` | `bin/envtest` | Where `test-envtest` keeps those binaries. |
 | `TESTENV_NAME` | `captf-test-dev` | The cluster name for the `testenv-*` targets. It must start with `captf-test-`. |
 | `TESTENV_ENGINE` | auto-detected | `podman` or `docker`, for the `testenv-*` and `e2e-*` targets. Auto-detection prefers `podman`. |
 | `TESTENV_WORKERS` | `0` | The number of kind worker nodes for `testenv-up`, from 0 to 5. |
@@ -104,8 +106,8 @@ An empty value takes the default in the table.
 | `generate` | Regenerate the deepcopy code for `api/` with `controller-gen`. Run it after you change an API type. |
 | `manifests` | Regenerate the CRD, RBAC and webhook manifests into `config/`. Run it after you change API types or kubebuilder markers. |
 | `fmt` | Format Go code with `gofmt -s` and `goimports`. |
-| `vet` | Run `go vet` in every Go module, then on the `test` module's e2e-tagged code. |
-| `lint` | Run `golangci-lint` in every module and on the `test` module's e2e-tagged code, then `lint-api`. |
+| `vet` | Run `go vet` in every Go module, then on the envtest-tagged code in `internal/envtest` and the `test` module's e2e-tagged code. |
+| `lint` | Run `golangci-lint` in every module and on the envtest-tagged and e2e-tagged code, then `lint-api`. |
 | `lint-api` | Run `kube-api-linter` on the `api/` module. |
 | `lint-fix` | Run `lint` with the auto-fixers of both linters on. |
 
@@ -113,7 +115,8 @@ An empty value takes the default in the table.
 
 | Target | Description |
 | --- | --- |
-| `test` | Run the unit tests of every Go module with `-race -count=1`. It never compiles the e2e-tagged code. |
+| `test` | Run the unit tests of every Go module with `-race -count=1`. It never compiles the e2e-tagged or envtest-tagged code. |
+| `test-envtest` | Run the envtest tier in `internal/envtest` (build tag `envtest`, `-race`) against a real kube-apiserver and etcd that `setup-envtest` downloads for `ENVTEST_K8S_VERSION` into `bin/envtest`. CI runs it as the `envtest` job. |
 | `test-cover` | Run the unit tests with `-race` and coverage through `gotestsum`, and write a profile and a JUnit report per module into `bin/`. CI runs this instead of `test`. |
 | `cover-check` | Check each package's coverage in the `bin/cover-*.out` profiles against its floor in `hack/coverage-floors.txt`. Run it after `test-cover`. |
 
@@ -212,7 +215,7 @@ faster when only one has failed. Several need `python3`, `git` or `podman`.
 | `verify-version` | Check that `hack/version.sh` prints a valid semantic version for every checkout state. |
 | `verify-templates` | Render `templates/` with the pinned `clusterctl`. |
 | `verify-local-repository` | Generate the provider and both flavors from a clusterctl local repository of the release assets, offline and without a cluster. |
-| `verify-test-tiers` | Check that e2e code carries the `e2e` build tag and lives only in `test/e2e/` and `test/env/lifecycle/`. |
+| `verify-test-tiers` | Check that e2e code carries the `e2e` build tag and lives only in `test/e2e/` and `test/env/lifecycle/`, and that envtest code carries the `envtest` tag and lives only in `internal/envtest/`. |
 | `check-licenses` | Check that no MPL-2.0 dependency of `tfcapi-lint` applies Exhibit B. |
 | `check-headers` | Check that every source file starts with the Apache-2.0 license header, copyright The CAPTF Authors. `.licenserc.yaml` lists the exempt files. Runs Apache SkyWalking Eyes in a container pinned by digest, with `CONTAINER_TOOL`. Part of `verify`. |
 | `fix-headers` | Add the Apache-2.0 license header to every source file that lacks it. |
