@@ -23,6 +23,7 @@ page lists all of them, grouped by who uses them.
 | Key | Put it on | Value | Effect |
 | --- | --- | --- | --- |
 | `captf.io/restore-state` | `TerraformCluster`, `TerraformMachine`, `TerraformMachinePool` | Serial from `status.stateBackups` | Pushes that backup back as the state |
+| `captf.io/confirm-no-resources` | `TerraformCluster`, `TerraformMachine`, `TerraformMachinePool` | The Job name from the `ApplyOutcomeUnknown` message | Confirms an unconfirmed apply created nothing, releasing the hold |
 | `captf.io/variables` | A `ConfigMap` or `Secret` | `true` | Allows it as a `variablesFrom` source |
 | `captf.io/runner` | A `ServiceAccount` | `true` | Allows it as a custom runner account |
 
@@ -64,6 +65,31 @@ kubectl annotate terraformcluster <name> -n <namespace> \
 <namespace> -o jsonpath='{.status.stateBackups}'`. See the [state restore
 runbook](../operator-guide/runbooks/state-restore.md) and [Backups and
 Restore](../concepts/secret-management/backups.md#restore).
+
+### `captf.io/confirm-no-resources`
+
+Releases an object held at `StateReadable=False`/`ApplyOutcomeUnknown`: an
+apply Job ended without a result, or disappeared, before any state was
+written, so it may have created resources nothing records.
+
+| | |
+| --- | --- |
+| Kinds | `TerraformCluster`, `TerraformMachine`, `TerraformMachinePool` |
+| Value | The name of the Job the condition message names |
+| Removed by CAPTF | Yes, when it names the recorded Job |
+
+Set it only after you have checked the cloud and the Job created nothing. The
+controller then clears the `captf.io/unconfirmed-apply` record, removes the
+annotation, and in the same pass a live object applies again and a deleting
+object drops its finalizer. A value that names another Job is ignored and
+logged. It is consumed only on the no-state path: with a state, the record
+already keeps an apply due. See the [state restore
+runbook](../operator-guide/runbooks/state-restore.md#apply-outcome-unknown).
+
+```sh
+kubectl annotate terraformmachine <name> -n <namespace> \
+  captf.io/confirm-no-resources=<job> --overwrite
+```
 
 ### `captf.io/variables`
 
@@ -175,17 +201,23 @@ See [Retain and Adopt](../concepts/deletion/retain.md).
 
 ### On the durable inputs Secret
 
-The durable inputs Secret holds what CAPTF needs to re-render and destroy
-an object. Unlike `status`, these annotations move with the Secret.
+The durable inputs Secret (`captf-inputs-<kindshort>-<name>`) is the attempt
+record: it holds the files of the newest apply Job that was created, and the
+bookkeeping CAPTF needs to re-render and destroy an object. The applied Secret
+(`captf-applied-<kindshort>-<name>`, next section) holds the newest successful
+apply. Unlike `status`, these annotations move with the Secrets.
 
 | Key | Kind | On | Records |
 | --- | --- | --- | --- |
-| `captf.io/image` | annotation | Durable inputs Secret | `spec.source.image` as last written |
-| `captf.io/image-digest` | annotation | Durable inputs Secret | The resolved image digest, so a floating tag stays pinned across reconciles |
-| `captf.io/identity` | annotation | Durable inputs Secret, identity mirror | The `TerraformClusterIdentity` the credentials came from, or the Secret's name when `captf.io/identity-kind` is `Secret` |
-| `captf.io/identity-kind` | annotation | Durable inputs Secret | `Secret` when the credentials came from a namespace-local Secret (`identityRef.kind: Secret`); absent for a `TerraformClusterIdentity`. Pins the kind with the name, so an immutable kind's destroy keeps the same credentials |
+| `captf.io/image` | annotation | Durable inputs Secret, applied Secret, per-run Secret | `spec.source.image` of that attempt or apply |
+| `captf.io/inputs-hash` | annotation | Durable inputs Secret, applied Secret, per-run Secret (and the state Secret and Jobs) | The inputs hash the files were rendered with |
+| `captf.io/job` | annotation | Durable inputs Secret, applied Secret | The apply Job the record belongs to |
+| `captf.io/image-digest` | annotation | Applied Secret only | The digest the image resolved to in the pod of the last successful apply. It always pairs with the applied files; the durable Secret no longer carries it |
+| `captf.io/may-have-applied` | annotation | Durable inputs Secret | `true` when the newest apply may have run its apply step: it newly failed after the step may have run (the result lists it, or there is no result and the runner started, or the pod is gone), or its Job vanished. The next attempt write removes it, and so does a successful restore. A destroy then renders this record |
+| `captf.io/identity` | annotation | Durable inputs Secret, applied Secret, per-run Secret, identity mirror | The `TerraformClusterIdentity` the credentials came from, or the Secret's name when `captf.io/identity-kind` is `Secret` |
+| `captf.io/identity-kind` | annotation | Durable inputs Secret, applied Secret, per-run Secret | `Secret` when the credentials came from a namespace-local Secret (`identityRef.kind: Secret`); absent for a `TerraformClusterIdentity`. Pins the kind with the name, so an immutable kind's destroy keeps the same credentials |
 | `captf.io/applied` | annotation | Durable inputs Secret | `true` once an apply succeeded or a state with an inputs hash was read, so a later missing state reads as lost, not never written |
-| `captf.io/interrupted-apply` | annotation | Durable inputs Secret of a cluster or pool | An apply Job that was deleted while it ran. It may have applied part of its change, so an apply stays due, and is guarded, until one started after it succeeds |
+| `captf.io/unconfirmed-apply` | annotation | Durable inputs Secret of any kind | An apply Job whose outcome is unknown: it vanished while it ran, or it newly failed with no runner result after its runner started (or its pod is gone, for example an OOM or node loss). It may have applied part of its change, so an apply stays due, and is guarded, until one started after it succeeds; with no state and no earlier apply it holds the object at `StateReadable=False`/`ApplyOutcomeUnknown`. The old name `captf.io/interrupted-apply` is not read |
 | `captf.io/pending-cluster-outputs` | annotation | A pool's durable inputs Secret | A change of the cluster's exports whose pool apply was blocked before a destructive plan, as JSON. The pool keeps applying the exports of its last successful apply until you approve its `TerraformPlan` |
 | `captf.io/partial-cluster-outputs` | annotation | A pool's durable inputs Secret | A change of the cluster's exports whose pool apply failed, so the state may hold part of it, as JSON. Every apply is guarded until one succeeds |
 | `captf.io/applied-cluster-outputs-hash` | annotation | A pool's durable inputs Secret | The hash of the cluster exports the last successful pool apply rendered. A hash, never an exported value |
@@ -206,7 +238,7 @@ an object. Unlike `status`, these annotations move with the Secret.
 | `captf.io/plan-unreadable` | annotation | Job | That the Job's plan result could not be parsed |
 | `captf.io/approved-plan` | annotation | Job | The plan hash (`--expect-plan`) an apply Job was created to satisfy |
 | `captf.io/after-failed-apply` | annotation | Job | That the apply started while the newest apply had failed, so an earlier failure still counts and the apply waits for approval instead of being dropped |
-| `captf.io/after-interrupted-apply` | annotation | Job | The vanished apply Job that this apply started after. Its success removes the `captf.io/interrupted-apply` record |
+| `captf.io/after-interrupted-apply` | annotation | Job | The unconfirmed apply Job that this apply started after. Its success removes the `captf.io/unconfirmed-apply` record |
 | `captf.io/restore-serial` | annotation | Restore Job | The backup serial the Job pushes |
 | `captf.io/approval-hash` | annotation | Pool apply Job | The approval hash of a pool apply guarded for a change of the cluster's exports: the `spec.inputsHash` of the `ExportsChange` `TerraformPlan`, and the value of `--allow-deletes-hash` |
 | `captf.io/cluster-outputs-hash` | annotation | Pool apply Job | The hash of the cluster exports the apply renders |

@@ -178,7 +178,7 @@ cluster. Keep these outside it:
   Secrets wherever you store other credentials; keep the manifests in
   version control.
 - **The module images** your objects reference, by digest. The durable
-  inputs Secret pins the digest of the last successful apply; a destroy
+  applied Secret pins the digest of the last successful apply; a destroy
   needs that image to exist.
 
 !!! warning "Treat any such backup as sensitive as the Secrets themselves"

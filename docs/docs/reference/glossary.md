@@ -70,12 +70,13 @@ what that page already says.
     [Drift and Health](../concepts/drift-and-health.md).
 
 **durable inputs (Secret)**
-:   `captf-inputs-<kindshort>-<name>`, the
-    record of what the controller rendered when it last started an apply
-    Job for an object. An immutable machine's destroy, drift and refresh
-    always use it; a mutable cluster or pool's destroy prefers it and falls
-    back to current inputs, while its drift and refresh prefer current
-    inputs and fall back to it. See [Job Inputs](../concepts/inputs.md).
+:   `captf-inputs-<kindshort>-<name>`, the attempt record: what the controller
+    rendered for the newest apply Job it created. Alongside it,
+    `captf-applied-<kindshort>-<name>` is the applied record of the newest
+    successful apply, with its image digest. An immutable machine's destroy,
+    drift and refresh use the record the state describes; a mutable cluster
+    or pool's destroy prefers it and falls back to current inputs, while its
+    drift and refresh prefer current inputs and fall back to it. See [Job Inputs](../concepts/inputs.md).
 
 **identity**
 :   A `TerraformClusterIdentity`: names the Secret of cloud

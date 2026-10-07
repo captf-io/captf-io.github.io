@@ -146,11 +146,13 @@ drift and destroy from the durable inputs Secret below.
 
 ### Durable inputs
 
-The rendered inputs (including `bootstrap_data`) are stored in a Secret
-owned by the Terraform* object (`captf-inputs-<kindshort>-<name>`), so
-drift and destroy of immutable machines re-feed exactly the values used at
-apply, and the Secret moves with the object. The resolved image digest
-(`captf.io/image-digest`, see
+The rendered inputs (including `bootstrap_data`) are stored in two Secrets
+owned by the Terraform* object: `captf-inputs-<kindshort>-<name>` holds the
+newest apply attempt (written after its Job is created), and
+`captf-applied-<kindshort>-<name>` holds the newest successful apply. Drift
+and destroy of immutable machines re-feed exactly the values used at apply,
+and the Secrets move with the object. The resolved image digest
+(`captf.io/image-digest` on the applied Secret, see
 [`image-contract.md`](../../image-contract.md#versioning-and-pinning)
 "Versioning and pinning") and the identity are pinned there too, so an
 immutable machine's drift and destroy always run the exact image that

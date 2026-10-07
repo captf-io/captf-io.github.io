@@ -105,14 +105,16 @@ Notes:
 
 | Op | Inputs it runs against | Writes the durable Secret |
 | --- | --- | --- |
-| `apply`, `plan` | The current inputs | `apply` only |
-| `refresh`, `drift` | Current (mutable) or durable (immutable) | No |
-| `destroy` | The durable inputs | No |
+| `apply`, `plan` | The current inputs | `apply` only (the attempt record, after the Job is created) |
+| `refresh`, `drift` | Current (mutable) or the recorded inputs (immutable) | No |
+| `destroy` | The recorded inputs the state describes (see [Which record a destroy renders](../deletion/destroy-job.md#which-record-a-destroy-renders)) | No |
 | `restore` | None: a backend-only root and the backup chunks | No |
 
 Only `apply` and `plan` run the spec's image as written. Every other op runs
-the digest pinned after the last successful apply, when one exists; without
-one it falls back to the spec reference and emits `DigestUnknown`.
+the digest of the record it renders, when it has one: the applied record's
+digest (the pod's digest of the last successful apply). An attempt record has
+no digest, so an op that renders it runs the spec reference and emits
+`DigestUnknown`.
 
 !!! related "See also"
 

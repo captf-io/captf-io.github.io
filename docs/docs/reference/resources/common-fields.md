@@ -593,7 +593,7 @@ status:
 | --- | --- | --- |
 | `status.source` | `object` | What the last Job ran. |
 | `status.source.image` | `string` | The image reference that ran last, as written in the spec. **Range:** 1 to 512 characters. |
-| `status.source.imageDigest` | `string` | The digest the container runtime resolved the image to (the pod's `imageID`). Informational: the pinned copy lives on the durable inputs Secret as `captf.io/image-digest`. **Range:** 1 to 512 characters. |
+| `status.source.imageDigest` | `string` | The digest the container runtime resolved the image to (the pod's `imageID`). Informational: it comes from the applied record, the applied Secret `captf-applied-*`, where `captf.io/image-digest` pairs it with the files of the latest successful apply. **Range:** 1 to 512 characters. |
 | `status.source.runtimeVersion` | `string` | The version reported by `<command> version -json`. **Range:** 1 to 64 characters. |
 
 ```yaml

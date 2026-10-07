@@ -29,7 +29,8 @@ order:
    has no `deletecollection`), then the **state lock Lease**
    `lock-tfstate-default-<suffix>`. Neither Terraform nor OpenTofu deletes
    its own state: a destroy only empties it.
-2. **The durable inputs Secret** `captf-inputs-<kindshort>-<name>`.
+2. **The durable inputs Secret** `captf-inputs-<kindshort>-<name>` and the
+   **applied Secret** `captf-applied-<kindshort>-<name>`.
 3. **The plan key Secret.** It is owned by the object too, but is removed
    here so it does not outlive a finished destroy while it waits for
    garbage collection.
@@ -42,7 +43,7 @@ order:
 6. **The finalizer**, in the same patch that writes the status.
 
 [Retain](held.md#retain) runs a different set: it keeps the state
-Secrets, the state backups and the durable inputs Secret, taking their
+Secrets, the state backups and the durable and applied inputs Secrets, taking their
 owner references away and labeling them `captf.io/retained-from-uid`, and
 only then runs steps 3 to 6 after deleting the state lock Lease (see
 [Retain and Adopt](retain.md#what-retain-keeps)). It waits for a live run

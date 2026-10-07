@@ -58,7 +58,7 @@ what each CAPTF object is, how to select it, and what happens if it is lost.
 | --- | --- | --- |
 | **State Secrets** `tfstate-default-<suffix>` and `-part-N` | Label `tfstate=true` | The state is gone: `StateReadable=False`/`StateLost` for an object that applied, no Job runs, a deletion is held |
 | **State backups** `captf-state-backup-*` | Label `captf.io/state-backup=true` | No in-cluster restore source |
-| **Durable inputs** `captf-inputs-<kindshort>-<name>` | Name prefix `captf-inputs-` (label `captf.io/managed=true` with the owner-kind label) | The `captf.io/applied` marker, the pinned digest and the pinned identity go; a `TerraformMachine` can no longer render a destroy (`DestroyFailed`) |
+| **Durable and applied inputs** `captf-inputs-<kindshort>-<name>`, `captf-applied-<kindshort>-<name>` | Name prefixes `captf-inputs-` and `captf-applied-` (label `captf.io/managed=true` with the owner-kind label) | The `captf.io/applied` marker, the pinned digest and the pinned identity go; a `TerraformMachine` can no longer render a destroy (`DestroyFailed`) |
 | **`Terraform*` objects** | The kinds | The spec is the module's inputs; without it nothing can be rebuilt |
 | **`TerraformClusterIdentity`** (cluster-scoped) | The kind | Objects report `IdentityNotFound`; no Job, not even a destroy |
 | **Identity source Secrets** | The Secret named by each identity's `spec.secretRef` | `SecretNotFound` on the identity and every object using it |
@@ -140,8 +140,8 @@ see.
     A new `Terraform*` object whose state Secret is missing and
     that shows no sign of an earlier apply reads as "never applied", and its
     first apply creates a **second** set of resources next to the live ones. The
-    signs of an earlier apply are the `captf.io/applied` marker or a pinned
-    digest on the durable inputs Secret, or any state backup. With any of them
+    signs of an earlier apply are the `captf.io/applied` marker on the durable inputs
+    Secret, an applied Secret (`captf-applied-*`), or any state backup. With any of them
     the missing state reads as lost and nothing runs. So restore the Secrets
     **before** the objects can reconcile, or restore the objects paused.
 

@@ -56,7 +56,7 @@ is running, the controller:
 | --- | --- |
 | The state Secrets, every chunk | Kept |
 | The state backups | Kept |
-| The durable inputs Secret | Kept |
+| The durable and applied inputs Secrets | Kept |
 | The state lock Lease | Deleted |
 | The plan key, the run and write leases | Deleted |
 | The object's place among the credential mirror's owners | Dropped, as on every deletion |
@@ -85,7 +85,7 @@ Setting it on a deletion that is stuck releases it, whatever holds it:
 
 - the state is lost or unreadable (a [held deletion](held.md));
 - the last destroy failed;
-- the destroy cannot start: the durable inputs are gone, the identity no
+- the destroy cannot start: the inputs Secrets (durable and applied) are gone, the identity no
   longer allows the namespace or no longer exists, or the runner
   credentials cannot be prepared.
 
@@ -139,7 +139,7 @@ it as you like.
     The adopted state was written by the earlier object's inputs. A
     `TerraformCluster` or `TerraformMachinePool` whose spec differs applies
     the difference, guarded as any change is. A `TerraformMachine` is
-    immutable and keeps the adopted durable inputs, image and identity.
+    immutable and keeps the adopted inputs records, image and identity.
 
 ## Discarding retained state
 

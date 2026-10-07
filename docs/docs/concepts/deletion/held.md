@@ -34,7 +34,7 @@ that did, the state was lost. The controller tells them apart with
 | --- | --- | --- |
 | `status.initialization.provisioned` is true | The object's status | No |
 | The `captf.io/applied: "true"` marker | The durable inputs Secret `captf-inputs-*`, set at the first successful apply or restore, never cleared | Yes, it moves with the Secret |
-| A pinned image digest | The same Secret; only a successful apply pins one, but an image change clears it | Yes |
+| An applied record | The applied Secret `captf-applied-*`; only a successful apply writes one | Yes |
 | Any state backup exists | The `captf-state-backup-*` Secrets | Yes (owned by the object) |
 
 With `--state-backups=0` no backup is ever taken, so the last signal is

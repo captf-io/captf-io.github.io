@@ -27,18 +27,19 @@ Each section names the page that covers the detail.
 2. The manager's reconcile resolves the identity, makes sure the mirror
    `captf-creds-<identity>` is current, and creates the `captf-runner`
    ServiceAccount and RoleBinding in the namespace if they are missing.
-3. It renders the inputs, writes the durable `captf-inputs-<kindshort>-<name>`
-   Secret, takes the run lease (and, for a `TerraformCluster`, the cluster
-   write lease), creates the Job, and creates the per-run `captf-run-<job>`
-   Secret for it.
+3. It renders the inputs, takes the run lease (and, for a `TerraformCluster`,
+   the cluster write lease), creates the Job, creates the per-run
+   `captf-run-<job>` Secret for it, and then writes the durable
+   `captf-inputs-<kindshort>-<name>` Secret (the attempt record).
 4. The Job's runner runs `init` and `apply`. Terraform creates
    `tfstate-default-<suffix>` and the lock Lease `lock-tfstate-default-<suffix>`.
    Neither is owned by anything yet.
-5. When the Job finishes, the manager deletes the per-run Secret and
-   releases the leases, reads the state, and adopts it: it adds the owner
-   reference to every chunk and sets `captf.io/inputs-hash`. It pins the
-   image digest and sets `captf.io/applied` on the durable Secret, and
-   takes the first backup, `captf-state-backup-<suffix>-<serial>`.
+5. When the Job finishes, the manager promotes the per-run Secret into the
+   applied record `captf-applied-<kindshort>-<name>` (files, image, identity,
+   hash and digest), deletes the per-run Secret and releases the leases,
+   reads the state, and adopts it: it adds the owner reference to every chunk
+   and sets `captf.io/inputs-hash`. It sets `captf.io/applied` on the durable
+   Secret, and takes the first backup, `captf-state-backup-<suffix>-<serial>`.
 
 ```mermaid
 sequenceDiagram
@@ -47,11 +48,11 @@ sequenceDiagram
     participant J as Job
     Op->>M: identity, Secret, Cluster API objects
     M->>M: mirror, ServiceAccount, RoleBinding
-    M->>M: durable inputs, leases
-    M->>J: create Job, then per-run Secret
+    M->>M: leases
+    M->>J: create Job, per-run Secret, then durable inputs
     J->>J: init, apply (creates state and lock)
-    M->>M: delete per-run Secret, release leases
-    M->>M: adopt state, pin digest, first backup
+    M->>M: promote to applied inputs, delete per-run Secret, release leases
+    M->>M: adopt state, first backup
 ```
 
 ## Refresh and drift
@@ -66,16 +67,17 @@ the next adoption.
 ## A change
 
 For a mutable object, a change in the image or the inputs produces a new
-inputs hash. The manager rewrites the durable Secret (an image change also
-clears the pinned digest), starts an apply Job with a new per-run Secret,
-and adopts the state with the new hash when it succeeds. With
+inputs hash. The manager starts an apply Job with a new per-run Secret and writes the
+durable Secret (the attempt record) once the create succeeds. When the apply
+succeeds, it promotes the inputs into the applied record and adopts the state
+with the new hash. With
 `applyPolicy: Manual`, a plan Job runs first with the plan key mounted, and
 the apply waits for your approval (see [Run inputs and the plan
 key](run-inputs.md#the-plan-key)). Each new serial adds a backup, and the
 oldest complete set beyond `--state-backups` is pruned.
 
 An immutable `TerraformMachine` never re-renders after it is provisioned: a
-change means a new object, and the durable Secret keeps what the old one
+change means a new object, and the inputs Secrets keep what the old one
 needs for its destroy.
 
 ## Delete
@@ -85,7 +87,7 @@ needs for its destroy.
    the Job has credentials, and takes the leases.
 2. The Job's runner runs `init` and `destroy`.
 3. When the destroy succeeds, cleanup deletes the state Secrets one by
-   one and the lock Lease, the durable inputs Secret, the plan key and the
+   one and the lock Lease, the durable and applied inputs Secrets, the plan key and the
    leases, removes the object's reference from the mirror (the mirror is
    deleted if it was the last), and removes the finalizer.
 4. The state backups are not deleted by cleanup. They are owned by the
@@ -102,8 +104,9 @@ the same cleanup.
 deletes them from the source with their finalizers stripped, so the
 manager's own delete path never runs on the source. What arrives:
 
-- The state chunks, the backups and the durable inputs Secret, which carry
-  the move label or an owner reference to a moved object. The plan key and
+- The state chunks, the backups and both inputs Secrets (durable and
+  applied), which carry the move label or an owner reference to a moved
+  object. The plan key and
   the mirror also follow their owners.
 - Not the identity's source Secret: you copy it yourself.
 - Not the Leases. The backend recreates the lock Lease at the target's next
@@ -143,7 +146,8 @@ applied when any of these is true:
 
 - the object is provisioned;
 - the durable inputs Secret carries `captf.io/applied: "true"`;
-- the durable inputs Secret pins an image digest;
+- an applied record `captf-applied-*` exists (only a successful apply writes
+  one);
 - a state backup exists.
 
 An applied object with no state reports `StateReadable=False`/`StateLost`.

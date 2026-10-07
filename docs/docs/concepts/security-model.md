@@ -158,10 +158,12 @@ names are dynamic. The reasoning is in
 
 ## Image pinning by digest
 
-The first time an apply Job of a `Terraform*` object **succeeds**, the
+Each time an apply Job of a `Terraform*` object **succeeds**, the
 controller records the image digest the kubelet actually ran (read from the
 pod's container status, not from `spec.source.image`) as `captf.io/image-digest`
-on the object's durable inputs Secret; a failed apply pins nothing. See
+on the object's applied Secret (`captf-applied-*`), together with the files
+that apply ran; a failed apply pins nothing. The digest always pairs with the
+files of the latest success, so a later success replaces it. See
 [Annotations, Labels and Finalizers](../reference/annotations-labels.md) for
 the annotation.
 
@@ -176,7 +178,7 @@ the annotation.
 Pinning guards against an accident — a tag moved out from under a running
 cluster changing what a later destroy runs — not against a hostile image:
 the pinned digest is whichever image `spec.source.image` named when the
-apply succeeded, and that image's own runtime computed the plan and ran the
+latest apply succeeded, and that image's own runtime computed the plan and ran the
 providers. Approving a blocked destructive plan or a Manual-policy plan
 preview is a write to a `TerraformPlan`, held apart from the right to edit the
 target: the shipped `captf-plan-approver-role` is aggregated into no built-in

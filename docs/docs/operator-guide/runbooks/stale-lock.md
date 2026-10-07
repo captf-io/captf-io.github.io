@@ -134,7 +134,7 @@ docker run --rm --entrypoint /captf/runtime \
   <image>@<digest> force-unlock -force <lock-id>
 ```
 
-`<image>@<digest>` comes from the object's durable inputs Secret
+`<image>@<digest>` comes from the object's applied Secret `captf-applied-<kindshort>-<name>`
 (`captf.io/image`/`captf.io/image-digest`; drop any `:tag` from `image`,
 append `@` and the digest). `<labels>` must be the same HCL object the Job
 itself would pass, or `init` reads an empty state: read it off the state

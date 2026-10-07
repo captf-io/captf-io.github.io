@@ -52,7 +52,8 @@ carrying the move label.
 | The `Terraform*` objects | Owner chain | Spec and metadata only |
 | State Secrets, every chunk | `clusterctl.cluster.x-k8s.io/move` label, and the owner reference once the object owns it | The label is set by the backend config on every state Secret |
 | State backups | The same label and owner reference | |
-| The durable inputs Secret | Owner reference | No move label; it carries the `captf.io/applied` marker and the pinned digest |
+| The durable inputs Secret (attempt record) | Owner reference | No move label; it carries the `captf.io/applied` marker |
+| The applied Secret (`captf-applied-<kindshort>-<name>`) | Owner reference | No move label; it carries the image digest of the last successful apply |
 | The plan key Secret | Owner reference | |
 | `TerraformPlan` objects | Owner reference | A finished plan (`Applied`, `Superseded`, `Failed`) moves with any `approvedBy`. An in-flight plan (`Pending`, `Approved`) is created again by the mover, so the webhook accepts it only when the mover is its approver: the mover re-approves it |
 | The credential mirror | Owner reference | Recreated if missing |
@@ -90,7 +91,7 @@ once the namespace holds no `Terraform*` object.
 ## After the move
 
 On the target, the first reconcile reads the moved state. A state that did
-not arrive, while the durable Secret's marker or a backup says the object
+not arrive, while the durable Secret's marker, the applied record or a backup says the object
 applied, reads as `StateLost`, not as a new object, so it is never applied a
 second time next to the live resources; restore a backup or investigate.
 Periodic checks have no history to count from, so the drift and health

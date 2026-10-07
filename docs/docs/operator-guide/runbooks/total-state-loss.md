@@ -46,8 +46,8 @@ flowchart TD
 ```
 
 "Ever applied" means **any** of: `status.initialization.provisioned`, the
-`captf.io/applied` marker on the durable inputs Secret, a pinned image digest
-on it, or any state backup Secret of the object. With any of them, a missing
+`captf.io/applied` marker on the durable inputs Secret, an applied record (the applied Secret
+`captf-applied-*`), or any state backup Secret of the object. With any of them, a missing
 state reads as `StateReadable=False`/`StateLost` and **no Job runs**: not an
 apply, not a refresh, not a drift check. So an `import` block in the module
 cannot run, because nothing runs the module. No annotation clears the marker.
@@ -141,7 +141,7 @@ the state. If it is a pool or cluster, pause its Cluster
     ```
 
     The `<image>@<digest>` is `captf.io/image` and `captf.io/image-digest` from
-    the durable inputs Secret, or `status.source` on the object. This follows
+    the applied Secret `captf-applied-*`, or `status.source` on the object. This follows
     [Stuck Destroy](stuck-destroy.md#4-clean-up-the-cloud-resources), which runs
     the same binary this way; only the backend arguments differ (a kubeconfig
     instead of the pod's own token).

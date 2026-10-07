@@ -40,7 +40,7 @@ longer act for it.
 | The cloud resources | **Keep running, untracked.** The state was the only record of them |
 | The state Secrets | Collected if owned (owner reference). A chunk written since the last reconcile, or any chunk of an object paused since, has only the backend labels and is **left behind** |
 | The state backups | Collected: they are owned by the object. The newest copy of a lost state goes with them |
-| The durable inputs Secret | Collected, with the pinned image and the rendered module needed to destroy by hand |
+| The durable and applied inputs Secrets | Collected, with the pinned image and the rendered module needed to destroy by hand |
 | The plan key Secret, the Jobs and their pods | Collected |
 | The state lock Lease, the run lease, the cluster write lease | **Left behind.** They carry no owner reference |
 | The credential mirror | Collected once every owner is gone; the mirror's owner list is not updated |

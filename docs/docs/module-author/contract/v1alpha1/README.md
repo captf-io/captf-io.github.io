@@ -272,7 +272,8 @@ reference accordingly.
   Secret, written when that apply Job starts (a failed apply may already
   have created resources from those inputs, so destroy must use them),
   owned by the Terraform* object (`captf-inputs-<kindshort>-<name>`),
-  together with the resolved image digest (`captf.io/image-digest`) and
+  together with the resolved image digest (`captf.io/image-digest`, on the
+  applied Secret `captf-applied-<kindshort>-<name>`) and
   the identity. **Drift and destroy render from that Secret**, never from
   the live CAPI objects: destroy must work after the bootstrap Secret, the
   owning Machine/MachinePool, or the Cluster are gone, and drift on an

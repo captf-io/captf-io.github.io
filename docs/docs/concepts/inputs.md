@@ -77,25 +77,35 @@ flowchart TD
     DurableP -.->|destroy always; drift/refresh when gated or current inputs unavailable| RenderP
 ```
 
-Why two Secrets exist:
+Why three Secrets exist:
 
-- **Durable inputs Secret** (`captf-inputs-<kindshort>-<name>`, owned by the
-  Terraform\* object, moves with it across `clusterctl move`): the record of
-  what was rendered when the controller last **started** an apply Job for
-  this object (written at Job start, not gated on the Job's success).
-  Destroy always prefers it; a **cluster or pool** (both mutable) whose
-  durable Secret is missing falls back to freshly built current inputs, but
-  a **machine** (immutable) never does — with no durable Secret and no live
-  spec to fall back to, destroy has nothing to run against until the Secret
-  is restored. Drift and refresh follow the same asymmetry: a cluster or
+- **Durable inputs Secret, the attempt record**
+  (`captf-inputs-<kindshort>-<name>`, owned by the Terraform\* object, moves
+  with it across `clusterctl move`): the record of what was rendered for the
+  newest apply Job that was **created** (or a running one adopted). It is
+  written after the Job create succeeds, so a start that is deferred,
+  refused or never reaches the create writes nothing. It is not gated on the
+  Job's success.
+- **Applied Secret, the applied record** (`captf-applied-<kindshort>-<name>`,
+  the same owner reference and labels, so it moves, is retained and is
+  cleaned up with the durable Secret): the files, image, identity, inputs
+  hash and digest of the newest **successful** apply. It is a separate
+  Secret because two copies of files of up to 1 MB do not fit in one Secret.
+  Destroy renders the record the state describes (see [Which record a
+  destroy renders](deletion/destroy-job.md#which-record-a-destroy-renders)); a
+  **cluster or pool** (both mutable) with no record falls back to freshly
+  built current inputs, but a **machine** (immutable) never does — with no
+  record and no live spec to fall back to, destroy has nothing to run
+  against until a Secret is restored. Drift and refresh follow the same asymmetry: a cluster or
   pool checks against its *current* inputs when they build cleanly, falling
-  back to the durable Secret only when they don't (a dependency gate, an
-  owner gone); a machine, being immutable, always checks against the durable
-  Secret.
+  back to the recorded inputs only when they don't (a dependency gate, an
+  owner gone); a machine, being immutable, always checks against its
+  recorded inputs (the applied record, else the attempt record).
 - **Per-run Secret** (`captf-run-<job>`, owned by the Job, mounted at
-  `/captf/config`, deleted when the Job finishes): a private copy the Job's
-  pod reads, so a rewrite of the durable Secret by a later reconcile can
-  never change the files under a running Job.
+  `/captf/config`): a private copy the Job's pod reads, so a rewrite of the
+  durable Secret by a later reconcile can never change the files under a
+  running Job. When bookkeeping reads a newly finished successful apply, it
+  is promoted into the applied record and then deleted.
 
 ## 2. Cluster role inputs
 
@@ -361,13 +371,20 @@ What a change does, per kind:
 
 ## 8. Inspecting the inputs of a live object
 
-The durable Secret holds exactly two data keys, `main.tf.json` and
-`terraform.tfvars.json`, plus three annotations recording the pinned
-execution context: `captf.io/image`, `captf.io/image-digest`,
-`captf.io/identity`. Its name follows the pattern
-`captf-inputs-c-<cluster-name>` for a `TerraformCluster`,
+The durable Secret (the attempt record) and the applied Secret each hold
+exactly two data keys, `main.tf.json` and `terraform.tfvars.json`, plus
+annotations recording the execution context: `captf.io/image`,
+`captf.io/identity`, `captf.io/identity-kind`, `captf.io/inputs-hash` and
+`captf.io/job`. Only the applied Secret carries `captf.io/image-digest`. The
+durable Secret also carries `captf.io/may-have-applied` and the other
+bookkeeping annotations listed in [Annotations, Labels and
+Finalizers](../reference/annotations-labels.md#on-the-durable-inputs-secret).
+The names follow the pattern `captf-inputs-c-<cluster-name>` (and
+`captf-applied-c-<cluster-name>`) for a `TerraformCluster`,
 `captf-inputs-m-<machine-name>` for a `TerraformMachine`, and
-`captf-inputs-mp-<pool-name>` for a `TerraformMachinePool`.
+`captf-inputs-mp-<pool-name>` for a `TerraformMachinePool`. Read the applied
+record (`captf-applied-*`) to see what the last successful apply ran with, and
+the durable one to see what the newest attempt ran with.
 
 To print the tfvars **without** the sensitive `bootstrap_data` key:
 
@@ -387,12 +404,13 @@ jq -r '.data["terraform.tfvars.json"] | @base64d | fromjson' <<<"$s" \
   | jq --argjson drop "$sensitive" 'del(.bootstrap_data) | delpaths([$drop[] | [.]])'
 ```
 
-!!! danger "Both input Secrets carry bootstrap data in cleartext"
+!!! danger "All input Secrets carry bootstrap data in cleartext"
 
-    Both the durable Secret (`captf-inputs-<kindshort>-<name>`) and
+    The durable Secret (`captf-inputs-<kindshort>-<name>`), the applied
+    Secret (`captf-applied-<kindshort>-<name>`) and
     the per-run Secret (`captf-run-<job>`) carry bootstrap data in
     cleartext by design — for control-plane machines that includes the
-    cluster CA and service-account private keys. Treat both Secrets as
+    cluster CA and service-account private keys. Treat all of them as
     sensitive: avoid `kubectl get -o yaml` or `-o json` on them, which
     print every key including `bootstrap_data` unredacted
     (`kubectl describe secret` is safe: it prints only key names and byte

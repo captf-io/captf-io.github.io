@@ -130,8 +130,9 @@ the [runbooks](../../operator-guide/runbooks/README.md).
 | `tfstate-default-<suffix>` and `-part-N` | Secret | The Terraform or OpenTofu `kubernetes` backend, inside the Job | The object, as a non-blocking owner reference, set after the first successful apply. A chunk without one (written by a refresh or drift Job, or restored without references) or naming an earlier UID is owned again on the next reconcile | Gzipped state under the key `tfstate` | Yes: it carries the move label | Cleanup after a destroy or a delete with no state; kept, with the owner reference removed and a `captf.io/retained-from-uid` label, by a Retain |
 | `lock-tfstate-default-<suffix>` | Lease | The backend, when a run takes the lock | None | The lock holder's information | No: a Lease is not discovered; the backend recreates it | Cleanup, with the state |
 | `captf-state-backup-<suffix>-<serial>` and `-part-N` | Secret | The manager, after it sees a new serial | The object (non-controller reference); re-owned after a restore | A verbatim copy of the state chunks | Yes: it carries the move label | With the object, by garbage collection; pruned beyond `--state-backups`. A Retain removes the owner reference and keeps them |
-| `captf-inputs-<kindshort>-<name>` | Secret | The manager, when an apply Job starts | The object; re-owned after a restore | The rendered root module and tfvars, plus the image, digest, identity and applied marker | Yes, by following the owner reference | Cleanup; kept, with the owner reference removed, by a Retain |
-| `captf-run-<job>` | Secret | The manager, right after it creates the Job | The Job | The same two rendered files | Not applicable: it lives only while the Job does | The first time the controller sees the Job finished |
+| `captf-inputs-<kindshort>-<name>` | Secret | The manager, after it creates an apply Job (the attempt record) | The object; re-owned after a restore | The rendered root module and tfvars of the newest attempt, plus the image, identity, inputs hash, Job, applied marker and bookkeeping annotations | Yes, by following the owner reference | Cleanup; kept, with the owner reference removed, by a Retain |
+| `captf-applied-<kindshort>-<name>` | Secret | The manager, when it reads a newly finished successful apply (the applied record) | The object; re-owned after a restore | The rendered root module and tfvars of the newest successful apply, plus its image, digest, identity, inputs hash and Job | Yes, by following the owner reference | Cleanup; kept, with the owner reference removed, by a Retain |
+| `captf-run-<job>` | Secret | The manager, right after it creates the Job | The Job | The same two rendered files, plus the image, identity and inputs hash | Not applicable: it lives only while the Job does | After the manager promotes it to the applied record, not when it first sees the Job finished |
 | `captf-plankey-<kindshort>-<name>` | Secret | The manager, before a plan or approved apply Job | The object; re-owned after a restore | 32 random bytes under the key `key` | Yes, by following the owner reference | Cleanup |
 | `captf-creds-<identity>` (the mirror) | Secret | The manager, on a reconcile of an object that uses the identity | Each object that uses it (non-controller references); a using object's reference to its earlier UID is replaced | A copy of the identity's source Secret data | Yes, and it is rewritten from the source on the target | When its last user is gone, or when the namespace stops being allowed |
 | The identity's source Secret (any name) | Secret | The operator | None | Cloud credentials | No: copy it to the target yourself | By the operator |
@@ -153,10 +154,12 @@ flowchart TD
     end
     subgraph mgr[Manager]
         MIR["captf-creds-identity<br/>(mirror)"]
-        DUR["captf-inputs-kind-name<br/>(durable inputs)"]
+        DUR["captf-inputs-kind-name<br/>(attempt record)"]
+        APP["captf-applied-kind-name<br/>(applied record)"]
         RUN["captf-run-job<br/>(per-run inputs)"]
         KEY["captf-plankey-<br/>kind-name"]
         DUR -->|"copied at<br/>Job start"| RUN
+        RUN -->|"promoted on<br/>success"| APP
     end
     subgraph job[Job pod]
         R["Runner"] --> TF["Terraform or<br/>OpenTofu"]
@@ -179,8 +182,9 @@ flowchart TD
 The flow, in words. An operator creates the identity's source Secret and
 the `TerraformClusterIdentity` that names it. When an object runs, the
 manager mirrors the source into the object's namespace and renders the
-object's inputs into the durable Secret, then copies them into a per-run
-Secret that belongs to one Job. The Job's runner receives the per-run
+object's inputs into a per-run Secret that belongs to one Job, and records
+them in the durable Secret. When the Job succeeds, the per-run copy is
+promoted into the applied Secret. The Job's runner receives the per-run
 Secret, the mirror and, for a plan, the plan key; it runs Terraform, which
 reads and writes the state Secrets and holds the lock Lease through the
 cluster API. The manager reads the state back, takes a backup when the
