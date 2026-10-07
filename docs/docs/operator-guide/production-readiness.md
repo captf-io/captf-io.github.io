@@ -83,8 +83,9 @@ provide.
   limit. The sizes are an estimate, not yet measured: the informers hold
   Secrets without their data, so the steady state is small, and the limit
   leaves room for a reconcile that reads a large state (up to 64Mi
-  decompressed) with several others in flight. Memory still grows with the
-  number of objects and Jobs. Watch the manager's working set and raise the
+  decompressed) with several others in flight. Memory grows with the
+  number of objects and Jobs, not with the size of state, backups or inputs:
+  the informers are metadata-only. Watch the manager's working set and raise the
   limit before it reaches it.
 - [ ] **Concurrency.** `--terraformcluster-concurrency` and its machine, pool and
   template counterparts default to 10 each. They cap reconciles in flight

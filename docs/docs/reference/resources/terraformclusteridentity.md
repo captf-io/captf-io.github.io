@@ -275,8 +275,10 @@ An identity sets one condition, `Ready`.
 `Ready` says nothing about which namespaces are allowed or whether a mirror
 exists; the objects that reference the identity report that through their
 `IdentityAllowed` and `CredentialsMirrored` conditions. The controller does
-not watch the source Secret, so it re-reads it every five minutes and notices
-a Secret created or deleted out of band within that time. It also emits
+not watch the source Secret, so it re-reads it every five minutes while `Ready`
+is `True` and every 30 seconds while it is `False`, and notices a Secret
+created or deleted out of band within that time. `status.namespaces` is
+computed from the manager's cache. It also emits
 `IdentitySecretNotFound` (also for `CredentialsIncomplete`) and
 `IdentitySecretFound` events when `Ready` changes. Every reason and its meaning is in [Conditions](../conditions.md).
 

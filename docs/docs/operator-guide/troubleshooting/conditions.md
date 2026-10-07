@@ -122,13 +122,16 @@ normal (`True` is healthy).
 
 Whether the object's `TerraformClusterIdentity` exists, allows the namespace and
 has its credentials Secret. While it is not `True` no Job starts, except that a
-deletion that needs no Job still finishes.
+deletion that needs no Job still finishes. `IdentityAllowed`, `CredentialsMirrored`
+and `RunnerRBACReady` are re-evaluated only on passes with no active Job; while
+a Job runs they keep their last values. A credential error blocks only the
+start of new Jobs, never the bookkeeping of finished ones.
 
 | Status | Reason | Meaning | Likely cause | What to do | See |
 | --- | --- | --- | --- | --- | --- |
 | `True` | `IdentityAllowed` | The identity exists, allows the namespace and its Secret exists with every required key. | The normal state. | Nothing. | [Identities](../../user-guide/identities.md) |
 | `True` | `LocalSecret` | `identityRef.kind` is `Secret` and that Secret exists in the object's namespace. It is used as it is. | The normal state for a namespace-local Secret. | Nothing. | [Identities](../../user-guide/identities.md#use-a-secret-in-the-objects-namespace) |
-| `False` | `IdentityNotFound` | No identity resolved. | No `identityRef` on the object or the cluster defaults, or the named identity does not exist. | Set `identityRef.name` to an existing identity, or create it. | [Identity runbook](../runbooks/identity-and-credentials.md#identitynotfound) |
+| `False` | `IdentityNotFound` | No identity resolved. | No `identityRef` on the object or the cluster defaults, or the named identity does not exist or was deleted (the controller then removes its mirrors and emits `MirrorRemoved`). | Set `identityRef.name` to an existing identity, or create it. | [Identity runbook](../runbooks/identity-and-credentials.md#identitynotfound) |
 | `False` | `NamespaceNotAllowed` | The identity's `allowedNamespaces` excludes this namespace. The mirror is revoked. | The namespace was never added, or was removed. | Add the namespace to the identity. | [Identity runbook](../runbooks/identity-and-credentials.md#namespacenotallowed) |
 | `False` | `SecretNotFound` | The identity allows the namespace but its credentials Secret does not exist. | Not created, deleted, or not copied after a `clusterctl move`. | Create the Secret at the name and namespace in `spec.secretRef`. With `kind: Secret`, create it in the object's own namespace. | [Identity runbook](../runbooks/identity-and-credentials.md#secretnotfound) |
 | `False` | `CredentialsIncomplete` | The identity's Secret lacks a key in its `spec.requiredKeys`. | As for the identity's own `Ready`. | Add the missing keys named in the message. | [Identity runbook](../runbooks/identity-and-credentials.md#credentialsincomplete) |

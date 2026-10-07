@@ -105,7 +105,7 @@ controller did.
 | `IdentitySecretFound` | TerraformClusterIdentity | The credentials Secret appeared. | [Identities](../../user-guide/identities.md) |
 | `MirrorCreated` | TerraformCluster, TerraformMachine, TerraformMachinePool | The namespace's credential mirror was created for this object. | [Identities](../../user-guide/identities.md#how-credentials-reach-a-job) |
 | `OwnerReferencesRepaired` | TerraformCluster, TerraformMachine, TerraformMachinePool | Secrets of this object (state, backups, durable inputs, plan key, its mirror entry) were owned by it again after a restore, or because a chunk had no owner reference. | [State adoption](../../concepts/secret-management/state.md#adoption) |
-| `MirrorRemoved` | TerraformCluster, TerraformMachine, TerraformMachinePool | The mirror was deleted: its last user went, or the identity no longer allows the namespace. | [Cleanup](../../concepts/deletion/cleanup.md) |
+| `MirrorRemoved` | TerraformCluster, TerraformMachine, TerraformMachinePool | The mirror was deleted: its last user went, the identity no longer allows the namespace, or the identity was deleted. | [Cleanup](../../concepts/deletion/cleanup.md) |
 | `CapacityResolved` | TerraformMachineTemplate | A template's capacity or node info changed from its image labels. | [Templates](../../user-guide/clusterclass.md) |
 | `RunStarted` | TerraformCluster, TerraformMachine, TerraformMachinePool (runner) | The runtime is ready and the first step is about to run. | [Job Environment](../../reference/environment.md) |
 | `StepStarted` | TerraformCluster, TerraformMachine, TerraformMachinePool (runner) | A runtime step started. | [Job Environment](../../reference/environment.md) |

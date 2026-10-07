@@ -27,6 +27,11 @@ Replace `<ns>`, `<kind>` and `<name>` below with the object's namespace,
 kind (`terraformcluster`, `terraformmachine` or `terraformmachinepool`) and
 name.
 
+The three conditions are re-evaluated only on passes with no active Job: while
+a Job runs they keep their last values. A credential error never blocks the
+bookkeeping of finished Jobs; it only blocks starting new ones, and the pass
+retries with backoff.
+
 ## Find the reason
 
 ```sh
@@ -43,7 +48,9 @@ all, or `identityRef.name` names a `TerraformClusterIdentity` that does
 not exist. Fix: set `identityRef.name` (on the object, or on the
 cluster's `spec.defaults` for a machine or pool that should inherit it) to
 an existing `TerraformClusterIdentity`, or create the one it already
-names. See [Reference it](../../user-guide/identities.md#reference-it).
+names. Deleting a `TerraformClusterIdentity` produces this reason too: the
+controller removes its mirror Secrets and emits a `MirrorRemoved` event, as for a
+namespace the identity no longer allows. See [Reference it](../../user-guide/identities.md#reference-it).
 
 ### NamespaceNotAllowed
 
@@ -129,7 +136,8 @@ the write).
 specific cause: a `RoleBinding` named `captf-runner` already exists in the
 namespace without `captf.io/managed=true` — the controller never modifies
 a `RoleBinding` it does not own, since a binding it did not create could
-carry subjects or a `RoleRef` from something else. Fix that case by
+carry subjects or a `RoleRef` from something else. Concurrent first use of a
+namespace no longer shows a spurious `RBACFailed` warning. Fix that case by
 renaming or removing the conflicting `RoleBinding`; CAPTF then creates its
 own. For any other message, it is an API error (permissions, quota, a
 webhook); the manager's own RBAC to manage these objects is set up as part

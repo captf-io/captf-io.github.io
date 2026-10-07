@@ -53,7 +53,7 @@ namespace, is bound to one ClusterRole scoped to exactly what reconciling
 | `jobs` | get, list, watch, create, patch, delete | Creates, watches and prunes the runner Jobs |
 | `jobs/finalizers` | update | Granted alongside `jobs`; the controller itself never sets a finalizer on a Job |
 | `pods` | get, list | Reads a Job's pod status for its outcome and the image digest it ran (no `watch`) |
-| `events`, `events.k8s.io/events` | create, patch | Records reconcile events on `Terraform*` objects |
+| `events.k8s.io/events` | create, patch | Records reconcile events on `Terraform*` objects |
 | `authentication.k8s.io/tokenreviews` | create | Backs the authenticated diagnostics endpoint |
 | `authorization.k8s.io/subjectaccessreviews` | create | Backs the authenticated diagnostics endpoint and the identity webhook's Secret-read check |
 

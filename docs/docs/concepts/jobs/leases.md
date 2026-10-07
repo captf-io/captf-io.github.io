@@ -130,7 +130,7 @@ and is emitted once per wait, not on every requeue.
 | --- | --- | --- |
 | `WaitingForRunLease` | Another live Job holds this object's run lease, or the Cluster's write lease (a second cluster operation) | The Job; or "another manager took it first" when a concurrent writer won the race |
 | `WaitingForClusterOperation` | A machine's or pool's op waits for its cluster's op | The cluster's Job |
-| `WaitingForJobSlot` | The manager's or the cluster's Job limit is reached; no lease was taken. See [Job limits](README.md#job-limits) | The count and the limit, not a Job |
+| `WaitingForJobSlot` | The manager's or the cluster's Job limit is reached; no lease was taken. See [Job limits](README.md#job-limits) | The limit and its scope, not a Job. The running count is logged at `-v=2` (keys `active` and `limit`), not put in the message |
 | `WaitingForMachineOperations` | A cluster's op waits for machine and pool ops in flight | Up to five Jobs and a count |
 
 The condition depends on the op: `ApplyJobSucceeded` for apply, destroy and

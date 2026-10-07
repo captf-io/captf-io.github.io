@@ -168,7 +168,9 @@ Before it renders anything or takes a lease, the manager counts the
 unfinished Jobs from its Job cache. If either limit is reached, the
 operation does not start: it reports `Unknown`/`WaitingForJobSlot` (on
 `DriftJobSucceeded` for a refresh or drift, on `RestoreJobSucceeded` for a
-restore), emits a `WaitingForJobSlot` event once, counts in
+restore) with the message "Waiting for a Job slot: the limit of N Jobs running
+{in all|for cluster X} is reached[ (a drift starts below 80% of it)]; the
+operation starts once one finishes", emits a `WaitingForJobSlot` event once, counts in
 `captf_lease_waits_total{reason="job_slot"}`, and looks again after about 15
 seconds (plus up to 10% jitter). Nothing counts toward a retry backoff.
 

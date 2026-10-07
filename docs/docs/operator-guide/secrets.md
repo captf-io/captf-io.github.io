@@ -59,13 +59,16 @@ is shortened to its prefix plus a hash, still deterministic and unique.
 The manager's main cache holds only Secrets labeled `captf.io/managed=true`:
 credential mirrors, durable and per-run inputs, state and state backups —
 the five Secrets above that carry that label, whether CAPTF or the state
-backend created them. It keeps their metadata only (name, namespace, labels
-and annotations): the data is stripped before the Secret is stored, so no
-state chunk, backup or input payload sits in memory, and every `Get` or
+backend created them. It holds them as metadata-only informers (name, namespace, labels
+and annotations): the API server sends no payload, so no state chunk, backup
+or input payload ever reaches the manager's memory, and every `Get` or
 `List` of a Secret goes to the API server. A
 second, separate cache backs `spec.variablesFrom` watches; it holds Secrets
-(and ConfigMaps) labeled `captf.io/variables=true`, with their data stripped
-out before they are stored, so no variable value ever sits in memory there.
+and ConfigMaps labeled `captf.io/variables=true` as metadata-only informers
+too, so no variable value ever reaches the manager through a watch. Both
+caches also drop `managedFields` from every object they store. Manager
+memory therefore scales with the number of objects, not with the size of
+state, backups or inputs.
 Everything else — the identity's source Secret, bootstrap data, image pull
 secrets, and a `spec.variablesFrom` Secret's actual content when it is
 resolved — is read directly from the API server on demand and never

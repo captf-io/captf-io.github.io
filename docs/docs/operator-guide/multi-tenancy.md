@@ -62,7 +62,9 @@ Protections the admission webhook adds:
   cannot read the Secret cannot point an identity at it, or grant more
   namespaces access to it. Narrowing is not re-checked.
 - **Deleting** an identity is refused while any object resolves to it or any
-  namespace still holds its mirror.
+  namespace still holds its mirror. The refusal is best-effort (the webhook
+  fails open); if the identity is deleted anyway, the controller removes its
+  mirrors, and the objects report `IdentityAllowed=False`/`IdentityNotFound`.
 
 Practical rules:
 

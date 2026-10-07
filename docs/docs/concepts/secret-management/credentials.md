@@ -71,8 +71,14 @@ on the next reconcile of any object that uses it, which is bounded by the
 manager's `--sync-period` (default ten minutes). A Job that is already
 running keeps the credentials it started with; the next Job gets the new
 ones. The identity's own controller only reports status: it re-reads the
-source every five minutes to set the identity's `Ready` condition and
-`status.namespaces`, and does not copy anything.
+source every five minutes while `Ready` is `True`, and every 30 seconds while
+it is `False` (`SecretNotFound` or `CredentialsIncomplete`), to set the
+identity's `Ready` condition. It computes `status.namespaces` from the
+manager's cache, and does not copy anything. Objects that use the identity are
+woken by its creation, deletion or a spec change, not by status-only changes,
+and no longer by changes to a mirror's owner references, only by the mirror's
+deletion. An object gated on credentials recovers through its own 30 second
+requeue.
 
 ## Revocation
 
@@ -87,7 +93,11 @@ infrastructure](../../operator-guide/runbooks/stuck-destroy.md#retain-instead).
 When the last object using the mirror is removed, cleanup removes its own
 owner reference and deletes the mirror. You cannot delete an identity while
 any object uses it: the delete webhook refuses until `status.namespaces` is
-empty.
+empty. The webhook is a best-effort guardrail (it fails open), so if the
+identity is deleted anyway the controller removes its mirrors the same way it
+does for a namespace the identity no longer allows: the objects report
+`IdentityAllowed=False`/`IdentityNotFound` and a `MirrorRemoved` event is
+emitted. A namespace-local `Secret` identity is never touched.
 
 ## Conflicts
 
