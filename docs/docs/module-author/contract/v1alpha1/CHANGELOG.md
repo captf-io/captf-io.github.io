@@ -80,7 +80,7 @@ compatibility guarantee (see [`README.md`](README.md#versioning)
   when enabled, `replicas` renders `status.replicas` (falling back to
   `MachinePool.spec.replicas` before the first observation) clamped into
   `[min,max]`, is excluded from the inputs hash, and the controller
-  writes the raw observed value back to `MachinePool.spec.replicas` and
+  writes the observed value, clamped into `[min,max]`, back to `MachinePool.spec.replicas` and
   claims `cluster.x-k8s.io/replicas-managed-by: captf` (never a foreign
   truthy value), removing its own claim when autoscaling is disabled
   again. New condition `AutoscalingActive` (informational, pool-only,

@@ -135,8 +135,9 @@ The **desired capacity** of the group.
   else `MachinePool.spec.replicas` for the first apply before any refresh
   has run — either way **clamped into `[autoscaling.min, autoscaling.max]`**
   so a render never asks the cloud for an out-of-range desired count. The
-  clamp applies only to this rendered input; the write-back (Lifecycle)
-  always writes the raw observed value, unclamped.
+  write-back (Lifecycle) uses the same bound: it writes the observed value
+  clamped into `[min, max]`, so `MachinePool.spec.replicas` never leaves the
+  autoscaler's range.
 
 `replicas` is excluded from the inputs hash while `autoscaling.enabled`, so
 a non-replica-triggered apply (bootstrap rotation, module change, `exports`
@@ -327,7 +328,8 @@ counts the annotation as set for **any value except the literal string
 called by `ReplicasManagedByExternalAutoscaler` — a foreign truthy value is
 left alone, never overwritten), and, on every reconcile pass on which
 `status.replicas` is known and differs from `MachinePool.spec.replicas`,
-writes the raw observed desired capacity back to `MachinePool.spec.replicas`.
+writes the observed desired capacity, clamped into `[autoscaling.min,
+autoscaling.max]`, back to `MachinePool.spec.replicas`.
 The InfraMachinePool docs make this the provider's job
 ([`machine-pool.md`](https://github.com/kubernetes-sigs/cluster-api/blob/v1.14.2/docs/book/src/developer/core/controllers/machine-pool.md)
 "It is the provider's responsibility to update Cluster API's Spec.Replicas
@@ -559,7 +561,7 @@ does not reflect it.
   annotation is absent or `"false"` (a foreign truthy value already means
   another controller manages it, and is left untouched), and when
   `status.replicas` is known and differs from `MachinePool.spec.replicas`,
-  writes the raw observed value (unclamped by `[min,max]`, unlike the
+  writes the observed value clamped into `[min,max]` (the same bound as the
   rendered `replicas` input) to `spec.replicas` in the same patch. A
   `ReplicasWrittenBack` Normal event is emitted on the
   TerraformMachinePool once for each real write. A foreign owner of
