@@ -250,6 +250,11 @@ spec.summary.replace` above 0 requires membership in the group
 as above; the policy then narrows what it may approve. Replace the bot's
 name and the group with your own.
 
+The policy checks `UPDATE` only. An approval is an update of `spec.approved`
+from unset or `false` to `true`; a plan created already approved is the
+`clusterctl move` path, and RBAC on `create terraformplans` governs it, since
+`create` equals approve.
+
 ```yaml title="captf-plan-approval-policy.yaml"
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
@@ -261,14 +266,13 @@ spec:
     resourceRules:
     - apiGroups: ["infrastructure.cluster.x-k8s.io"]
       apiVersions: ["v1alpha1"]
-      operations: ["CREATE", "UPDATE"]
+      operations: ["UPDATE"]
       resources: ["terraformplans"]
   matchConditions:
   - name: approval-transition # (1)!
     expression: >-
       has(object.spec.approved) && object.spec.approved == true &&
-      (oldObject == null || !has(oldObject.spec.approved) ||
-      oldObject.spec.approved != true)
+      (!has(oldObject.spec.approved) || oldObject.spec.approved != true)
   variables:
   - name: destructive # (2)!
     expression: >-
@@ -276,6 +280,7 @@ spec:
       (has(object.spec.summary.replace) ? object.spec.summary.replace : 0) > 0
   - name: isHuman
     expression: >-
+      has(request.userInfo.groups) &&
       'captf-approvers' in request.userInfo.groups
   validations:
   - expression: "!variables.destructive || variables.isHuman" # (3)!
@@ -294,23 +299,20 @@ spec:
   validationActions: ["Deny"]
 ```
 
-1. The policy runs only on the transition to approved. `oldObject` is `null`
-   on `CREATE`, which covers a plan that `clusterctl move` creates already
-   approved; see the note below.
+1. The policy runs only on the transition to approved, on an `UPDATE`, where
+   `oldObject` is always set. Every other update of a plan passes it by.
 2. The counts are optional integers and can be absent, so each is read behind
    `has()`.
 3. A non-destructive plan passes for anyone who already has `patch`, so the
    bot can approve it. A destructive plan passes only for a member of
-   `captf-approvers`.
+   `captf-approvers`. A request without groups counts as no member, not as
+   an evaluation error.
 
 Notes:
 
-- The `clusterctl move` identity and the manager create plans, some of them
-  approved, so a destructive plan created approved by the mover is denied
-  unless the mover is in `captf-approvers`. Either add the mover's group to
-  the policy, or add a `matchConditions` entry that excludes it, for example
-  `request.userInfo.username != 'system:serviceaccount:<ns>:<mover>'`. Do
-  not exclude identities you do not control: `create` equals approve.
+- The manager and the `clusterctl move` identity create plans, some of them
+  approved, and the policy never sees a `CREATE`. Keep `create` on
+  `terraformplans` to those two: whoever may create a plan may approve one.
 - The webhook's own checks still apply: `approvedBy` must equal the
   requester, so the bot writes its own username.
 - `failurePolicy: Fail` denies approvals while the policy cannot be
