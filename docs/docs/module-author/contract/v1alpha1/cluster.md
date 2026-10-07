@@ -288,7 +288,9 @@ output is a literal `null` with no conditional path to a value.
   [`common.md`](common.md#what-is-hashed) "What is hashed").
 - **Externally managed.** A TerraformCluster carrying
   `cluster.x-k8s.io/managed-by` is skipped entirely: no Jobs, no status
-  writes
+  writes, except that a deleting one has only CAPTF's finalizer removed (event
+  `ExternallyManagedReleased`; state, Secrets and infrastructure are left to
+  the external manager)
   ([`infra-cluster.md`](https://github.com/kubernetes-sigs/cluster-api/blob/v1.14.2/docs/book/src/developer/providers/contracts/infra-cluster.md)
   "Externally managed infrastructure"). Machines and pools of that Cluster
   receive `captf_cluster_outputs = {}`.

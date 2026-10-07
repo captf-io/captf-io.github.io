@@ -193,7 +193,7 @@ scheduled, or whatever it implements), and the controller claims the
 Cluster API stops treating `spec.replicas` as authoritative. On every
 reconcile the controller then writes the group's observed desired
 capacity back to `MachinePool.spec.replicas`, emitting a
-[`ReplicasWrittenBack`](../reference/events.md) event when it changes; see
+[`ReplicasWrittenBack`](../reference/events.md) event once for each real write; see
 [Annotations, Labels and
 Finalizers](../reference/annotations-labels.md#cluster-api-and-clusterctl-keys)
 for both keys. Leave `spec.replicas` unset in this mode: Cluster API
@@ -208,6 +208,9 @@ claims), CAPTF leaves the annotation alone and stops writing observed
 replicas back. The pool reports
 `AutoscalingActive=False`/`ReplicasManagedExternally`, with a `Warning`
 event, and `spec.replicas` stays under that other controller's control.
+The module is rendered `spec.replicas` as is (1 if unset), and CAPTF never
+writes it back. A foreign owner is any value except absent, `false` or
+`captf`.
 See [`AutoscalingActive`](../reference/conditions.md#autoscalingactive).
 
 !!! warning "The Cluster Autoscaler's `clusterapi` provider does not drive these pools"

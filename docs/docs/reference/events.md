@@ -182,6 +182,7 @@ See [Deletion](../concepts/deletion/README.md).
 | --- | --- | --- | --- | --- |
 | `DeletionStarted` | Normal | any provisioned kind | The first reconcile with a `deletionTimestamp`. | None. |
 | `Destroyed` | Normal | any provisioned kind | The destroy succeeded and cleanup ran. | None. |
+| `ExternallyManagedReleased` | Normal | any kind | A deleting object carries `cluster.x-k8s.io/managed-by`, so CAPTF removed only its own finalizer. State, Secrets and infrastructure are left to the external manager. | None. |
 | `FinalizerRemoved` | Normal | any provisioned kind | The finalizer was removed. The object goes away. | None. |
 | `InfrastructureRetained` | Normal | any provisioned kind | A deletion with `deletionPolicy: Retain` removed the finalizer without a destroy. The infrastructure keeps running; the state Secrets, state backups and durable inputs were kept, without owner references and labeled `captf.io/retained-from-uid=<uid>`. The note counts them. | None, unless you want the infrastructure gone: adopt it with a new object, or delete it through the cloud. See [Retain and Adopt](../concepts/deletion/retain.md). |
 | `RetainedStateFound` | Warning | any provisioned kind | `StateReadable` became `False`/`RetainedStateFound`: the object found state an earlier object of its kind, namespace and name retained. No Job runs. | Set `spec.adoptRetainedState: true`, or delete the retained Secrets. See [Retain and Adopt](../concepts/deletion/retain.md#a-recreated-object-holds). |

@@ -170,7 +170,10 @@ remediation.
       request, and `RemediationWithdrawn` marks a withdrawal; see
       [Events](../reference/events.md).
     - `captf_remediation_requests_total{action="requested"|"withdrawn"}`
-      counts both; see [Metrics](../reference/metrics.md).
+      counts both; see [Metrics](../reference/metrics.md). Events and the
+      counter record only a change actually made: the patch carries the
+      cached Machine's resourceVersion, and on a Conflict the Machine is
+      re-read live and decided once more.
 
 !!! related "See also"
 

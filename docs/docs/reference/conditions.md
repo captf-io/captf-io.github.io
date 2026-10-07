@@ -80,6 +80,7 @@ yet. In the `Ready` summary an absent input counts as `Unknown`, except
 | [`RestoreJobSucceeded`](#restorejobsucceeded) | All three | Normal | Outcome of a state restore you requested. |
 | [`OutputsValid`](#outputsvalid) | All three | Normal | The module's outputs satisfy the contract. |
 | [`InfrastructureHealthy`](#infrastructurehealthy) | All three | Normal | The health the module reports. |
+| [`InputsApplied`](#inputsapplied) | All three | Normal | The current inputs are what the infrastructure was last applied with. Never feeds `Ready`. |
 | [`DriftJobSucceeded`](#driftjobsucceeded) | All three | Normal | Outcome of the newest refresh or drift Job. |
 | [`DriftDetected`](#driftdetected) | All three | Negative | The last drift check found differences. |
 | [`DeletionBlocked`](#deletionblocked) | `TerraformCluster` | Negative | A deleting cluster waits for its machines and pools. |
@@ -308,6 +309,29 @@ health](../concepts/drift-and-health.md#from-module-health-to-infrastructureheal
 To replace an unhealthy machine, see [machine
 remediation](../user-guide/remediation.md).
 
+## InputsApplied
+
+Carried by all three. Polarity: normal. Never feeds `Ready`.
+
+Whether the state's last successful apply used the object's current inputs and
+no apply is pending. `Ready` does not say this: a provisioned object stays
+`Ready` while an edit waits for an approval or a Job, because `Ready`'s inputs
+after provisioning are unchanged. Consumers that wait for a change to land
+(kstatus, Flux, Argo CD) should read `InputsApplied`. A `TerraformMachine`
+has a fixed hash, so it is `True` once applied. The condition is set once per
+pass, and left as it is while the object is deleting, paused, or when the pass
+stopped before reading the state. It has no event of its own. `kubectl get -o
+wide` shows it as a column.
+
+| Status | Reason | Meaning |
+| --- | --- | --- |
+| `True` | `InputsApplied` | The applied inputs hash equals the current one and no apply is pending. |
+| `False` | `ApplyPending` | The current inputs differ from the applied ones, or nothing was applied yet, and no Job runs: the apply has not started, is gated, or is backing off. |
+| `False` | `AwaitingApproval` | A `TerraformPlan` waits for its approval. |
+| `False` | `ApplyRunning` | An apply Job is active. |
+| `False` | `InputsApplyFailed` | The last apply failed and none has succeeded since. |
+| `Unknown` | `InputsUnavailable` | The current inputs cannot be built (a dependency or the variables gate them), so they cannot be compared with the applied ones. |
+
 ## DriftJobSucceeded
 
 Carried by all three. Polarity: normal. Never feeds `Ready`.
@@ -481,7 +505,7 @@ Before provisioning, all three kinds summarize the same nine inputs:
 - `InfrastructureHealthy`
 - `Deleting`
 
-After provisioning, the inputs differ per kind:
+`InputsApplied` is never an input. After provisioning, the inputs differ per kind:
 
 | Kind | Inputs after provisioning |
 | --- | --- |

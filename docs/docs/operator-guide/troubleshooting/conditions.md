@@ -26,7 +26,7 @@ Jump to: [Ready](#ready) [Paused](#paused) [Deleting](#deleting)
 [CredentialsMirrored](#credentialsmirrored) [RunnerRBACReady](#runnerrbacready)
 [ApplyJobSucceeded](#applyjobsucceeded) [StateReadable](#statereadable)
 [RestoreJobSucceeded](#restorejobsucceeded) [OutputsValid](#outputsvalid)
-[InfrastructureHealthy](#infrastructurehealthy)
+[InfrastructureHealthy](#infrastructurehealthy) [InputsApplied](#inputsapplied)
 [DriftJobSucceeded](#driftjobsucceeded) [DriftDetected](#driftdetected)
 [DeletionBlocked](#deletionblocked) [EndpointAvailable](#endpointavailable)
 [AutoscalingActive](#autoscalingactive) [CapacityResolved](#capacityresolved)
@@ -273,6 +273,29 @@ provisioning it is the input that moves Ready.
 | `Unknown` | `WaitingForProvisioning` | Before the first apply. | A new object. | Nothing; see `ApplyJobSucceeded`. | [Jobs](../../concepts/jobs/troubleshooting.md) |
 | `Unknown` | `HealthUnknown` | The module reports `unknown`, or no health at all. | The module has no health signal yet. | Check the module's `health` output. | [Drift and health](../../concepts/drift-and-health.md) |
 | `Unknown` | `ProviderIDMissing` | `provider_id` turned null after provisioning. It is reported terminated only if the next sample is null too. | A transient read, or the instance vanished. | Wait one sample. | [Drift and health](../../concepts/drift-and-health.md) |
+
+## InputsApplied
+
+Carried by: TerraformCluster, TerraformMachine, TerraformMachinePool. Polarity:
+normal (`True` is healthy). Never feeds Ready.
+
+Whether the inputs of the current generation are what the infrastructure was last
+applied with. Ready does not say that: after provisioning its inputs are
+unchanged, so a provisioned object stays Ready while an edit waits for an
+approval. Read `InputsApplied` from kstatus, Flux or Argo CD to know when a
+change landed. It is set once per pass, and left as it is while the object is
+deleting, paused, or when the pass stopped before reading the state. A
+TerraformMachine has a fixed hash. It has no event of its own, and `kubectl get
+-o wide` shows it as a column.
+
+| Status | Reason | Meaning | Likely cause | What to do | See |
+| --- | --- | --- | --- | --- | --- |
+| `True` | `InputsApplied` | The applied inputs equal the current ones and no apply is pending. | The normal state. | Nothing. | [Inputs](../../concepts/inputs.md) |
+| `False` | `ApplyPending` | The current inputs differ from the applied ones, or nothing was applied yet, and no Job runs. | An edit that has not started yet, a gate (credentials, dependencies, a Job slot, a lease) or a backoff. | Wait, or read `ApplyJobSucceeded` for what holds the apply. | [Jobs](../../concepts/jobs/troubleshooting.md) |
+| `False` | `AwaitingApproval` | A TerraformPlan waits for its approval. | A destructive or manual-approval change. | Review and approve the plan, or revert the edit. | [Manual approval](../../concepts/approvals/manual-approval.md) |
+| `False` | `ApplyRunning` | An apply Job is active. | An apply is in flight. | Wait. | [Jobs](../../concepts/jobs/README.md) |
+| `False` | `InputsApplyFailed` | The last apply failed and none has succeeded since. | The module failed. | Read `ApplyJobSucceeded` and the Job's logs. | [Failing Jobs](../runbooks/job-failures.md) |
+| `Unknown` | `InputsUnavailable` | The current inputs cannot be built, so they cannot be compared with the applied ones. | A dependency or the variables gate the object. | Fix `DependenciesReady` or `VariablesValid` (`VariablesInvalid`). | [Dependencies](#dependenciesready) |
 
 ## DriftJobSucceeded
 

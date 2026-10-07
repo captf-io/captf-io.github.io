@@ -34,7 +34,10 @@ between them and the deferred patch must not leave a gap:
 A reconcile that reaches the end of the pass runs through, in order:
 
 1. **Externally managed.** An object carrying CAPI's externally-managed
-   annotation is left alone entirely; nothing below runs.
+   annotation is left alone entirely; nothing below runs. The one exception is
+   deletion: a deleting object has CAPTF's finalizer removed (and the
+   `ExternallyManagedReleased` event emitted), leaving the state, Secrets and
+   infrastructure to the external manager.
 2. **Owner lookup.** Without an owner reference of the expected kind yet,
    the object waits (`DependenciesReady=Unknown`) unless it is being
    deleted with no state and no running Job, in which case the finalizer is

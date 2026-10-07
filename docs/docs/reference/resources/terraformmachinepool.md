@@ -343,6 +343,7 @@ module reports a health state other than `pending`. That does not require
 | `MACHINEPOOL` | The name of the owner reference of kind `MachinePool`. |
 | `REPLICAS` | `status.replicas`. |
 | `READY` | The `Ready` condition's status. |
+| `INPUTSAPPLIED` | The `InputsApplied` condition's status. Only with `-o wide`; see [InputsApplied](../conditions.md#inputsapplied). |
 | `AGE` | Time since creation. |
 
 ## Validation

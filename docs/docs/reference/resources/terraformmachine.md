@@ -304,7 +304,7 @@ page covers what each type means for a machine.
 
 ## Printer columns
 
-`kubectl get terraformmachines` shows these columns. `-o wide` adds `Image`.
+`kubectl get terraformmachines` shows these columns. `-o wide` adds `Image` and `InputsApplied`.
 
 | Column | Source | Description |
 | --- | --- | --- |
@@ -314,6 +314,7 @@ page covers what each type means for a machine.
 | `Provisioned` | `.status.initialization.provisioned` | Whether the infrastructure is provisioned. |
 | `ProviderID` | `.spec.providerID` | The instance's provider ID. |
 | `Image` (wide) | `.spec.source.image` | The module image. |
+| `InputsApplied` (wide) | the `InputsApplied` condition's `status` | Whether the applied inputs are the current ones; see [InputsApplied](../conditions.md#inputsapplied). |
 | `Age` | `.metadata.creationTimestamp` | Time since creation. |
 
 ## Validation

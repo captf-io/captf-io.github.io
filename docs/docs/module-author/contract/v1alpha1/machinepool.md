@@ -126,6 +126,10 @@ The **desired capacity** of the group.
 - With `autoscaling.enabled = false`: `MachinePool.spec.replicas`,
   authoritative and in the inputs hash (`*int32`, "Defaults to 1"; the
   pointer distinguishes an explicit 0 from unset, and 0 is allowed).
+- With `cluster.x-k8s.io/replicas-managed-by` set to a foreign owner (any
+  value except absent, `false` or `captf`): `MachinePool.spec.replicas` as
+  is (1 if unset), whatever `autoscaling.enabled` is; CAPTF never writes it
+  back.
 - With `autoscaling.enabled = true`: `TerraformMachinePool.status.replicas`
   (the *observed* desired capacity from the last refresh) once one exists,
   else `MachinePool.spec.replicas` for the first apply before any refresh
@@ -558,7 +562,9 @@ does not reflect it.
   writes the raw observed value (unclamped by `[min,max]`, unlike the
   rendered `replicas` input) to `spec.replicas` in the same patch. A
   `ReplicasWrittenBack` Normal event is emitted on the
-  TerraformMachinePool whenever a write happens. With
+  TerraformMachinePool once for each real write. A foreign owner of
+  `replicas-managed-by` (any value except absent, `false` or `captf`) gets
+  no write-back. With
   `autoscaling.enabled = false`, the controller removes
   `replicas-managed-by` only if it still carries `captf` (never a foreign
   value), and never writes `spec.replicas`. Without the write-back, CAPI

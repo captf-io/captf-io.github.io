@@ -373,6 +373,7 @@ After provisioning, `Ready` summarizes only `InfrastructureHealthy` and
 | `PROVISIONED` | `status.initialization.provisioned` | |
 | `ENDPOINT` | `spec.controlPlaneEndpoint.host` | |
 | `IMAGE` | `spec.source.image` | Only with `-o wide`. |
+| `INPUTSAPPLIED` | `status.conditions` entry of type `InputsApplied` | Its `status`. Only with `-o wide`; see [InputsApplied](../conditions.md#inputsapplied). |
 | `AGE` | `metadata.creationTimestamp` | |
 
 ## Validation

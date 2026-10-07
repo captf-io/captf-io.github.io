@@ -183,7 +183,7 @@ condition value: `1` for True, `0` for False and `-1` for Unknown.
 | `captf_drift_resources_total` | counter | `kind`, `action` | resources | Resources a drift Job that found drift would `create`, `update`, `replace` or `delete`. |
 | `captf_last_success_timestamp_seconds` | gauge | `kind`, `namespace`, `name`, `op` | Unix seconds | When the newest successful Job of an op finished. |
 | `captf_unhealthy_samples` | gauge | `namespace`, `name` | samples | A `TerraformMachine`'s consecutive unhealthy health samples (`status.unhealthySamples`). |
-| `captf_remediation_requests_total` | counter | `action` | requests | `cluster.x-k8s.io/remediate-machine` annotations set on (`requested`) or removed from (`withdrawn`) a `Machine`. |
+| `captf_remediation_requests_total` | counter | `action` | requests | `cluster.x-k8s.io/remediate-machine` annotations set on (`requested`) or removed from (`withdrawn`) a `Machine`. Counts only a change actually made: the patch carries the cached Machine's resourceVersion, and on a Conflict the Machine is re-read live and decided once more. |
 
 `captf_last_success_timestamp_seconds` exports `drift` and `refresh` only
 while that op is scheduled: not while the object is deleting or paused, and
