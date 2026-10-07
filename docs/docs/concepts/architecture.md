@@ -24,7 +24,7 @@ image, with two replicas: the leader reconciles and both serve the
 webhooks. It runs the controllers that reconcile every kind except
 `TerraformClusterTemplate` and `TerraformMachinePoolTemplate`, which have
 no reconciler of their own, and it serves the validating webhooks for all
-seven kinds from the same process, on a separate port. It watches every
+eight kinds from the same process, on a separate port. It watches every
 namespace by default: `clusterctl init` never sets a namespace
 restriction. See [Configuration](../operator-guide/configuration.md) for
 how to scope or tune it.

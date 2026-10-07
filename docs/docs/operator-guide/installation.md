@@ -91,11 +91,11 @@ creates as a `Namespace` object; `clusterctl init`
 also installs `cert-manager` itself when it is missing, in its own
 namespace.
 
-- **CRDs** for the seven kinds: `TerraformCluster`,
+- **CRDs** for the eight kinds: `TerraformCluster`,
   `TerraformClusterTemplate`, `TerraformMachine`, `TerraformMachineTemplate`,
-  `TerraformMachinePool`, `TerraformMachinePoolTemplate` and
-  `TerraformClusterIdentity` (the last is cluster-scoped; the rest are
-  namespaced). See [The Kinds](../concepts/kinds.md) for what each one does,
+  `TerraformMachinePool`, `TerraformMachinePoolTemplate`,
+  `TerraformClusterIdentity` and `TerraformPlan` (`TerraformClusterIdentity` is
+  cluster-scoped; the rest are namespaced). See [The Kinds](../concepts/kinds.md) for what each one does,
   and [Custom Resources](../reference/resources/README.md) for every field.
 - **The manager**, a two-replica `Deployment` named
   `captf-controller-manager`, running as a non-root user, with a
@@ -213,7 +213,7 @@ kubectl -n captf-system get secret captf-webhook-service-cert
 ```
 
 The rollout command returns once the manager pod is ready. The CRD list
-should show all seven kinds. The webhook configuration and the certificate
+should show all eight kinds. The webhook configuration and the certificate
 must both exist and the certificate must report `Ready=True`, cert-manager
 was able to issue the webhook's serving certificate: without it, webhook
 calls from the API server fail closed (`failurePolicy: Fail`) and every

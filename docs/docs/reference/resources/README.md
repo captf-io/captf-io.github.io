@@ -7,11 +7,11 @@ subtitle: "Every kind, field by field"
 
 # Custom Resources
 
-CAPTF adds seven kinds to the `infrastructure.cluster.x-k8s.io/v1alpha1`
+CAPTF adds eight kinds to the `infrastructure.cluster.x-k8s.io/v1alpha1`
 API group. Three run a Terraform or OpenTofu module, one per role of the
 [module contract](../../module-author/contract/v1alpha1/README.md); three
-are templates Cluster API clones them from; and one holds the cloud
-credentials the others use. Each has its own page here: what it is, a
+are templates Cluster API clones them from; one holds the cloud
+credentials the others use; and one is a plan that waits for an approval. Each has its own page here: what it is, a
 minimal and a full YAML example, and every field of its spec and status,
 with its type, default, validation and what it does.
 
@@ -49,6 +49,14 @@ with its type, default, validation and what it does.
 
     [:octicons-arrow-right-24: TerraformClusterIdentity](terraformclusteridentity.md)
 
+-   :material-clipboard-check-outline:{ .lg .middle } __TerraformPlan__
+
+    ---
+
+    A plan the manager made, waiting for an approval: its counts, labels and phases.
+
+    [:octicons-arrow-right-24: TerraformPlan](terraformplan.md)
+
 -   :material-content-copy:{ .lg .middle } __Templates__
 
     ---
@@ -79,6 +87,7 @@ with its type, default, validation and what it does.
 | [`TerraformMachineTemplate`](terraformmachinetemplate.md) | Namespaced | Nothing; cloned into each `TerraformMachine` | `MachineDeployment` and `MachineSet` `spec.template.spec.infrastructureRef`, the control plane's machine template, and `ClusterClass` machine infrastructure `templateRef`s |
 | [`TerraformMachinePoolTemplate`](terraformmachinepooltemplate.md) | Namespaced | Nothing; cloned into a `TerraformMachinePool` | `ClusterClass.spec.workers.machinePools[].infrastructure.templateRef` |
 | [`TerraformClusterIdentity`](terraformclusteridentity.md) | Cluster | Nothing; its Secret feeds the others' Jobs | The others' `spec.identityRef` |
+| [`TerraformPlan`](terraformplan.md) | Namespaced | Nothing; created by the manager for a `TerraformCluster` or `TerraformMachinePool` | Its `spec.targetRef` |
 
 ```mermaid
 flowchart TD

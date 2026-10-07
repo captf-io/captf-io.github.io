@@ -58,6 +58,7 @@ SKIP = {
     "reference/resources/terraformmachinepool.md",
     "reference/resources/terraformmachinepooltemplate.md",
     "reference/resources/terraformclusteridentity.md",
+    "reference/resources/terraformplan.md",
 }
 
 # Pages of the first edition that this site no longer has, by their old

@@ -1,6 +1,6 @@
 ---
 title: "CAPTF Kinds and Their Roles"
-description: How CAPTF's seven kinds relate to Cluster API's objects, what stays fixed once an object exists, and what a cluster passes down.
+description: How CAPTF's eight kinds relate to Cluster API's objects, what stays fixed once an object exists, and what a cluster passes down.
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 2, 2026"
 git_creation_date_iso: "2026-09-29"
@@ -14,16 +14,17 @@ subtitle: "The three Terraform kinds"
 # The Kinds
 
 If you are learning how CAPTF's objects relate to Cluster API's, start
-here. CAPTF adds seven kinds to one API group and version,
+here. CAPTF adds eight kinds to one API group and version,
 `infrastructure.cluster.x-k8s.io/v1alpha1`. Three of them are the objects
 that carry the desired state Cluster API's core controllers drive as a
-cluster comes up; three are templates that stamp those out; the seventh
-holds the cloud credentials the others use. Every field, default and
+cluster comes up; three are templates that stamp those out; one holds the
+cloud credentials the others use; and the eighth is a plan the manager
+creates, which waits for an approval. Every field, default and
 validation rule is in [Custom Resources](../reference/resources/README.md); this page
-explains how the seven fit together, and what stays fixed once an object
+explains how the eight fit together, and what stays fixed once an object
 exists.
 
-## The seven kinds
+## The eight kinds
 
 | Kind | Cluster API role | Scope | Referenced by |
 | --- | --- | --- | --- |
@@ -34,6 +35,7 @@ exists.
 | `TerraformMachineTemplate` | Template | Namespaced | A MachineDeployment, MachineSet, KubeadmControlPlane, another control-plane provider, or a ClusterClass |
 | `TerraformMachinePoolTemplate` | Template | Namespaced | A ClusterClass |
 | `TerraformClusterIdentity` | None (CAPTF-only) | Cluster | `spec.identityRef` of a cluster, machine or pool in an allowed namespace |
+| `TerraformPlan` | None (CAPTF-only) | Namespaced | Its `spec.targetRef`; created by the manager |
 
 ## The three workload kinds
 
@@ -124,6 +126,16 @@ A `TerraformMachineTemplate` additionally reports `status.capacity` and
 `status.nodeInfo`, resolved from its image's labels, for Cluster
 Autoscaler scale-from-zero. `TerraformMachinePoolTemplate` has no status:
 a pool has no scale-from-zero, so there is no capacity to resolve.
+
+## `TerraformPlan`
+
+A `TerraformPlan` is a plan the manager made for a `TerraformCluster` or a
+`TerraformMachinePool`, kept as an object so that its approval can be listed,
+selected and automated. You never create one: the manager does, and owns it
+through a controller owner reference, so it is deleted with its target and
+moves with it under `clusterctl move`. You approve it by setting
+`spec.approved`. Its fields, labels and phases are on
+[TerraformPlan](../reference/resources/terraformplan.md).
 
 ## `TerraformClusterIdentity`
 

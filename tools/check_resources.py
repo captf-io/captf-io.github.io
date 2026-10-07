@@ -61,6 +61,7 @@ PAGE_OF = {
     "TerraformMachinePool": "terraformmachinepool.md",
     "TerraformMachinePoolTemplate": "terraformmachinepooltemplate.md",
     "TerraformClusterIdentity": "terraformclusteridentity.md",
+    "TerraformPlan": "terraformplan.md",
 }
 COMMON_PAGE = "common-fields.md"
 

@@ -217,6 +217,18 @@ recognize them in `kubectl get -o yaml` output.
 | `captf.io/remediation-requested` | annotation | `Machine` | That CAPTF set `cluster.x-k8s.io/remediate-machine`; the value is the reason. CAPTF removes only a request it made |
 | `clusterctl.cluster.x-k8s.io/block-move` | annotation | `TerraformCluster`, `TerraformMachine`, `TerraformMachinePool` | That a Job is starting or running, so `clusterctl move` waits. Set before a Job is created and cleared when none is active |
 
+### On `TerraformPlan` objects
+
+The manager puts these labels on every [`TerraformPlan`](resources/terraformplan.md#labels),
+so you can select plans without reading specs. They are part of the public
+integration API: their keys and values are frozen for `v1alpha1`.
+
+| Key | Kind | On | Records |
+| --- | --- | --- | --- |
+| `captf.io/destructive` | label | `TerraformPlan` | `true` when the plan replaces or deletes a resource, otherwise `false` |
+| `captf.io/plan-phase` | label | `TerraformPlan` | The plan's phase: `Pending`, `Approved`, `Applied`, `Superseded` or `Failed`. It survives `clusterctl move`, and only the manager may change it |
+| `captf.io/plan-reason` | label | `TerraformPlan` | Why the plan waits: `Manual`, `Destructive` or `ExportsChange` |
+
 ### On state and backup Secrets
 
 | Key | Kind | On | Records |

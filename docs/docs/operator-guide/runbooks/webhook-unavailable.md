@@ -34,7 +34,7 @@ that, and getting the webhook serving again.
 
 ## What is blocked while the webhook is down
 
-Every `CREATE` and `UPDATE` of the seven kinds above is blocked: nothing
+Every `CREATE` and `UPDATE` of the eight kinds above is blocked: nothing
 new can be created, and no existing one can be changed — including by
 Cluster API's own controllers. In practice that reaches further than a
 person running `kubectl apply`:

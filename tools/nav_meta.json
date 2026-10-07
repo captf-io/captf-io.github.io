@@ -635,6 +635,10 @@
     "icon": "lucide/copy",
     "subtitle": "A TerraformMachinePool to clone"
   },
+  "reference/resources/terraformplan.md": {
+    "icon": "lucide/clipboard-check",
+    "subtitle": "A plan waiting for an approval"
+  },
   "reference/resources/terraformclusteridentity.md": {
     "icon": "lucide/key-round",
     "subtitle": "Credentials and who may use them"

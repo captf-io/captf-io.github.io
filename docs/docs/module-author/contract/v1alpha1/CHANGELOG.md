@@ -21,6 +21,19 @@ compatibility guarantee (see [`README.md`](README.md#versioning)
 
 ### Added
 
+- `TerraformPlan`, a namespaced kind the controller creates for a plan that
+  waits for an approval (additive within v1alpha1; the module contract is
+  unchanged; see [TerraformPlan](../../../reference/resources/terraformplan.md)).
+  `spec` holds the controller-written `targetRef`, `planHash`, `inputsHash`,
+  `reason` (`Manual`, `Destructive` or `ExportsChange`) and `summary`, and
+  the approver-written `approved` and `approvedBy`; `status` holds `phase`
+  (`Pending`, `Approved`, `Applied`, `Superseded` or `Failed`), the `Ready`
+  and `Approved` conditions and `observedGeneration`. The labels
+  `captf.io/destructive`, `captf.io/plan-phase` and `captf.io/plan-reason`
+  are part of its public API. Its admission webhook requires `approvedBy` to
+  equal the approving user and lets only the manager change the phase label.
+  A guarded apply that blocks now also reports its plan in the runner result,
+  so it fails closed when the plan key cannot be read.
 - Machinepool role, including native autoscaling (additive
   within v1alpha1; `machinepool.md`, `README.md` "Roles and CAPI
   mapping"): the v1 controller now reconciles `TerraformMachinePool`.
@@ -196,6 +209,15 @@ compatibility guarantee (see [`README.md`](README.md#versioning)
 
 ### Changed
 
+- Plan and drift counts are `create`, `update`, `replace` and `delete`, with
+  a replacement counted in `replace` only, not as one add and one destroy.
+  A plan also counts `import`, `move`, `forget` and `outputChanges`. The names
+  replace `add`, `change` and `destroy` in the runner result's `drift` and
+  `plan` objects, `status.lastRun.drift`, `status.plan` and the `DriftDetected`
+  message, and the `action` label of `captf_resources_changed_total` and
+  `captf_drift_resources_total` is `create`, `update`, `replace`, `delete` or
+  `import`. The counts of an apply or destroy `changes` object still follow the
+  runtime's summary line (`add`, `change`, `destroy`, `import`).
 - Cluster `exports` is also published to `TerraformCluster.status.exports`, up
   to 64 KiB of compact JSON, readable by anyone who can `get` the object
   (`cluster.md` "`exports` (output)"). A clarification: the module contract

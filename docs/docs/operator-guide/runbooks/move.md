@@ -110,6 +110,7 @@ path therefore never runs on the source.
 | State Secrets (`tfstate-default-<suffix>` and its chunks) — owned by the object | The state lock Lease (`lock-tfstate-default-<suffix>`) — not a discovered kind. **Recreated by the backend at the target's next `init`.** |
 | State backups (`captf-state-backup-<suffix>-<serial>` and their chunks) — owned by the object | The runner ServiceAccount (`captf-runner`) and its RoleBinding — not discovered kinds. **Recreated by the controller before the target's first Job.** |
 | The durable inputs Secret (`captf-inputs-<kindshort>-<name>`) — by owner reference only | The run lease and, for a TerraformCluster, the cluster write lease — not discovered kinds. A lease whose Job was active during the move is left on the source; see [run leases](../../concepts/lifecycle.md#run-leases-and-the-cluster-operation-gate). |
+| `TerraformPlan` objects — owned by their target. Their `captf.io/plan-phase` label moves with them; status is rebuilt | |
 | The plan key (`captf-plankey-<kindshort>-<name>`) and the mirrored credentials Secret (`captf-creds-<identity>`) — by owner reference only | The identity's own credentials Secret — deliberately not owned and not labeled for move. **Copy it to the target yourself; see below.** |
 | | Every `variablesFrom` ConfigMap or Secret — deliberately not owned. **Recreate it on the target, or label it for move yourself** (see [Module Variables](../../user-guide/variables.md#what-a-change-does-per-kind)). |
 

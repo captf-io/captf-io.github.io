@@ -37,7 +37,7 @@ namespace, is bound to one ClusterRole scoped to exactly what reconciling
 
 | Resource | Verbs | Why |
 | --- | --- | --- |
-| `terraformclusters`, `terraformmachines`, `terraformmachinepools`, `terraformclusteridentities`, their `*Template` kinds | get, list, watch, create, update, patch, delete | Reconciles and owns every kind it serves |
+| `terraformclusters`, `terraformmachines`, `terraformmachinepools`, `terraformclusteridentities`, `terraformplans`, their `*Template` kinds | get, list, watch, create, update, patch, delete | Reconciles and owns every kind it serves |
 | The `/status` subresources of every kind above except `terraformmachinepooltemplates` (which has none) | get, update, patch | Writes status separately from the spec |
 | The `/finalizers` subresources of `terraformclusters`, `terraformmachines` and `terraformmachinepools` (never a `*Template` kind or `terraformclusteridentities`) | update | Adds and removes its own finalizers |
 | `clusters`, `clusters/status`, `machines/status`, `machinepools/status` | get, list, watch | Reads the Cluster API objects a `Terraform*` object belongs to |

@@ -230,6 +230,7 @@ nav = [
       { "TerraformMachinePool" = "docs/reference/resources/terraformmachinepool.md" },
       { "TerraformMachinePoolTemplate" = "docs/reference/resources/terraformmachinepooltemplate.md" },
       { "TerraformClusterIdentity" = "docs/reference/resources/terraformclusteridentity.md" },
+      { "TerraformPlan" = "docs/reference/resources/terraformplan.md" },
       { "Common Fields" = "docs/reference/resources/common-fields.md" },
     ] },
     { "Metadata and Templates" = [
@@ -530,7 +531,7 @@ https://captf.io/llms-full.txt is the whole site in one file. News: https://capt
 ]
 "Overview" = [
   { "docs/concepts/architecture.md" = "The manager, webhooks, runner Jobs, module image and state backend, and how one apply flows through them." },
-  { "docs/concepts/kinds.md" = "How CAPTF's seven kinds relate to Cluster API's objects, what stays fixed once an object exists, and what a cluster passes down." },
+  { "docs/concepts/kinds.md" = "How CAPTF's eight kinds relate to Cluster API's objects, what stays fixed once an object exists, and what a cluster passes down." },
   { "docs/reference/glossary.md" = "Short definitions of CAPTF terms and the Cluster API and Terraform terms its docs assume, each linked to the page that covers it." },
   { "docs/concepts/security-model.md" = "What creating a Terraform* object grants, what its Job can read, and what CAPTF keeps out of status, events and logs." },
   { "docs/operator-guide/limitations.md" = "What CAPTF does not do yet or does with a catch, with the workaround and the page that has the detail." },
@@ -677,6 +678,7 @@ https://captf.io/llms-full.txt is the whole site in one file. News: https://capt
   { "docs/reference/resources/terraformmachinepool.md" = "Every field, status value, condition, printer column and admission rule of the TerraformMachinePool kind, with examples." },
   { "docs/reference/resources/terraformmachinepooltemplate.md" = "Every field, printer column and admission rule of the TerraformMachinePoolTemplate kind, the ClusterClass template for TerraformMachinePool." },
   { "docs/reference/resources/terraformclusteridentity.md" = "Reference for the cluster-scoped TerraformClusterIdentity kind: its credentials Secret, allowed namespaces, status, conditions, validation and lifecycle." },
+  { "docs/reference/resources/terraformplan.md" = "Reference for the TerraformPlan kind: a plan that waits for an approval, its spec and status, labels, phases, conditions, print columns and admission rules." },
   { "docs/reference/resources/common-fields.md" = "Reference for the spec and status fields that TerraformCluster, TerraformMachine and TerraformMachinePool share: source, identity, Job policy, variables and run status." },
   { "docs/reference/annotations-labels.md" = "Every annotation, label and finalizer CAPTF reads or sets: the keys you set to approve, restore or abandon, CAPTF's own bookkeeping keys and the captf_tags modules receive." },
   { "docs/reference/clusterctl-variables.md" = "Every variable the CAPTF clusterctl templates read, with required and default values, grouped by flavor, plus the ClusterClass topology variables." },
