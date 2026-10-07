@@ -121,8 +121,8 @@ What exists today follows from those triggers:
   commit on `main` whose `ci` workflow passed (`:edge` and `:sha-<commit>`;
   `:edge` only while that commit is still `main`'s head) and on every release
   tag whose commit passed `ci` (`:vX.Y.Z`); `workflow_dispatch` republishes
-  `:edge` after the same check. Releases v0.1.0 and
-  v0.1.1 exist, so `:v0.1.1` is a tag you can install. Pin a release tag,
+  `:edge` after the same check. Releases v0.1.0,
+  v0.1.1 and v0.2.0 exist, so `:v0.2.0` is a tag you can install. Pin a release tag,
   or better its digest, in anything you keep; `:edge` and `:sha-<commit>`
   are builds of `main` that passed CI but are not releases. To build your own, use
   `make docker-build` and `make docker-push IMG=...`. A maintainer can fall

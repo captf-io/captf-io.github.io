@@ -508,7 +508,7 @@ object's inputs, runs the module image in a runner Job, keeps Terraform state in
 next to the object, and reads the module's outputs back from that state. A module is written to the \
 `v1alpha1` module contract and linted with `tfcapi-lint`.
 
-Status: pre-alpha. v0.1.0 and v0.1.1 are released. Every kind and the module contract are `v1alpha1`; \
+Status: pre-alpha. v0.1.0, v0.1.1 and v0.2.0 are released. Every kind and the module contract are `v1alpha1`; \
 the contract is frozen for implementation but may change. Two opt-in end-to-end suites run on a local \
 kind cluster, one of them driving the no-op modules through real Cluster API objects, but they are not \
 yet part of CI. Nothing has been applied to a real cloud, including the reference cloud modules (AWS, \

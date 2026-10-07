@@ -58,10 +58,10 @@ clusterctl upgrade apply --contract v1beta2
 clusterctl upgrade apply --infrastructure terraform:vX.Y.Z
 ```
 
-!!! note "Only two releases exist"
+!!! note "Only three releases exist"
 
-    CAPTF has released v0.1.0 and v0.1.1, so `clusterctl upgrade plan` has
-    one step to offer. Neither upgrade path has been run: see
+    CAPTF has released v0.1.0, v0.1.1 and v0.2.0, so `clusterctl upgrade plan`
+    has two steps to offer. Neither upgrade path has been run: see
     [Compatibility](compatibility.md#what-is-tested). To try an unreleased
     build, reinstall from a local repository, the same way as a first install
     (see [Installing from a local

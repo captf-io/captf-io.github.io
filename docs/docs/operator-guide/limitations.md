@@ -32,7 +32,7 @@ Integration](../module-author/control-planes/README.md).
 
 ## Maturity
 
-- **Pre-alpha.** v0.1.0 and v0.1.1 are released, but nothing has been
+- **Pre-alpha.** v0.1.0, v0.1.1 and v0.2.0 are released, but nothing has been
   applied to a real cloud. Every API kind is
   `v1alpha1`, and the module contract is `v1alpha1` and provisional: it may
   change before a real module has provisioned a cluster with it. See

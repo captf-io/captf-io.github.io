@@ -31,7 +31,7 @@ check them against the tag you install.
 | Cluster API contract | `v1beta2` | `metadata.yaml`, the CRD label |
 | controller-runtime | v0.24.1 | `go.mod` |
 | Kubernetes client libraries | v0.36.5 (`k8s.io/api`, `apimachinery`, `client-go`) | `go.mod` |
-| CAPTF release series | 0.1 (v0.1.0 and v0.1.1 released) | `metadata.yaml` |
+| CAPTF release series | 0.1 (v0.1.0 and v0.1.1 released), 0.2 (v0.2.0 released) | `metadata.yaml` |
 | CAPTF API and module contract | `v1alpha1`, provisional | the CRDs, [contract](../module-author/contract/README.md) |
 | cert-manager | `cert-manager.io/v1` API required; no minimum release stated | [Installation](installation.md) |
 | Terraform | Any 1.x with the CLI surface below; the reference modules require `>= 1.5.0` and are validated on 1.5.7 | [image contract](../module-author/image-contract.md) |

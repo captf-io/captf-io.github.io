@@ -39,7 +39,7 @@ install -m 0755 "tfcapi-lint-<os>-<arch>" /usr/local/bin/tfcapi-lint
 tfcapi-lint version
 ```
 
-- `<version>` is the provider release, for example `v0.1.1`.
+- `<version>` is the provider release, for example `v0.2.0`.
 - `<os>` and `<arch>` pick a binary from the list above.
 
 The [tfcapi-lint](../module-author/tfcapi-lint.md#install) guide shows

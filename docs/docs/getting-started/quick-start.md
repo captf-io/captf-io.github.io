@@ -39,7 +39,7 @@ cloud provider.
     - `clusterctl` (v1.14 or later) and a clone of
       [`cluster-api-provider-terraform`](https://github.com/captf-io/cluster-api-provider-terraform):
       the `templates/...` paths below are relative to it. Check out the
-      release tag you install, for example `git checkout v0.1.1`.
+      release tag you install, for example `git checkout v0.2.0`.
     - A management cluster that can pull from `ghcr.io`, where the manager
       image and the no-op module images are published.
 
@@ -55,13 +55,13 @@ CAPTF is not one of `clusterctl`'s built-in providers, so point a
 providers:
 - name: terraform
   type: InfrastructureProvider
-  url: https://github.com/captf-io/cluster-api-provider-terraform/releases/download/v0.1.1/infrastructure-components.yaml
+  url: https://github.com/captf-io/cluster-api-provider-terraform/releases/download/v0.2.0/infrastructure-components.yaml
 ```
 
 Install that release:
 
 ```sh
-clusterctl init --config clusterctl.yaml --infrastructure terraform:v0.1.1
+clusterctl init --config clusterctl.yaml --infrastructure terraform:v0.2.0
 ```
 
 This also installs Cluster API's core, bootstrap and control-plane
@@ -81,8 +81,8 @@ for the general form of the local-repository steps.
     ```sh
     export IMG=registry.example.com/you/cluster-api-provider-terraform:dev
     make docker-build docker-push IMG="${IMG}"
-    make manifests-release RELEASE_DIR="${HOME}/local-repository/infrastructure-terraform/v0.1.1" \
-      RELEASE_IMG="${IMG}" VERSION=v0.1.1
+    make manifests-release RELEASE_DIR="${HOME}/local-repository/infrastructure-terraform/v0.2.0" \
+      RELEASE_IMG="${IMG}" VERSION=v0.2.0
     ```
 
     Then use the `file://` form of the `url` in `clusterctl.yaml`, with
@@ -93,7 +93,7 @@ for the general form of the local-repository steps.
     providers:
     - name: terraform
       type: InfrastructureProvider
-      url: file:///home/<you>/local-repository/infrastructure-terraform/v0.1.1/infrastructure-components.yaml
+      url: file:///home/<you>/local-repository/infrastructure-terraform/v0.2.0/infrastructure-components.yaml
     ```
 
 ## 2. Apply an identity

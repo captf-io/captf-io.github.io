@@ -21,7 +21,7 @@ provide.
 
 !!! warning "Pre-alpha: treat this as a minimum, not a certification"
 
-    CAPTF is pre-alpha: v0.1.0 and v0.1.1 are released, but it has run only in the
+    CAPTF is pre-alpha: v0.1.0, v0.1.1 and v0.2.0 are released, but it has run only in the
     opt-in end-to-end suites on a local kind cluster, with the noop modules
     and no real cloud; `clusterctl upgrade` and `move` have not run (see
     [Compatibility](compatibility.md#what-is-tested) and [Project

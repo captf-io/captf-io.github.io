@@ -51,7 +51,7 @@ providers:
 ```
 
 `url` can also name a specific tag instead of `latest`, for example
-`.../releases/download/v0.1.1/infrastructure-components.yaml`, or a `file://` path
+`.../releases/download/v0.2.0/infrastructure-components.yaml`, or a `file://` path
 into a local repository built from a release's assets; see [Installing from
 a local repository](../developer-guide/releasing.md#installing-from-a-local-repository)
 for the local repository layout and for pinning a version.
@@ -59,7 +59,7 @@ for the local repository layout and for pinning a version.
 !!! tip "Pin a version"
 
     `latest` follows the newest release. For anything you keep, pin one:
-    `clusterctl init --config clusterctl.yaml --infrastructure terraform:v0.1.1`.
+    `clusterctl init --config clusterctl.yaml --infrastructure terraform:v0.2.0`.
 
 ## Install with clusterctl init
 
