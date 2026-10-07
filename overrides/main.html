@@ -54,6 +54,39 @@
   <link rel="icon" href="{{ config.theme.favicon | url }}">
 {% endblock %}
 
+{#- The fonts, self-hosted instead of from Google Fonts, whose stylesheet
+    blocked the first paint on mobile by most of a second. Inter and
+    JetBrains Mono (SIL OFL 1.1, assets/fonts/*-OFL.txt) are the variable
+    builds from @fontsource-variable 5.3.0, Latin and Latin Extended only;
+    a page downloads a file only when it uses a character in its range.
+    Until a file arrives, text renders in "Inter Fallback": the system's
+    Arial (or the metric-compatible Liberation Sans or Arimo) or Roboto,
+    scaled to Inter's metrics so that the swap moves almost nothing; without
+    it, the swap re-wrapped the announcement banner and shifted the page by
+    a CLS of 0.3. The overrides are measured with fontTools: average
+    advance over English letter frequencies, and Inter's typo metrics, for
+    Arial and Roboto alike (they differ by under 0.3%).
+    No preload: on a throttled phone it held the first paint back until the
+    font arrived, almost doubling the time to first paint. The family names
+    are the theme's font settings in zensical.toml. -#}
+{% block fonts %}
+  {%- set text = config.theme.font.text -%}
+  {%- set code = config.theme.font.code -%}
+  {%- set latin = "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD" -%}
+  {%- set latin_ext = "U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF" -%}
+  <style>
+    {%- for family, file in [(text, "inter"), (code, "jetbrains-mono")] -%}
+      {%- for style in ["normal", "italic"] -%}
+        {%- for subset, range in [("latin-ext", latin_ext), ("latin", latin)] -%}
+          @font-face{font-family:"{{ family }}";font-style:{{ style }};font-weight:100 900;font-display:swap;src:url("{{ ('assets/fonts/' ~ file ~ '-' ~ subset ~ '-wght-' ~ style ~ '.woff2') | url }}") format("woff2");unicode-range:{{ range }}}
+        {%- endfor -%}
+      {%- endfor -%}
+    {%- endfor -%}
+    @font-face{font-family:"{{ text }} Fallback";src:local("Arial"),local("Liberation Sans"),local("Arimo"),local("Roboto");size-adjust:107.2%;ascent-override:90.4%;descent-override:22.5%;line-gap-override:0%}
+    :root{--md-text-font:"{{ text }}","{{ text }} Fallback";--md-code-font:"{{ code }}"}
+  </style>
+{% endblock %}
+
 {% block extrahead %}
   {{ super() }}
   {%- set site = config.site_url -%}

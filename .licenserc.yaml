@@ -44,6 +44,8 @@ header:
     - "**/*.html"
     - "**/*.svg"
     - "uv.lock"
+    # The self-hosted fonts and their SIL OFL 1.1 license texts.
+    - "overrides/assets/fonts/**"
     - "**/.gitignore"
     - "CODEOWNERS"
 
