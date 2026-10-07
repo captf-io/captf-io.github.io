@@ -1,0 +1,85 @@
+{#-
+  The 404 page. GitHub Pages serves it at whatever path was missing, so every
+  link here must be absolute; the url filter gives root-relative links on
+  this page. Built from the landing page's pieces (landing.css and
+  partials/glyph.html), plus the .captf-404 rules at the end of landing.css.
+  As on the home page, the theme's header, search and our footer stay, and
+  the sidebars go. notfound.js fills in the missing path and the issue link;
+  without it the page reads the same, with a generic path.
+-#}
+{% extends "main.html" %}
+
+{% block extrahead %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ 'assets/stylesheets/landing.css' | url }}">
+{% endblock %}
+
+{#- The drawer only, as on the home page (see home.html). -#}
+{% block site_nav %}
+  <div class="md-sidebar md-sidebar--primary captf-drawer-only" data-md-component="sidebar" data-md-type="navigation">
+    <div class="md-sidebar__scrollwrap">
+      <div class="md-sidebar__inner">
+        {% include "partials/nav.html" %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block container %}
+{%- from "partials/glyph.html" import glyph %}
+<div class="md-content captf-landing-content" data-md-component="content">
+<article class="captf-landing captf-404">
+<div class="hero-band">
+  <section class="hero wrap">
+    <p class="status-pill"><span class="miss" aria-hidden="true"></span>HTTP 404 · NotFound</p>
+    <p class="code grad" aria-hidden="true">404</p>
+    <h1>This page isn't <span class="grad">in the state.</span></h1>
+    <p class="lede">
+      It may have moved when the docs were reorganized, or the link may be
+      mistyped. Search for it, or start again from one of the pages below.
+    </p>
+    <p class="actions">
+      <button type="button" class="btn btn-primary" data-captf-search>{{ glyph("search") }}<span>Search the site</span></button>
+      <a class="btn" href="{{ '.' | url }}">{{ glyph("home") }}<span>Home</span></a>
+      <a class="btn" href="{{ 'docs/' | url }}">{{ glyph("book") }}<span>Read the docs</span></a>
+    </p>
+    <div class="window term">
+      <div class="window-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>captf.io</span></div>
+      <pre><code><span class="prompt">$</span> terraform state show 'captf_page.this["<span class="path" data-captf-path>/missing/page/</span>"]'
+<span class="rail">╷</span>
+<span class="rail">│</span> <b class="err">Error:</b> <b>No instance found for the given address</b>
+<span class="rail">│</span>
+<span class="rail">│</span> Nothing in the site's state matches this address.
+<span class="rail">╵</span>
+<span class="prompt">$</span> <span class="cursor" aria-hidden="true"></span></code></pre>
+    </div>
+  </section>
+</div>
+<section class="wrap section" aria-label="Where to go next">
+  <ul class="paths">
+    <li>
+      <a href="{{ 'docs/getting-started/quick-start/' | url }}">
+        <span class="glyph">{{ glyph("bolt") }}</span>
+        <span><b>Quick start</b><span>Install CAPTF and reconcile a cluster with the no-op modules.</span></span>
+      </a>
+    </li>
+    <li>
+      <a href="{{ 'docs/module-author/contract/v1alpha1/' | url }}">
+        <span class="glyph">{{ glyph("module") }}</span>
+        <span><b>Module contract</b><span>What a module image must provide, and what CAPTF gives it.</span></span>
+      </a>
+    </li>
+    <li>
+      <a href="https://github.com/captf-io/captf-io.github.io/issues/new" data-captf-report>
+        <span class="glyph">{{ glyph("flag") }}</span>
+        <span><b>Report a broken link</b><span>Followed a link here? Tell us where it was, and we'll fix it.</span></span>
+      </a>
+    </li>
+  </ul>
+</section>
+</article>
+</div>
+{#- In the body, like landing.js, so that it also runs after instant
+    navigation. -#}
+<script defer src="{{ 'assets/javascripts/notfound.js' | url }}"></script>
+{% endblock %}
