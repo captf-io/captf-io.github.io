@@ -121,10 +121,14 @@ reconcile after it restarts on the new version:
   reconcile every identity once before deleting one, so this cleanup runs
   first; see [Identities and Credentials](../user-guide/identities.md).
 - **Re-approval of waiting plans.** Approvals are `TerraformPlan` objects
-  that the manager creates, and an approval cannot carry over from an older
-  release. Plan hashes start with `p2:` and bind what each change does, plus
-  output changes, imports and moves. A plan that was waiting for approval
-  under an older release is planned again automatically, and the new
+  that the manager creates, and an approval cannot carry over from a release
+  before `TerraformPlan` existed: `status.plan` is dropped, and the
+  `captf.io/approve-plan` and `captf.io/approve-destructive-plan`
+  annotations are ignored. The manager does not remove them; delete them
+  yourself. A change that waited under `applyPolicy: Manual` gets a new
+  plan Job at once. An apply that an older release blocked before a
+  destructive plan runs again, guarded, up to 10 minutes after the block,
+  and blocks again into a `TerraformPlan`. Either way the new
   `TerraformPlan` needs its own approval (see [Plan
   Approval](../user-guide/plan-approval.md#caveats)). Grant approvers
   `patch` on `terraformplans`; see [Who can

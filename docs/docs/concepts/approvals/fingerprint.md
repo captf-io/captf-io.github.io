@@ -106,9 +106,11 @@ provisioners that reach elsewhere. See [Limits](limits.md).
 A plan with no change at all has a fixed hash (`p2:` followed by the SHA-256
 of the empty string), and an apply for it needs no approval.
 
-A hash that does not start with `p2:` is a plan recorded by an older
-release (`p1:`). The controller plans again automatically and the approval
-is then given again, against the new plan.
+Every `TerraformPlan` carries a `p2:` hash. Plans from releases before
+`TerraformPlan` existed (in `status.plan`, approved with an annotation) are
+not carried over: after the upgrade the change is planned again and its new
+`TerraformPlan` needs its own approval (see
+[Upgrades](../../operator-guide/upgrades.md)).
 
 ## Drift is classified separately
 
