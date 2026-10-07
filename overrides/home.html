@@ -67,11 +67,15 @@
 <div class="hero-band">
   <section class="hero hero-split wrap">
     <div class="hero-copy">
-      <p class="eyebrow-pill">
-        <img src="{{ 'assets/brand/mark.svg' | url }}" alt="" width="18" height="18">
-        <span>Cluster API · Terraform · OpenTofu</span>
-      </p>
-      <h1 id="__skip"><span class="h1-line">Your modules</span> <span class="grad">are the provider.</span></h1>
+      {#- The eyebrow pill is part of the heading, so the page's h1 names
+          what CAPTF is as well as its tagline. -#}
+      <h1 id="__skip">
+        <span class="eyebrow-pill">
+          <img src="{{ 'assets/brand/mark.svg' | url }}" alt="" width="18" height="18">
+          <span>Cluster API · Terraform · OpenTofu</span>
+        </span>
+        <span class="h1-line">Your modules</span> <span class="grad">are the provider.</span>
+      </h1>
       <p class="lede">
         Turn the Terraform and OpenTofu you already trust into Kubernetes clusters, on any platform.
         No Go controller to write. No second copy of your infrastructure logic to keep in sync.

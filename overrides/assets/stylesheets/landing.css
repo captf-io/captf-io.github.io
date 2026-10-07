@@ -147,9 +147,13 @@
 .captf-landing .hero-split .lede { margin: 0; }
 .captf-landing .hero-split .actions,
 .captf-landing .hero-split .pills { justify-content: flex-start; }
+/* Inside the h1: a block of its own, sized and spaced like the paragraph it
+   was, not by the heading. */
 .captf-landing .eyebrow-pill {
-  display: inline-flex;
+  display: flex;
+  width: fit-content;
   align-items: center;
+  line-height: 1.6;
   gap: 9.6px;
   margin: 0 0 25.6px;
   padding: 6.4px 16px 6.4px 10.4px;
@@ -434,7 +438,7 @@
   border-radius: var(--radius);
   overflow-x: auto;
   font-size: 14.4px;
-  line-height: 1.5;
+  line-height: 1.6;
   
   background: var(--code) !important;
 }

@@ -130,13 +130,16 @@
 {% endblock %}
 
 {#- The title bar: "<page> - <site_name>", as the theme does, except on the
-    home page, whose own title would repeat the site name: there, the site
-    name alone. (The theme's page.is_homepage is not set in Zensical; the
-    home page is the one with an empty url.) -#}
+    home page, whose own title would repeat the site name: there, its
+    head_title (front matter), else the site name alone. (The theme's
+    page.is_homepage is not set in Zensical; the home page is the one with
+    an empty url and a canonical, the 404 page the one with neither.) -#}
 {% block htmltitle %}
-  {%- set is_home = page is defined and page and not page.url -%}
+  {%- set is_home = page is defined and page and not page.url and page.canonical_url -%}
   {% if is_home %}
-    <title>{{ config.site_name }}</title>
+    <title>{{ page.meta.head_title if page.meta and page.meta.head_title else config.site_name }}</title>
+  {% elif page is defined and page and not page.url %}
+    <title>Page not found - {{ config.site_name }}</title>
   {% elif page.meta and page.meta.title %}
     <title>{{ page.meta.title }} - {{ config.site_name }}</title>
   {% elif page.title %}

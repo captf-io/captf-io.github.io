@@ -1,5 +1,8 @@
 ---
 title: CAPTF
+# The title bar and search results: the site name alone would leave out
+# "Provider" and OpenTofu, which people search for.
+head_title: "Cluster API Provider Terraform and OpenTofu (CAPTF)"
 description: "Cluster API Provider Terraform: turn the Terraform and OpenTofu modules you already trust into Kubernetes clusters, on any platform."
 template: home.html
 hide:
