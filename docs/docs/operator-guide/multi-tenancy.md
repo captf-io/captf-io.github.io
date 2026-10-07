@@ -95,6 +95,21 @@ variables and read-only files.
   the manager's next reconcile. See [Rotate
   credentials](../user-guide/identities.md#rotate-credentials).
 
+### Namespace-local Secrets
+
+An `identityRef` with `kind: Secret` skips the identity object: it names a
+Secret in the referencing object's own namespace, and Jobs get it directly.
+There is no mirror, no `allowedNamespaces` rule and no `SubjectAccessReview`;
+`IdentityAllowed` is `True` with reason `LocalSecret`. Use it when a tenant
+owns its own credentials and no platform team needs to gate them. It adds no
+reach that a module did not already have, because the runner can read every
+Secret in the namespace (next section), but it moves the decision from the
+platform team to whoever may write the `identityRef`: anyone who can create
+or edit a `Terraform*` object in the namespace can name any Secret there as
+its credentials. Keep `TerraformClusterIdentity` for credentials a platform
+team hands out. See [Use a Secret in the object's
+namespace](../user-guide/identities.md#use-a-secret-in-the-objects-namespace).
+
 ## The runner reads every Secret in its namespace
 
 !!! danger "Any module image can read, replace or delete every Secret in its namespace"

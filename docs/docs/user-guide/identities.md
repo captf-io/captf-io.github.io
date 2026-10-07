@@ -15,8 +15,10 @@ subtitle: "Point clusters at credentials"
 A `TerraformClusterIdentity` is a cluster-scoped object that names a Secret
 of cloud credentials and the namespaces allowed to use it. Every
 `TerraformCluster`, `TerraformMachine` and `TerraformMachinePool` needs one,
-directly or by inheriting its cluster's, before it can run a Job. This page
-covers creating an identity, choosing which namespaces it allows,
+directly or by inheriting its cluster's, before it can run a Job. (An
+object can also name a Secret in its own namespace instead; see [Use a Secret
+in the object's namespace](#use-a-secret-in-the-objects-namespace).) This
+page covers creating an identity, choosing which namespaces it allows,
 referencing it from each kind, rotating and revoking its credentials, and
 deleting it. For the trust an identity's credentials carry once mounted
 into a Job, see [Security model](../concepts/security-model.md); for the
@@ -95,13 +97,26 @@ kind: TerraformClusterIdentity
 metadata:
   name: <identity-name>
 spec:
+  type: Secret
   secretRef:
     name: <identity-name>
     namespace: <credentials-namespace>
+  requiredKeys:
+    - AWS_ACCESS_KEY_ID
+    - AWS_SECRET_ACCESS_KEY
   allowedNamespaces:
     list:
       - <tenant-namespace>
 ```
+
+`type` says how the credentials are supplied. `Secret`, the only type, takes
+them from `secretRef`, and is what an unset `type` means.
+
+`requiredKeys` is optional. It lists the keys the Secret must hold: when one
+is missing, the identity is `Ready=False` with reason `CredentialsIncomplete`,
+and objects that use it start no Job instead of failing in the cloud with a
+confusing authentication error. Only key names are checked, never values, so
+it works the same for every cloud.
 
 `allowedNamespaces` decides which namespaces may use the identity:
 
@@ -138,7 +153,8 @@ neither field, such as to labels or annotations, are not re-checked.
 
 ## Reference it
 
-An identity is used through `identityRef`, which names it by `name`:
+An identity is used through `identityRef`, which names it by `name` (and,
+for a namespace-local Secret, `kind: Secret`; see [below](#use-a-secret-in-the-objects-namespace)):
 
 - **`TerraformCluster`**: `spec.identityRef` is required and mutable —
   changing it re-resolves the cluster's credentials on its next reconcile.
@@ -160,6 +176,10 @@ An identity is used through `identityRef`, which names it by `name`:
 - **`TerraformMachinePool`**: `spec.identityRef` is optional and mutable,
   with the same fallback as a machine.
 
+The fallback chain is the same for both kinds: an object's own
+`identityRef`, else `spec.defaults.identityRef`, else the cluster's
+`spec.identityRef`.
+
 `identityRef.name` must resolve to an identity that exists and allows the
 object's namespace; the [Conditions](../reference/conditions.md#identityallowed)
 reference has every reason `IdentityAllowed` and `CredentialsMirrored` can
@@ -175,11 +195,144 @@ carry.
     ```
 
     The identity's own `Ready` condition is `True`/`SecretFound` once its
-    Secret exists, `False`/`SecretNotFound` otherwise, and `status.namespaces`
+    Secret exists with every key in `requiredKeys`, `False`/`SecretNotFound`
+    when it does not exist, `False`/`CredentialsIncomplete` when a required
+    key is missing, and `status.namespaces`
     lists every namespace currently holding a mirror of it. On the object
     that references it, `IdentityAllowed` and `CredentialsMirrored` turn
     `True` once the namespace is allowed and the mirror is in place; until
     then no Job for that object starts.
+
+## Use a Secret in the object's namespace
+
+When the credentials belong to the tenant and no platform team needs to gate
+them, skip the identity and name a Secret from the object's own namespace:
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: TerraformCluster
+metadata:
+  name: demo
+  namespace: team-a
+spec:
+  identityRef:
+    kind: Secret
+    name: team-a-aws
+```
+
+`kind` is `TerraformClusterIdentity` when unset, or `Secret`. A `Secret`
+reference:
+
+- is read from the namespace of the object that sets it, never another;
+- reaches the Job exactly as an identity's mirror does (`envFrom` and files
+  under `/var/run/captf/credentials/`), with the same `TF_` and `KUBE_`
+  rules;
+- is not mirrored, and there is no `allowedNamespaces` rule or
+  `SubjectAccessReview`: `IdentityAllowed` is `True` with reason
+  `LocalSecret`, or `False` with `SecretNotFound` while the Secret is
+  missing;
+- is not checked against `requiredKeys` (that lives on the identity);
+- works in `spec.identityRef`, in `spec.defaults.identityRef` of a
+  `TerraformCluster`, and in a machine's or pool's own `identityRef`, with
+  the fallback chain above. A machine's `identityRef` stays immutable;
+- is picked up by the next Job after you change the Secret. The Secret is
+  not watched, so a Secret that was missing is noticed on the object's next
+  retry (about every 30 seconds while credentials are the blocker).
+
+Deleting the object does not touch the Secret. An immutable kind
+(`TerraformMachine`) records the Secret's name and kind when it applies, so
+its destroy keeps using it even if the cluster's default later changes.
+
+!!! warning "Anyone who can write the `identityRef` can pick the Secret"
+
+    The Secret is not gated by a platform object, so whoever may create or
+    edit a `Terraform*` object in the namespace chooses which of its Secrets
+    becomes the Job's credentials. A module can already read every Secret in
+    its namespace, so this adds no new reach, but it removes the platform
+    team's say. Use a `TerraformClusterIdentity` for credentials you hand
+    out. See [Multi-tenancy](../operator-guide/multi-tenancy.md#namespace-local-secrets).
+
+## Chain roles with the credentials mount
+
+An identity's Secret is not limited to access keys. Because every key also
+appears as a file under `/var/run/captf/credentials/<key>` and as an
+environment variable, you can ship a cloud SDK config that has the Job
+assume a role or impersonate a service account. CAPTF does nothing special
+for it: the Secret is delivered, and the provider SDK in the module does the
+chaining. It works when the module's provider block uses the default
+credential chain and sets no credentials itself, as the reference modules do.
+
+Keep the long-lived base credential in a file, not as an environment
+variable: environment credentials take precedence over a profile, so a plain
+`AWS_ACCESS_KEY_ID` key would stop the profile from being used.
+
+=== "AWS: assume a role"
+
+    ```yaml
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: aws-assume
+      namespace: <credentials-namespace>
+    type: Opaque
+    stringData:
+      AWS_CONFIG_FILE: /var/run/captf/credentials/config
+      AWS_SHARED_CREDENTIALS_FILE: /var/run/captf/credentials/credentials
+      AWS_PROFILE: target
+      credentials: |
+        [base]
+        aws_access_key_id = <value>
+        aws_secret_access_key = <value>
+      config: |
+        [profile target]
+        role_arn = arn:aws:iam::<account-id>:role/<role-name>
+        source_profile = base
+        role_session_name = captf
+    ```
+
+    The `AWS_*` keys become environment variables that point the SDK at the
+    two files; `credentials` and `config` are the files. The role's trust
+    policy must allow the base principal. Set `requiredKeys` to
+    `["credentials", "config"]` so a Secret missing either one is caught
+    early.
+
+=== "GCP: impersonate a service account"
+
+    ```yaml
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: gcp-impersonate
+      namespace: <credentials-namespace>
+    type: Opaque
+    stringData:
+      GOOGLE_APPLICATION_CREDENTIALS: /var/run/captf/credentials/source.json
+      GOOGLE_IMPERSONATE_SERVICE_ACCOUNT: <target>@<project>.iam.gserviceaccount.com
+      source.json: |
+        { "type": "service_account", ... }
+    ```
+
+    The Google provider reads `GOOGLE_IMPERSONATE_SERVICE_ACCOUNT` and calls
+    the target through the source key. The source account needs
+    `roles/iam.serviceAccountTokenCreator` on the target.
+
+=== "Azure and OCI"
+
+    Neither has an assume-role chain the identity Secret can express. For
+    Azure, use one service principal per subscription or tenant (the
+    `ARM_*` keys); a provider that supports auxiliary tenants takes its
+    own setting, which is a module variable, not part of the identity. For
+    OCI, use an API key per target (`OCI_*` keys, or a config file with a
+    profile, as for AWS). Whether a given module honors a file-based config
+    depends on its provider block: check the module's page under
+    [Cloud modules](../cloud-modules/README.md).
+
+Two cautions. The base credential is still mounted in the Job and is as
+exposed as any other (see [Security model](../concepts/security-model.md)),
+so scope it to the one permission that matters, the right to assume the
+role. And the assumed role's session expires (an hour by default for AWS);
+a Job longer than that needs a role with a longer maximum session duration,
+and `role_duration_seconds` in the profile.
 
 ## Rotate credentials
 

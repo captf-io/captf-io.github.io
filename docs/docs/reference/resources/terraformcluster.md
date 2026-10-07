@@ -219,7 +219,8 @@ rule](../../concepts/kinds.md#the-inheritance-rule).
 | --- | --- | --- |
 | `spec.defaults` | object | Optional. **Mutable.** |
 | `spec.defaults.identityRef` | object | The identity of machines and pools that set no `identityRef`. **Default:** `spec.identityRef`. Same shape as [Identity reference](common-fields.md#identity-reference). |
-| `spec.defaults.identityRef.name` | string | The name of the `TerraformClusterIdentity`. |
+| `spec.defaults.identityRef.kind` | string | `TerraformClusterIdentity` (the default when unset) or `Secret`, a Secret in the machine's or pool's own namespace. |
+| `spec.defaults.identityRef.name` | string | The name of the `TerraformClusterIdentity`, or of the Secret when `kind` is `Secret`. |
 | `spec.defaults.jobs` | object | A Job policy merged field by field under each machine's or pool's own `jobs`, and over this cluster's own `spec.jobs`. Same type as `spec.jobs`; see [Jobs](common-fields.md#jobs). It is validated like `spec.jobs`. |
 | `spec.defaults.drift` | object | A drift policy merged field by field under each machine's or pool's own `drift`, and over this cluster's own `spec.drift`. |
 | `spec.defaults.drift.intervalSeconds` | integer | **Default:** `spec.drift.intervalSeconds`, else the manager's `--drift-default-interval`. **Range:** 0 or more. `0` disables a machine's drift checks but not a pool's, which then uses the manager default. |

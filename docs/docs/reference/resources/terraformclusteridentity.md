@@ -20,7 +20,7 @@ identity and mounts that copy into the Jobs it runs there.
 | API version | `infrastructure.cluster.x-k8s.io/v1alpha1` |
 | Scope | Cluster |
 | Created by | A platform admin, with `kubectl apply` |
-| Referenced by | `TerraformCluster` (`spec.identityRef`, `spec.defaults.identityRef`), `TerraformMachine` and `TerraformMachinePool` (`spec.identityRef`) |
+| Referenced by | `TerraformCluster` (`spec.identityRef`, `spec.defaults.identityRef`), `TerraformMachine` and `TerraformMachinePool` (`spec.identityRef`), with `kind` unset or `TerraformClusterIdentity` |
 | Finalizers | None. The delete webhook protects an identity in use instead |
 | Short names | None |
 | Categories | `cluster-api` |
@@ -86,13 +86,16 @@ spec:
 
 ## Spec
 
-`spec` must have at least one property, and `spec.secretRef` is required.
+`spec` must have at least one property, and `spec.secretRef` is required
+while `spec.type` is `Secret` (the only type, and the default when unset).
 Every field is mutable: the CRD and webhook mark none immutable.
 
 | Field | Type | Description |
 | --- | --- | --- |
 | `spec` | object | The desired state: the credentials Secret and who may use it. **Required.** |
-| `spec.secretRef` | object | The credentials Secret. **Required.** |
+| `spec.type` | string | How the credentials are supplied. A union discriminator: each value selects the fields that must be set. **Allowed values:** `Secret`, the only one. **Default:** `Secret`. |
+| `spec.secretRef` | object | The credentials Secret. **Required** when `spec.type` is `Secret`. |
+| `spec.requiredKeys` | array of string | Keys the credentials Secret must hold. See [Required keys](#required-keys). **Range:** up to 64 items, each 1 to 253 characters from `[-._a-zA-Z0-9]`. Items are unique (a set). **Default:** unset, which checks nothing. |
 | `spec.allowedNamespaces` | object | Which namespaces may reference the identity. **Default:** unset, which allows no namespace. **Mutable.** |
 
 ### Secret reference
@@ -106,6 +109,32 @@ The Secret may live in any namespace. The admission webhook requires that the
 user who creates or changes the identity may `get` it, which keeps an
 identity from exposing a Secret its author cannot read. See
 [Validation](#validation).
+
+### Required keys
+
+`spec.requiredKeys` lists key names that the Secret's `data` must hold. When
+one is missing, the identity's `Ready` is `False` with reason
+`CredentialsIncomplete`, its message names the missing keys, and every object
+that uses the identity gets `IdentityAllowed=False` with the same reason and
+starts no Job. Only key names are compared, never values, so the check is the
+same for every cloud: list `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
+for an AWS identity, or `credentials` and `config` for a file-based one. An
+empty value counts as present.
+
+```yaml title="identity.yaml"
+spec:
+  secretRef:
+    name: aws
+    namespace: captf-system
+  requiredKeys:
+    - AWS_ACCESS_KEY_ID
+    - AWS_SECRET_ACCESS_KEY
+```
+
+To use a Secret without an identity object, see
+[Identity reference](common-fields.md#identity-reference): `kind: Secret`
+names a Secret in the object's own namespace, and `requiredKeys` does not
+apply to it.
 
 ### Allowed namespaces
 
@@ -208,8 +237,8 @@ property when present.
 | `status.conditions` | array of Condition | The identity's conditions. Only `Ready` is set. **Range:** up to 32 items. Keyed by `type`. |
 | `status.conditions[].type` | string | The condition type: `Ready`. |
 | `status.conditions[].status` | string | `True`, `False` or `Unknown`. |
-| `status.conditions[].reason` | string | A machine-readable reason: `SecretFound` or `SecretNotFound`. See [Conditions](../conditions.md). |
-| `status.conditions[].message` | string | A human-readable detail. For `SecretNotFound` it names the Secret as `namespace/name`. |
+| `status.conditions[].reason` | string | A machine-readable reason: `SecretFound`, `SecretNotFound` or `CredentialsIncomplete`. See [Conditions](../conditions.md). |
+| `status.conditions[].message` | string | A human-readable detail. For `SecretNotFound` it names the Secret as `namespace/name`. For `CredentialsIncomplete` it also lists the missing keys. |
 | `status.conditions[].lastTransitionTime` | time | When `status` last changed. |
 | `status.conditions[].observedGeneration` | integer | The `metadata.generation` the condition was computed from. |
 
@@ -239,8 +268,8 @@ An identity sets one condition, `Ready`.
 
 | Status | Meaning |
 | --- | --- |
-| `True` | The credentials Secret named by `spec.secretRef` exists (`SecretFound`). |
-| `False` | The Secret does not exist (`SecretNotFound`). Objects that use this identity start no Job until it does. |
+| `True` | The credentials Secret named by `spec.secretRef` exists and holds every key in `spec.requiredKeys` (`SecretFound`). |
+| `False` | The Secret does not exist (`SecretNotFound`), or lacks a required key (`CredentialsIncomplete`). Objects that use this identity start no Job until it is fixed. |
 | `Unknown` | Not set by the identity controller. |
 
 `Ready` says nothing about which namespaces are allowed or whether a mirror
@@ -248,8 +277,8 @@ exists; the objects that reference the identity report that through their
 `IdentityAllowed` and `CredentialsMirrored` conditions. The controller does
 not watch the source Secret, so it re-reads it every five minutes and notices
 a Secret created or deleted out of band within that time. It also emits
-`IdentitySecretNotFound` and `IdentitySecretFound` events when `Ready`
-changes. Every reason and its meaning is in [Conditions](../conditions.md).
+`IdentitySecretNotFound` (also for `CredentialsIncomplete`) and
+`IdentitySecretFound` events when `Ready` changes. Every reason and its meaning is in [Conditions](../conditions.md).
 
 ## Printer columns
 
@@ -270,9 +299,11 @@ is unreachable.
 
 Schema rules:
 
-- `spec` must have at least one property, and `spec.secretRef.name` and
-  `spec.secretRef.namespace` are required, with the length and character
-  limits in [Secret reference](#secret-reference).
+- `spec` must have at least one property. `spec.type` must be `Secret`, and
+  with it (or with `type` unset) `spec.secretRef` is required, so
+  `spec.secretRef.name` and `spec.secretRef.namespace` are too, with the
+  length and character limits in [Secret reference](#secret-reference).
+- `spec.requiredKeys` has up to 64 unique items, each a valid Secret key.
 - `spec.allowedNamespaces` must set `list`, `selector` or both. The empty
   object is rejected with a message telling you to write `selector: {}`.
 - `spec.allowedNamespaces.list` has 1 to 100 unique items, each a DNS label.

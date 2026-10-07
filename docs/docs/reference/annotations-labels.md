@@ -182,7 +182,8 @@ an object. Unlike `status`, these annotations move with the Secret.
 | --- | --- | --- | --- |
 | `captf.io/image` | annotation | Durable inputs Secret | `spec.source.image` as last written |
 | `captf.io/image-digest` | annotation | Durable inputs Secret | The resolved image digest, so a floating tag stays pinned across reconciles |
-| `captf.io/identity` | annotation | Durable inputs Secret, identity mirror | The `TerraformClusterIdentity` the credentials came from |
+| `captf.io/identity` | annotation | Durable inputs Secret, identity mirror | The `TerraformClusterIdentity` the credentials came from, or the Secret's name when `captf.io/identity-kind` is `Secret` |
+| `captf.io/identity-kind` | annotation | Durable inputs Secret | `Secret` when the credentials came from a namespace-local Secret (`identityRef.kind: Secret`); absent for a `TerraformClusterIdentity`. Pins the kind with the name, so an immutable kind's destroy keeps the same credentials |
 | `captf.io/applied` | annotation | Durable inputs Secret | `true` once an apply succeeded or a state with an inputs hash was read, so a later missing state reads as lost, not never written |
 | `captf.io/interrupted-apply` | annotation | Durable inputs Secret of a cluster or pool | An apply Job that was deleted while it ran. It may have applied part of its change, so an apply stays due, and is guarded, until one started after it succeeds |
 | `captf.io/pending-cluster-outputs` | annotation | A pool's durable inputs Secret | A change of the cluster's exports whose pool apply was blocked before a destructive plan, as JSON. The pool keeps applying the exports of its last successful apply until you approve its `TerraformPlan` |

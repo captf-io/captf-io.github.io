@@ -170,7 +170,7 @@ See [Identity and credentials](../operator-guide/runbooks/identity-and-credentia
 | --- | --- | --- | --- | --- |
 | `IdentityNotAllowed` | Warning | any provisioned kind | The identity does not allow the object's namespace, or does not exist. | Add the namespace to the identity's allowed namespaces. See [`IdentityAllowed`](conditions.md#identityallowed). |
 | `IdentitySecretFound` | Normal | `TerraformClusterIdentity` | The identity's credentials Secret appeared. | None. |
-| `IdentitySecretNotFound` | Warning | `TerraformClusterIdentity` | The identity's credentials Secret went missing. | Recreate the Secret. |
+| `IdentitySecretNotFound` | Warning | `TerraformClusterIdentity` | The identity's credentials Secret went missing, or lacks a key listed in `spec.requiredKeys` (the message says which). | Recreate the Secret, or add the missing keys. |
 | `MirrorCreated` | Normal | any provisioned kind | The credential mirror of the namespace was created on behalf of the object. | None. |
 | `MirrorRemoved` | Normal | any provisioned kind | The credential mirror of the namespace was deleted on behalf of the object. | None. |
 

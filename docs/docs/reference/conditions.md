@@ -108,9 +108,10 @@ it, and the input's own reason, such as `Provisioning`, appears there, not in
 | Status | Reason | Meaning |
 | --- | --- | --- |
 | `True` | `Ready` | Every input is healthy. Nothing to do. |
-| `True` | `SecretFound` | Identity only: the Secret named by `spec.secretRef` exists. |
+| `True` | `SecretFound` | Identity only: the Secret named by `spec.secretRef` exists and holds every key in `spec.requiredKeys`. |
 | `False` | `NotReady` | An input is `False`. Read the message, then the named condition below. |
 | `False` | `SecretNotFound` | Identity only: the Secret does not exist, and objects that use the identity start no Job until it does. See the [identity runbook](../operator-guide/runbooks/identity-and-credentials.md#secretnotfound). |
+| `False` | `CredentialsIncomplete` | Identity only: the Secret lacks a key listed in `spec.requiredKeys`, and objects that use the identity start no Job until it holds them. See the [identity runbook](../operator-guide/runbooks/identity-and-credentials.md#credentialsincomplete). |
 | `Unknown` | `ReadyUnknown` | No input is `False`, but one is `Unknown`: the object waits for its owner, a first apply, a lease or an approval. Usually transient. |
 
 ## DependenciesReady
@@ -149,10 +150,12 @@ that a deletion that needs no Job still finishes. See
 
 | Status | Reason | Meaning |
 | --- | --- | --- |
-| `True` | `IdentityAllowed` | The identity exists, allows the namespace and its Secret exists. |
+| `True` | `IdentityAllowed` | The identity exists, allows the namespace and its Secret exists with every required key. |
+| `True` | `LocalSecret` | `identityRef.kind` is `Secret` and that Secret exists in the object's namespace. It is used as it is: no mirror and no `allowedNamespaces` check. |
 | `False` | `IdentityNotFound` | No identity resolved: none is set on the object or the cluster defaults, or the named one does not exist. [Fix](../operator-guide/runbooks/identity-and-credentials.md#identitynotfound). |
 | `False` | `NamespaceNotAllowed` | The identity's `allowedNamespaces` excludes this namespace. CAPTF revokes the mirror. [Fix](../operator-guide/runbooks/identity-and-credentials.md#namespacenotallowed). |
-| `False` | `SecretNotFound` | The identity allows the namespace but its credentials Secret does not exist. [Fix](../operator-guide/runbooks/identity-and-credentials.md#secretnotfound). |
+| `False` | `SecretNotFound` | The identity allows the namespace but its credentials Secret does not exist. [Fix](../operator-guide/runbooks/identity-and-credentials.md#secretnotfound). With `kind: Secret`, the Secret does not exist in the object's namespace. |
+| `False` | `CredentialsIncomplete` | The identity's Secret lacks a key in its `spec.requiredKeys`. The message names the keys. [Fix](../operator-guide/runbooks/identity-and-credentials.md#credentialsincomplete). |
 | `Unknown` | `IdentityCheckFailed` | CAPTF could not finish the check, for example because an API read failed. It usually clears by itself. [Fix](../operator-guide/runbooks/identity-and-credentials.md#identitycheckfailed). |
 
 ## CredentialsMirrored

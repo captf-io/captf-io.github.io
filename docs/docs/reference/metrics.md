@@ -225,7 +225,7 @@ sum by (kind, reason) (increase(captf_lease_waits_total[1h]))
 
 | Metric | Type | Labels | Unit | Measures |
 | --- | --- | --- | --- | --- |
-| `captf_identity_denied_total` | counter | `reason` | refusals | Identity refusals: `notfound` or `namespace`. |
+| `captf_identity_denied_total` | counter | `reason` | refusals | Identity refusals: `notfound`, `incomplete` (a required key is missing) or `namespace`. |
 | `captf_image_inspect_errors_total` | counter | `reason` | errors | Registry or image-label failures while resolving template capacity. |
 
 ```promql

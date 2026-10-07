@@ -128,6 +128,28 @@ state is gone. `events.k8s.io/events` grants `create` only, never `patch` or
 updates one; with `--runner-events=false` the Jobs pass no event target and
 nothing calls this permission.
 
+### Why the Secret verbs are not narrowed
+
+Narrowing them with a per-object Role and `resourceNames` was investigated
+against Terraform 1.16.5 and OpenTofu 1.12.7, and does not work without an
+architecture change:
+
+- Both runtimes `list` Secrets with a **label** selector (workspaces on
+  `init`; Terraform also on every state read and write). Kubernetes applies
+  `resourceNames` to `list` only for a `metadata.name` field selector, and
+  `list` returns Secret contents, so namespace-wide read stays.
+- `create` cannot be restricted by name.
+- Terraform names its state chunks itself (`...-part-N`, one per MiB of
+  state), so a fixed name list needs a ceiling and fails past it.
+- The runner ServiceAccount is shared by the namespace, so per-object names
+  would be unioned. Isolation would need a ServiceAccount, Role and
+  RoleBinding per object.
+
+`clusterctl move` is not the obstacle: the controller recreates RBAC at the
+target. The only change that closes the read path is moving state access out
+of the Job (a state proxy). Until then, the namespace is the boundary: see
+[Security model](../concepts/security-model.md#what-the-runner-can-read-and-why).
+
 No Role is ever created for the runner. The manager binds this ClusterRole
 through the `bind` verb, restricted to its name, so the manager does not
 need to hold the ClusterRole's own permissions itself.

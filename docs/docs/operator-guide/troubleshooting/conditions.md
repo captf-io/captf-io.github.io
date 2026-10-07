@@ -56,9 +56,10 @@ from its credentials Secret instead.
 | Status | Reason | Meaning | Likely cause | What to do | See |
 | --- | --- | --- | --- | --- | --- |
 | `True` | `Ready` | Every input of Ready is `True`. | A healthy object. | Nothing. | [Ready summarization](../../reference/conditions.md#ready-summarization) |
-| `True` | `SecretFound` | Identity only: the credentials Secret named by `spec.secretRef` exists. | A healthy identity. | Nothing. | [Identities](../../user-guide/identities.md) |
+| `True` | `SecretFound` | Identity only: the credentials Secret named by `spec.secretRef` exists and holds every key in `spec.requiredKeys`. | A healthy identity. | Nothing. | [Identities](../../user-guide/identities.md) |
 | `False` | `NotReady` | At least one input of Ready is `False`. The message names it. | Any failing input: dependencies, credentials, the apply, the state, outputs or health. | Read the message, then find the named condition below. Before the object is provisioned the inputs are `DependenciesReady`, `IdentityAllowed`, `CredentialsMirrored`, `RunnerRBACReady`, `ApplyJobSucceeded`, `StateReadable`, `OutputsValid`, `InfrastructureHealthy` and `Deleting`. | [Start here](README.md#start-here) |
 | `False` | `SecretNotFound` | Identity only: the credentials Secret does not exist. | Never created, `spec.secretRef` names the wrong Secret or namespace, or the Secret was not copied after a `clusterctl move`. | Create or copy the Secret. | [Identity runbook](../runbooks/identity-and-credentials.md#secretnotfound) |
+| `False` | `CredentialsIncomplete` | Identity only: the credentials Secret lacks a key listed in `spec.requiredKeys`. | The Secret was created without a key, a key was renamed, or `requiredKeys` names a key the Secret never had. | Add the missing keys to the Secret, or remove them from `requiredKeys`. | [Identity runbook](../runbooks/identity-and-credentials.md#credentialsincomplete) |
 | `Unknown` | `ReadyUnknown` | No input is `False`, but at least one is `Unknown`. | The object is waiting: for its owner, the cluster infrastructure, bootstrap data, a first apply or a lease. | Find the `Unknown` input in the status. This is usually transient. | [Start here](README.md#start-here) |
 
 ## Paused
@@ -124,10 +125,12 @@ deletion that needs no Job still finishes.
 
 | Status | Reason | Meaning | Likely cause | What to do | See |
 | --- | --- | --- | --- | --- | --- |
-| `True` | `IdentityAllowed` | The identity exists, allows the namespace and its Secret exists. | The normal state. | Nothing. | [Identities](../../user-guide/identities.md) |
+| `True` | `IdentityAllowed` | The identity exists, allows the namespace and its Secret exists with every required key. | The normal state. | Nothing. | [Identities](../../user-guide/identities.md) |
+| `True` | `LocalSecret` | `identityRef.kind` is `Secret` and that Secret exists in the object's namespace. It is used as it is. | The normal state for a namespace-local Secret. | Nothing. | [Identities](../../user-guide/identities.md#use-a-secret-in-the-objects-namespace) |
 | `False` | `IdentityNotFound` | No identity resolved. | No `identityRef` on the object or the cluster defaults, or the named identity does not exist. | Set `identityRef.name` to an existing identity, or create it. | [Identity runbook](../runbooks/identity-and-credentials.md#identitynotfound) |
 | `False` | `NamespaceNotAllowed` | The identity's `allowedNamespaces` excludes this namespace. The mirror is revoked. | The namespace was never added, or was removed. | Add the namespace to the identity. | [Identity runbook](../runbooks/identity-and-credentials.md#namespacenotallowed) |
-| `False` | `SecretNotFound` | The identity allows the namespace but its credentials Secret does not exist. | Not created, deleted, or not copied after a `clusterctl move`. | Create the Secret at the name and namespace in `spec.secretRef`. | [Identity runbook](../runbooks/identity-and-credentials.md#secretnotfound) |
+| `False` | `SecretNotFound` | The identity allows the namespace but its credentials Secret does not exist. | Not created, deleted, or not copied after a `clusterctl move`. | Create the Secret at the name and namespace in `spec.secretRef`. With `kind: Secret`, create it in the object's own namespace. | [Identity runbook](../runbooks/identity-and-credentials.md#secretnotfound) |
+| `False` | `CredentialsIncomplete` | The identity's Secret lacks a key in its `spec.requiredKeys`. | As for the identity's own `Ready`. | Add the missing keys named in the message. | [Identity runbook](../runbooks/identity-and-credentials.md#credentialsincomplete) |
 | `Unknown` | `IdentityCheckFailed` | The check could not be completed. | A read of the identity, the namespace labels or the Secret failed for a reason other than not found, such as an API error. | Usually clears on its own. If it persists, read the manager's log for the error. | [Identity runbook](../runbooks/identity-and-credentials.md#identitycheckfailed) |
 
 ## CredentialsMirrored

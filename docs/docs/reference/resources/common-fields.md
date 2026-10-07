@@ -65,15 +65,30 @@ spec:
 
 ## Identity reference
 
-`spec.identityRef` names the cluster-scoped `TerraformClusterIdentity` whose
-credentials the object's Jobs use. See [Identities and
+`spec.identityRef` names the credentials the object's Jobs use: a
+cluster-scoped `TerraformClusterIdentity`, or a Secret in the object's own
+namespace. See [Identities and
 Credentials](../../user-guide/identities.md#reference-it) for creating an
 identity and how its credentials reach a Job.
 
 | Field | Type | Description |
 | --- | --- | --- |
 | `spec.identityRef` | `object` | The identity to use. Whether it is required depends on the kind (below). |
-| `spec.identityRef.name` | `string` | The `TerraformClusterIdentity` name. **Required** when `spec.identityRef` is set. **Range:** 1 to 253 characters. |
+| `spec.identityRef.kind` | `string` | What `name` refers to. **Allowed values:** `TerraformClusterIdentity` or `Secret`. **Default:** unset, which means `TerraformClusterIdentity`. |
+| `spec.identityRef.name` | `string` | The `TerraformClusterIdentity` name, or the Secret name when `kind` is `Secret`. **Required** when `spec.identityRef` is set. **Range:** 1 to 253 characters. |
+
+**Kind `Secret`.** The Secret is read from the namespace of the object that
+references it and mounted into Jobs as it is, through the same `envFrom` and
+files as an identity's mirror. There is no mirror, no `allowedNamespaces`
+check and no `requiredKeys` check: `IdentityAllowed` is `True` with reason
+`LocalSecret`, or `False` with `SecretNotFound` while the Secret is missing.
+It works in `spec.identityRef` and in `spec.defaults.identityRef` of a
+`TerraformCluster`, and follows the same fallback chain as an identity: a
+machine or pool with its own `identityRef` never falls through to the
+cluster's, whatever its kind. A Secret reference is never counted as a user
+of a `TerraformClusterIdentity` of the same name. See
+[Identities](../../user-guide/identities.md#use-a-secret-in-the-objects-namespace)
+for when to use it.
 
 How the identity resolves depends on the kind:
 
@@ -93,6 +108,15 @@ How the identity resolves depends on the kind:
 spec:
   identityRef:
     name: aws-prod
+```
+
+A namespace-local Secret instead:
+
+```yaml
+spec:
+  identityRef:
+    kind: Secret
+    name: team-a-aws
 ```
 
 ## Jobs

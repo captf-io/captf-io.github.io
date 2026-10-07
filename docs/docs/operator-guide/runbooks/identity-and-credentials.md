@@ -59,10 +59,22 @@ selector distinction.
 
 `False`. The identity exists and allows this namespace, but its
 `spec.secretRef` Secret does not exist (or was deleted after the identity
-was created and admission's `SubjectAccessReview` check passed). Fix:
+was created and admission's `SubjectAccessReview` check passed). With
+`identityRef.kind: Secret`, the Secret named by `identityRef.name` does not
+exist in the object's own namespace; create it there. Fix:
 create the credentials Secret at the namespace and name `spec.secretRef`
 names, or point `spec.secretRef` at one that exists. See
 [Create the credentials Secret](../../user-guide/identities.md#create-the-credentials-secret).
+
+### CredentialsIncomplete
+
+`False`. The identity's Secret exists, but lacks a key listed in the
+identity's `spec.requiredKeys`; the message names the missing keys. The
+identity's own `Ready` carries the same reason, and objects that use it start
+no Job. Only key names are compared: an empty value is present. Fix: add the
+keys to the Secret, or drop them from `requiredKeys` if the module does not
+need them. The mirror then catches up on the next reconcile. See
+[Required keys](../../reference/resources/terraformclusteridentity.md#required-keys).
 
 ### IdentityCheckFailed
 

@@ -66,6 +66,12 @@ Consequences:
   sharing one namespace between two tenants' clusters or identities gives
   each tenant everything described in this page for the other's cluster
   too.
+- **A Secret named by `identityRef.kind: Secret` is as trusted as the
+  namespace.** It is read from the object's own namespace and mounted as it
+  is, with no `allowedNamespaces` check. Whoever may write the `identityRef`
+  chooses which Secret of the namespace becomes the Job's credentials,
+  which the runner could already read. See
+  [Multi-tenancy](../operator-guide/multi-tenancy.md#namespace-local-secrets).
 - **Pod Security Admission applies to Jobs like any workload.** A namespace
   that enforces it gets the defaults described in
   [Pod security](#pod-security).
@@ -143,6 +149,12 @@ delete every Secret in its namespace, which includes:
 The manager itself can also read every Secret in the cluster, as
 any CAPI infrastructure provider that runs the Kubernetes state backend
 effectively can.
+
+Narrowing these verbs was investigated and is not possible without moving
+state access out of the Job: `list` is by label and cannot carry
+`resourceNames`, `create` cannot be name-restricted, and Terraform's chunk
+names are dynamic. The reasoning is in
+[RBAC](../operator-guide/rbac.md#why-the-secret-verbs-are-not-narrowed).
 
 ## Image pinning by digest
 
