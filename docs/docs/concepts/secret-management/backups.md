@@ -125,6 +125,10 @@ The sequence:
 6. Success or failure records the serial in `status.lastRestoredSerial`. On
    success the controller removes the annotation, the restored state is
    adopted with the backup's inputs hash, and the next reconcile reads it.
+   A restore Job always carries `captf.io/inputs-hash`, empty for a backup
+   taken without one; after such a restore the controller removes the hash
+   from the state, which then reads as `StateWithoutInputsHash` (a mutable
+   kind applies again; an immutable provisioned kind gets `StateLost`).
    On failure the annotation stays.
 
 To retry the same serial after a failure, remove the annotation, wait until

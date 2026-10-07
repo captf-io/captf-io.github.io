@@ -156,7 +156,7 @@ managed resources it recorded, and the `default` workspace cannot be
 deleted. The controller removes the state Secrets and the lock Lease
 itself, once it is safe to do so: after a destroy Job succeeds, or
 immediately on deletion of an object that was never applied and so has no
-state. That same cleanup also deletes the durable inputs Secret, the
+state. That same cleanup also deletes the durable and applied inputs Secrets, the
 object's run lease and, for a `TerraformCluster`, its cluster write
 lease. State backups are not deleted by
 this cleanup; they are owned by the object and are garbage collected when

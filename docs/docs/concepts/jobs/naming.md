@@ -77,13 +77,25 @@ The controller creates the Job, then its per-run Secret, then records
 not yet seen the Job, repeats the sequence with the same name:
 
 1. Creating the Job returns `AlreadyExists`. The controller reads the
-   existing Job and carries on with it, so no second Job starts.
+   existing Job live and adopts it only when this object controls it (by
+   UID) **and** it is still running, so no second Job starts. Any other case
+   defers the start (`ErrStartDeferred`, requeued after the cache-lag
+   interval) and the next pass decides again:
+    - This object's Job, finished: deferred; the next pass picks the next
+      attempt.
+    - Another object's Job (an earlier incarnation of the same name),
+      finished: deleted with a UID precondition, then deferred.
+    - Another object's Job, running: deferred and logged.
 2. The per-run Secret, owned by the Job, is created if missing. One that
    already belongs to the same Job (by UID) is left as is, because the name
    embeds the inputs hash and so the content is identical. One owned by a
    different Job of the same name, left over from an earlier pruned Job whose
    garbage collection is pending, is deleted and recreated; adopting it
    would let that collection delete it under the new pod.
+
+A `TerraformPlan` create that hits `AlreadyExists` reads the plan live in the
+same way. It uses the plan when this object controls it; otherwise the pass
+errors and retries until garbage collection removes the plan.
 
 Any other create error is returned. A **rejected** create (invalid,
 forbidden, unauthorized, bad request, too large or namespace gone) proves no

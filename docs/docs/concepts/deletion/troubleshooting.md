@@ -61,14 +61,16 @@ flowchart TD
 | `Deleting` message `The destroy Job waits for its credentials: …` | Credentials cannot be prepared, often in a terminating namespace | Fix the named condition ([identities](../../operator-guide/runbooks/identity-and-credentials.md)), or [Retain](held.md#retain). See [Terminating namespaces](namespaces.md) |
 | `ApplyJobSucceeded=False`/`IdentityNotAllowed` | The identity no longer allows the namespace, or is gone | Allow the namespace again, or [Retain](held.md#retain) |
 | `ApplyJobSucceeded=False`/`DestroyFailed` with a Job | The destroy failed; it retries with backoff forever | [Failing Jobs](../../operator-guide/runbooks/job-failures.md), then [Stuck Destroy](../../operator-guide/runbooks/stuck-destroy.md) |
-| `DestroyFailed`, message `The durable inputs Secret is missing` | The destroy cannot be rendered | [Restore the Secret](../../operator-guide/runbooks/stuck-destroy.md#the-durable-inputs-secret-is-missing), or [Retain](held.md#retain) |
+| `DestroyFailed`, message `The inputs Secrets (durable and applied) are missing` | The destroy cannot be rendered | [Restore the Secrets](../../operator-guide/runbooks/stuck-destroy.md#the-inputs-secrets-are-missing), or [Retain](held.md#retain) |
+| Warning event `DestroyInputsMismatch` | The destroy renders a record whose inputs hash is not the state's: an apply that failed partway, or no record carries the state's hash | Usually nothing: see [Which record a destroy renders](destroy-job.md#which-record-a-destroy-renders). Check the infrastructure after it ran |
+| `StateReadable=False`/`ApplyOutcomeUnknown` | An apply ended without a result before any state was written, and the deletion is held | [Held deletions](held.md#apply-outcome-unknown) |
 | `ApplyJobSucceeded=False`/`JobDeadlineExceeded` | The destroy ran out of time | Raise `activeDeadlineSeconds`; see [Tuning Jobs](../../user-guide/job-tuning.md#deadlines-and-lock-waits) |
 | `ApplyJobSucceeded=False`/`ImagePullFailed` or `ImageInvalid` | The pinned image cannot run | [Failing Jobs](../../operator-guide/runbooks/job-failures.md) |
 | Nothing explains it | The manager is not reconciling | [Reconcile Errors](../../operator-guide/runbooks/reconcile-errors.md), [Webhook Unavailable](../../operator-guide/runbooks/webhook-unavailable.md) |
 
 !!! note "A message that names `spec.deletionPolicy: Retain`"
 
-    It tells you the controller sees no way to proceed alone. [Retain](held.md#retain) releases every case in this table without a destroy, and keeps the state, backups and durable inputs for a later [adoption](retain.md#adopting-retained-state). Set on an object whose destroy could succeed, it also skips that destroy.
+    It tells you the controller sees no way to proceed alone. [Retain](held.md#retain) releases every case in this table without a destroy, and keeps the state, backups and inputs Secrets for a later [adoption](retain.md#adopting-retained-state). Set on an object whose destroy could succeed, it also skips that destroy.
 
 !!! danger "Retaining or stripping leaves cloud resources running"
 

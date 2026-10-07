@@ -24,7 +24,7 @@ finalizer by hand, or use Retain to keep the state.
 
 !!! danger "Removing the finalizer deletes the only record of your cloud resources"
 
-    Removing the finalizer garbage-collects the state Secrets, the state backups and the durable inputs Secret through their owner references, which are **the only record of the live cloud resources**. Back them up, or un-own them, before you do that.
+    Removing the finalizer garbage-collects the state Secrets, the state backups and the durable and applied inputs Secrets through their owner references, which are **the only record of the live cloud resources**. Back them up, or un-own them, before you do that.
 
 
 If the destroy is not failing but never starts because the state is
@@ -48,8 +48,8 @@ at least these four cases, which are the ones a destroy cannot get past:
   (`StateReadable` is `False`).
 - The last destroy Job failed (`status.lastRun` is a destroy and
   `ApplyJobSucceeded` is `False`).
-- The destroy cannot be rendered because the durable inputs Secret is
-  gone (`ApplyJobSucceeded` is `False`/`DestroyFailed`).
+- The destroy cannot be rendered because the inputs Secrets (durable and
+  applied) are gone (`ApplyJobSucceeded` is `False`/`DestroyFailed`).
 - The destroy cannot start because the identity no longer allows the
   namespace or was deleted (`IdentityNotAllowed`), or the runner
   credentials cannot be prepared (the `Deleting` condition says the destroy
@@ -65,7 +65,7 @@ kubectl patch <kind> <name> -n <ns> --type merge \
 
 The controller waits for any running Job, then removes the finalizer
 without a destroy and emits an `InfrastructureRetained` event. It keeps the
-state Secrets, the state backups and the durable inputs Secret, removes
+state Secrets, the state backups and the durable and applied inputs Secrets, removes
 their owner references so they are not garbage-collected, and labels each
 `captf.io/retained-from-uid=<uid>`. Whatever the module created keeps
 running, with nothing managing it, so you either clean the cloud resources
@@ -122,6 +122,7 @@ Save the output as `<suffix>` for the commands below.
 kubectl get secret -n <ns> -l tfstate=true,tfstateSecretSuffix=<suffix> -o yaml > backup-state.yaml
 kubectl get secret -n <ns> -l captf.io/state-backup=true,captf.io/state-backup-suffix=<suffix> -o yaml > backup-state-backups.yaml
 kubectl get secret -n <ns> captf-inputs-<kindshort>-<name> -o yaml > backup-inputs.yaml
+kubectl get secret -n <ns> captf-applied-<kindshort>-<name> -o yaml > backup-applied.yaml
 ```
 
 `<kindshort>` is `c` for a TerraformCluster, `m` for a TerraformMachine, `mp`
@@ -133,10 +134,12 @@ the [state restore runbook](state-restore.md). Both kinds of Secret are
 owned by the object and are garbage-collected along with it once its
 finalizer is removed.
 
-`backup-inputs.yaml`'s `captf.io/image-digest` annotation (see
+`backup-applied.yaml`'s `captf.io/image-digest` annotation (see
 [Annotations, labels and finalizers](../../reference/annotations-labels.md))
 names the exact image that ran the last successful apply — you will need it
-in step 4.
+in step 4. If the newest attempt failed after it may have applied (the
+durable Secret carries `captf.io/may-have-applied`), the destroy renders that
+attempt's files instead: take them from `backup-inputs.yaml`.
 
 ## 3. Un-own the Secrets, if you want them to survive finalizer removal
 
@@ -180,7 +183,7 @@ docker run --rm --entrypoint /captf/runtime \
   -var-file=terraform.tfvars.json
 ```
 
-- `<image>@<digest>` is the repository from `backup-inputs.yaml`'s
+- `<image>@<digest>` is the repository from `backup-applied.yaml`'s
   `captf.io/image` annotation (drop any `:tag`) plus `@` and the digest
   from its `captf.io/image-digest` annotation.
 - `<labels>` must be the same HCL object the Job itself would pass, or
@@ -191,8 +194,9 @@ docker run --rm --entrypoint /captf/runtime \
   labels and finalizers](../../reference/annotations-labels.md) for what
   each remaining key means.
 - `./root` needs `main.tf.json` and `terraform.tfvars.json` from
-  `backup-inputs.yaml`'s data (the durable inputs Secret's rendered root
-  module and tfvars), and the identity's credentials as environment
+  `backup-applied.yaml`'s data (the applied Secret's rendered root
+  module and tfvars; use `backup-inputs.yaml`'s when the destroy would render
+  the attempt record), and the identity's credentials as environment
   variables (`-e <KEY>=<value>` for each key of the mirrored credentials
   Secret, or a file for a file-based one — see [Identities and
   credentials](../../user-guide/identities.md#how-credentials-reach-a-job)).
@@ -236,20 +240,29 @@ remove that entry by index instead.
     shows nothing unless you un-owned the Secrets in step 3, in which case they
     are exactly what you chose to keep.
 
-## The durable inputs Secret is missing
+## The inputs Secrets are missing
 
 If the object reports `ApplyJobSucceeded=False`/`DestroyFailed` with the
-message "The durable inputs Secret is missing, so destroy cannot be
-rendered; see
-<https://captf.io/docs/operator-guide/runbooks/stuck-destroy.html>", the
-durable inputs Secret (`captf-inputs-<kindshort>-<name>`: the rendered root
-module, tfvars and pinned image from the last successful apply — see [Job
-Inputs](../../concepts/inputs.md)) was deleted or never written.
+message "The inputs Secrets (durable and applied) are missing, so destroy
+cannot be rendered", both inputs records are gone or were never written: the
+durable Secret (`captf-inputs-<kindshort>-<name>`, the newest attempt) and the
+applied Secret (`captf-applied-<kindshort>-<name>`: the rendered root module,
+tfvars and pinned image from the last successful apply — see [Job
+Inputs](../../concepts/inputs.md)). One surviving record is enough: destroy
+renders whichever describes the state (see [Which record a destroy
+renders](../../concepts/deletion/destroy-job.md#which-record-a-destroy-renders)).
+
+A destroy that renders inputs which differ from the state's emits the Warning
+`DestroyInputsMismatch`, naming the Job and both hashes. If it names an
+attempt that failed partway, the destroy is using that attempt's own inputs,
+as intended. If a typo in the provider config made an apply fail in validate or
+plan, that typo was never applied, so reverting the spec fixes a stuck
+destroy: the destroy keeps rendering what actually applied.
 
 `TerraformMachine` is the persistent case: it is immutable and never falls
 back to re-rendering current inputs for a destroy, since the Machine and
 its bootstrap Secret a rebuild would need are usually already gone by the
-time destroy runs, so once its durable Secret is gone the condition never
+time destroy runs, so once both of its Secrets are gone the condition never
 clears on its own. `TerraformCluster` and `TerraformMachinePool` (both
 mutable) fall back to building current inputs instead; they show the same
 message only while that build is gated (for example, waiting on a
@@ -259,12 +272,12 @@ inputs to destroy with.
 
 To recover:
 
-- **If you have a backup** (`backup-inputs.yaml` from a previous run of
-  step 2 above, or any earlier copy of the durable inputs Secret), recreate
-  it with `kubectl apply -f backup-inputs.yaml` after removing
+- **If you have a backup** (`backup-inputs.yaml` and `backup-applied.yaml`
+  from a previous run of step 2 above, or any earlier copy of either
+  Secret), recreate it with `kubectl apply -f backup-applied.yaml` after removing
   `metadata.uid` and `metadata.resourceVersion` from the YAML: reapplying
   the exact object restores its owner reference, labels and annotations,
-  including the pinned `captf.io/image` and `captf.io/image-digest`. The
+  including the pinned `captf.io/image` and `captf.io/image-digest` (which live on the applied Secret). The
   next reconcile reads it and starts the destroy Job.
 - **If you have no backup**, the controller cannot destroy the object's
   resources. Back up the state (step 2), then clean up out of band (step
@@ -284,4 +297,4 @@ To recover:
       their owner references work.
     - [State restore runbook](state-restore.md) — restoring a state instead of
       destroying it.
-    - [Job Inputs](../../concepts/inputs.md) — the durable inputs Secret.
+    - [Job Inputs](../../concepts/inputs.md) — the durable and applied inputs Secrets.

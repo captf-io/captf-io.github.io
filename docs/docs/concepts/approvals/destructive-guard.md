@@ -239,12 +239,15 @@ command. See [Upgrades](../../operator-guide/upgrades.md).
 
 ### An apply Job deleted while it ran
 
-This applies to `TerraformCluster` and `TerraformMachinePool`, not to
-`TerraformMachine`. If an apply Job is deleted while it runs (for example
-`kubectl delete job`), the Job may have applied part of its change. CAPTF
-confirms with live reads that the Job is gone and that the object's live
-status still names it, then records it in the durable inputs Secret
-(`captf.io/interrupted-apply=<job>`). Then:
+This applies to `TerraformCluster` and `TerraformMachinePool`, and the
+record itself is kept for every kind, `TerraformMachine` included (see
+[Unconfirmed applies](../deletion/held.md#apply-outcome-unknown)). If an apply
+Job is deleted while it runs (for example `kubectl delete job`), the Job may
+have applied part of its change. CAPTF confirms with live reads that the Job is
+gone and that the object's live status still names it, then records it in the
+durable inputs Secret (`captf.io/unconfirmed-apply=<job>`). A Job that newly
+failed with no runner result after its runner started, or whose pod is gone (an
+OOM kill, a node loss), is recorded the same way. Then:
 
 - **An apply of the current inputs stays due**, even if the inputs equal the
   state's.
@@ -253,8 +256,11 @@ status still names it, then records it in the durable inputs Secret
   the lost Job's work waits for approval. Under `applyPolicy: Manual` the due
   apply plans first and waits for plan approval as usual.
 - `ApplyJobSucceeded` is `False`/`ApplyFailed` with the message `Job <name>:
-  disappeared while it ran and may have applied part of its change; an apply
-  of the current inputs is due`, followed by whether that apply is guarded.
+  ended without a result or disappeared while it ran, and may have applied
+  part of its change; an apply of the current inputs is due`, followed by
+  whether that apply is guarded. When the crashed Job is itself the newest
+  apply, the condition reports that Job's own failure (`ApplyFailed` or
+  `JobDeadlineExceeded`) instead.
   This condition takes precedence over an older blocked or plan-changed apply:
   it names the vanished Job until an apply started after it (one carrying
   `captf.io/after-interrupted-apply`) reports its own outcome, so an earlier
@@ -262,8 +268,7 @@ status still names it, then records it in the durable inputs Secret
 - It clears when an apply started afterwards succeeds (those Jobs carry
   `captf.io/after-interrupted-apply`).
 
-Nothing is recorded for a stuck Job that CAPTF deleted itself, and a
-`TerraformMachine` records nothing. For a pool whose lost Job rendered a change
+Nothing is recorded for a stuck Job that CAPTF deleted itself. For a pool whose lost Job rendered a change
 of the cluster's exports, the change is also recorded as partly applied (see
 above).
 
@@ -273,6 +278,13 @@ above).
 - `clusterctl move` does not carry Jobs or status, but it carries the
   `TerraformPlan`, so a plan that waits for approval still gates the apply on
   the target cluster.
+
+## Deleting while blocked
+
+A blocked change never applied, so deleting the object while it is blocked
+destroys the **applied** inputs, not the blocked ones (see [Which record a
+destroy renders](../deletion/destroy-job.md#which-record-a-destroy-renders)).
+The destroy is never gated by the guard or by a plan.
 
 ## Blocked after a failed apply
 

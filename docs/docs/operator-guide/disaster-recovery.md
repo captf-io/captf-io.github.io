@@ -120,7 +120,7 @@ Notes on the selectors:
     done
     ```
 
-    Do the same for each `captf-inputs-*` Secret. If you use Velero, check how
+    Do the same for each `captf-inputs-*` and `captf-applied-*` Secret. If you use Velero, check how
     your version restores `ownerReferences` before you rely on it, and test with
     one namespace.
 
@@ -196,7 +196,7 @@ state, the durable inputs and the plan key by label, whoever owns them.
 
 If the old management cluster is still running, `clusterctl move` is the
 supported way to bring objects to a new one. It carries the state Secrets,
-the backups and the durable inputs, and it rewrites owner references for
+the backups and the durable and applied inputs, and it rewrites owner references for
 you. A file-level restore leaves that to CAPTF's own repair, above. You
 must copy the identity source
 Secrets yourself. See [clusterctl move](runbooks/move.md) and [clusterctl

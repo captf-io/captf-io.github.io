@@ -108,7 +108,14 @@ What happens:
     `StateRestored` event, the annotation is removed, `status.lastRun`
     names the restore Job, and the next reconcile reads the restored state
     as usual, adopting the inputs hash the backup carried (`StateAdopted`
-    — see [Events](../../reference/events.md)). The push writes back
+    — see [Events](../../reference/events.md)). A backup taken without an
+    inputs hash is restored with an empty hash on the Job, and the controller
+    removes the hash from the state once the restore succeeds: the state then
+    reads as `StateWithoutInputsHash`, so a mutable kind applies again, and an
+    immutable provisioned kind reports `StateLost` ("carries no inputs
+    hash"). The `StateAdopted` event then reads "Adopted the state Job X wrote,
+    without an inputs hash: its backup was taken without one, so the state no
+    longer shows a completed apply". The push writes back
     exactly the backup's serial rather than advancing it, and that serial
     is already backed up with this same content, so nothing new is written
     to `status.stateBackups`.
@@ -211,6 +218,17 @@ backup (`StateReadable` turns `True`/`StateRead`): run a drift check before
 anything applies again, since the object's own record of its last-applied
 inputs was lost along with the state, and the first reconcile after the
 push may see the current inputs as changed.
+
+## Apply outcome unknown
+
+`StateReadable=False`/`ApplyOutcomeUnknown` means no state exists and an apply
+Job ended without a result or vanished, so it may have created resources
+nothing records (see [Held deletions](../../concepts/deletion/held.md#apply-outcome-unknown)).
+A restore is one way out: restore a backup with `captf.io/restore-state`, and a
+successful restore newer than the newest apply clears the record. The other
+exits are to check the cloud and set `captf.io/confirm-no-resources=<job>`
+(the Job named in the condition message), or `deletionPolicy: Retain` when
+deleting.
 
 ## Caveats
 

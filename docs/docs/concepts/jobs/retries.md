@@ -79,7 +79,7 @@ way to skip it by hand.
 | An apply of a mutable kind | `LastApplyFailed`, until an apply succeeds | Backoff |
 | An apply of a `TerraformMachine` | `NoState` or `StateWithoutInputsHash` (state has no inputs hash until an apply succeeds) | Backoff |
 | A drift remediation apply | The remediation cap, below | Backoff |
-| An apply Job deleted while it ran (cluster, pool) | An apply of the current inputs stays due; see [below](#an-apply-job-deleted-while-it-ran) | Backoff |
+| An apply Job deleted while it ran, or killed without a result | An apply of the current inputs stays due; see [below](#an-apply-job-deleted-while-it-ran) | Backoff |
 | `refresh`, `drift` | The schedule: still due, so due again | Backoff |
 | `destroy` | `Deleting`, forever | Backoff; see [Destroy](../deletion/destroy-job.md) |
 | `plan` | The plan flow | Backoff |
@@ -98,17 +98,19 @@ plan-changed applies do not count. See [Drift](../../user-guide/drift.md).
 
 ### An apply Job deleted while it ran
 
-If an apply Job of a `TerraformCluster` or `TerraformMachinePool` is deleted
+If an apply Job of any kind is deleted
 while it runs, it never finishes and bookkeeping never reads its result, but it
 may have applied part of its change. CAPTF confirms with live reads (the Job is
 `NotFound` and the object's live `status.activeJob` still names it) and records
-`captf.io/interrupted-apply=<job>` on the durable inputs Secret. An apply of
+`captf.io/unconfirmed-apply=<job>` on the durable inputs Secret. An apply of
 the current inputs then stays due, even when the inputs equal the state's, and
 is guarded where the destructive guard applies. `ApplyJobSucceeded` is
-`False`/`ApplyFailed`: `Job <name>: disappeared while it ran and may have applied
-part of its change; an apply of the current inputs is due`. It clears when an
-apply started afterwards succeeds. A stuck Job that CAPTF deleted itself, and a
-`TerraformMachine`, record nothing. See [Machine
+`False`/`ApplyFailed`: `Job <name>: ended without a result or disappeared while it
+ran, and may have applied part of its change; an apply of the current inputs is
+due`. A Job that newly failed with no runner result after its runner started, or
+whose pod is gone (OOM, node loss), is recorded the same way. It clears when an
+apply started afterwards succeeds. A stuck Job that CAPTF deleted itself records
+nothing. See [Machine
 pools](../approvals/destructive-guard.md#an-apply-job-deleted-while-it-ran).
 
 ### Restore

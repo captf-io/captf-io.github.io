@@ -109,7 +109,7 @@ applies decides the pass.
 | No state, and the object never applied | The finalizer comes off at once | [Held](held.md#ever-applied) |
 | No state, and the object applied before | Held: `StateReadable=False`/`StateLost` | [Held](held.md) |
 | State exists but cannot be read | Held: `StateCorrupt`, `StateEncrypted` or `StateInconsistent` | [Held](held.md) |
-| `spec.deletionPolicy: Retain` | No destroy: the state, backups and durable inputs are kept, and the finalizer comes off | [Retain](retain.md) |
+| `spec.deletionPolicy: Retain` | No destroy: the state, backups and inputs Secrets are kept, and the finalizer comes off | [Retain](retain.md) |
 | Readable state | A destroy Job runs; no gate or approval applies | [Destroy](destroy-job.md) |
 | The destroy succeeded | Cleanup runs and the finalizer comes off | [Cleanup](cleanup.md) |
 | The destroy failed or cannot start | Retried with backoff, forever; `Retain` releases it | [Held](held.md#retain) |
@@ -120,8 +120,9 @@ applies decides the pass.
   live resources, except on an explicit `Retain`, which keeps the state.
 - It never destroys against a state it cannot read.
 - It never invents inputs to destroy with: the destroy renders from the
-  durable inputs Secret (or, for a cluster or pool without one, the current
-  inputs when they build).
+  inputs record that describes the state, the durable or the applied Secret
+  (or, for a cluster or pool with neither, the current inputs when they
+  build). See [Which record a destroy renders](destroy-job.md#which-record-a-destroy-renders).
 - It never skips the destroy because it failed. There is no skip-destroy
   annotation, only [Retain](held.md#retain).
 

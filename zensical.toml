@@ -699,7 +699,7 @@ https://captf.io/llms-full.txt is the whole site in one file. News: https://capt
   { "docs/developer-guide/contributing.md" = "Build, lint, test and verify CAPTF itself: repository layout, prerequisites, conventions and running the manager against a real cluster." },
   { "docs/developer-guide/cross-repo.md" = "Work across the captf-io repositories: a shared workspace, the order of a contract change, module images, license headers and base image bumps." },
   { "docs/developer-guide/readme-components.md" = "The header, badges, status note and footer that every captf-io README is composed from, the images they load from captf.io, and how to change them." },
-  { "docs/developer-guide/testing.md" = "What make test runs, the unit and e2e tiers, coverage floors, golden files, the test environment, and how to run one package or one test." },
+  { "docs/developer-guide/testing.md" = "What make test runs, the unit, envtest and e2e tiers, coverage floors, golden files, the test environment, and how to run one package or one test." },
   { "docs/developer-guide/releasing.md" = "Cut a CAPTF release by pushing a tag: what CI publishes, signing and verification, the manual fallback, and installing assets from a local repository." },
   { "docs/developer-guide/docs-workflow.md" = "Change the CAPTF docs or website: set up a preview, edit or add a page, run the checks and open a pull request." },
   { "docs/developer-guide/documentation.md" = "How the CAPTF docs are organized and written: where pages go, reference pages, page shape, voice, Markdown patterns and the checks to run." },

@@ -65,7 +65,7 @@ missing state reads as `StateLost`, not as nothing to destroy.
 Every Secret CAPTF keeps is namespaced, so a deleted namespace removes:
 
 - the state Secrets and their backups,
-- the durable inputs Secret (and with it the `captf.io/applied` marker),
+- the durable and applied inputs Secrets (and with them the `captf.io/applied` marker),
 - the plan key and the credential mirror,
 - the Jobs, their pods and their per-run Secrets,
 - the run and cluster Leases and the state lock Lease,

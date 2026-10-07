@@ -30,7 +30,7 @@ page explains what it checks, when, and what it does on a mismatch.
 
 | Read | Through |
 | --- | --- |
-| The object's Jobs (`List`) | The cache, scoped to the managed Jobs |
+| The object's Jobs (`List`) | The cache, scoped to the managed Jobs, and only the Jobs whose controller is this object by UID: Jobs of an earlier object of the same name count toward no attempt, backoff or outcome |
 | A single Job, to confirm `status.activeJob` or a lease holder | The uncached API reader |
 | The run and cluster leases | The uncached API reader |
 | Pods of a Job | The uncached API reader; pods are never cached |

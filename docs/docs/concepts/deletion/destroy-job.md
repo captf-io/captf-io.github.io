@@ -28,17 +28,54 @@ refreshes or checks drift.
   (`JobPolicyInvalid`) is skipped for a destroy, so a teardown never wedges
   on it. See [Tuning Jobs](../../user-guide/job-tuning.md#deadlines-and-lock-waits).
 - **No input gates.** A deleting object builds no inputs and ignores
-  `DependenciesReady`. The destroy renders from the **durable inputs
-  Secret** `captf-inputs-<kindshort>-<name>`, the files of the last
-  successful apply. A `TerraformCluster` or `TerraformMachinePool` whose
-  Secret is gone falls back to building its current inputs when they build;
-  a `TerraformMachine` never does, since its Machine and bootstrap Secret
-  are usually gone by then. See [The durable inputs Secret is
-  missing](../../operator-guide/runbooks/stuck-destroy.md#the-durable-inputs-secret-is-missing).
+  `DependenciesReady`. The destroy renders from an **inputs record**: the
+  durable Secret `captf-inputs-<kindshort>-<name>` (the newest attempt) or the
+  applied Secret `captf-applied-<kindshort>-<name>` (the newest success),
+  whichever describes the state (see [Which record a destroy
+  renders](#which-record-a-destroy-renders)). A `TerraformCluster` or
+  `TerraformMachinePool` with no record falls back to building its current
+  inputs when they build; a `TerraformMachine` never does, since its Machine
+  and bootstrap Secret are usually gone by then and the destroy fails with
+  `DestroyFailed` and the Retain hint. See [The inputs Secrets are
+  missing](../../operator-guide/runbooks/stuck-destroy.md#the-inputs-secrets-are-missing).
 - **The pinned image.** For a machine, the destroy runs the image and the
-  identity recorded in the durable Secret, not the current
+  identity recorded with the record it renders, not the current
   spec, so changing a template cannot change how an existing machine is torn
-  down.
+  down. The Job runs the digest of that record: the applied record has one,
+  an attempt record has none, so a destroy that renders it runs the spec image
+  and emits `DigestUnknown`.
+
+## Which record a destroy renders
+
+Destroy, and the refresh and drift of an immutable kind (also a mutable kind
+whose inputs do not build), render the record picked by these rules, in
+order:
+
+1. The attempt record, when its Job is not the applied record's Job and
+   `captf.io/may-have-applied` is set on it: the newest apply failed after its
+   apply step may have run, or its Job vanished, so the state may hold
+   resources only its inputs describe.
+2. With an inputs hash in the state, the record that carries that hash (the
+   applied record first).
+3. The applied record, else the attempt record.
+4. With no record at all, a mutable kind renders its current inputs, and an
+   immutable kind gets `DestroyFailed` with the Retain hint.
+
+When the state has a hash and the record picked carries a different one, the
+destroy emits the Warning `DestroyInputsMismatch`, naming the record's Job
+and both hashes. `captf.io/may-have-applied` is set in two cases: the newest
+apply newly failed (not blocked, plan not changed) after its apply step may
+have run (the result lists the apply step, or there is no result and the
+runner started, or the pod is gone), and the Job vanished. The next attempt
+write removes it, and so does a successful restore.
+
+What follows from this:
+
+- A blocked or destructive-plan-held change, or one that failed in validate or
+  plan, no longer changes what destroy renders: it never applied.
+- An apply that failed partway is destroyed with its own inputs.
+- Reverting the spec after a typo fixes a stuck destroy, because the typo was
+  never applied.
 
 ## What is in the way
 

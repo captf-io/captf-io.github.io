@@ -82,6 +82,7 @@ event is in [Conditions](conditions.md).
 | `ConditionChanged` | Normal or Warning | any provisioned kind | Any owned condition without a more specific reason changed status or reason. Warning when it moved into its bad state, Normal otherwise. | For a Warning, read the condition named in the note. |
 | `DigestPinned` | Normal | any provisioned kind | A successful apply's image digest was recorded on the applied Secret with its inputs: a new digest, or one that differs from the previous apply's. | None. |
 | `AppliedInputsUnknown` | Warning | any provisioned kind | An apply succeeded, but neither its per-run Secret nor the attempt record holds its inputs any more, so the applied record keeps the older apply's inputs, which a destroy would render. | Check what the apply changed; the next successful apply refreshes the record. See [Job inputs](../concepts/inputs.md). |
+| `DestroyInputsMismatch` | Warning | any provisioned kind | A destroy renders inputs whose hash is not the state's: those of an apply that failed after it may have changed resources, or, with no record of the state's hash, the last ones applied. The note names the Job and both hashes. | Check the infrastructure once the destroy ran. See [Which record a destroy renders](../concepts/deletion/destroy-job.md#which-record-a-destroy-renders). |
 | `DigestUnknown` | Warning | any provisioned kind | No digest could be pinned, or an operation runs the `spec` reference for lack of one. | Check that the registry is reachable and the reference resolves. |
 
 ## Jobs
@@ -139,14 +140,14 @@ See [State](../concepts/state.md) and
 
 | Reason | Type | On | Fires when | Action |
 | --- | --- | --- | --- | --- |
-| `StateAdopted` | Normal | any provisioned kind | The state written by a successful apply was adopted with its new inputs hash. | None. |
+| `StateAdopted` | Normal | any provisioned kind | The state written by a successful apply was adopted with its new inputs hash. After a restore of a backup taken without a hash, the note reads "Adopted the state Job X wrote, without an inputs hash: its backup was taken without one, so the state no longer shows a completed apply". | None. |
 | `StateBackedUp` | Normal | any provisioned kind | A new state serial was copied into a backup. Once per backup. | None. |
 | `StateRestored` | Normal | any provisioned kind | A restore Job pushed a backup into the backend and the `captf.io/restore-state` annotation was removed. | None. |
 | `StateRestoreFailed` | Warning | any provisioned kind | A restore Job failed. CAPTF does not retry it for the same serial. | Read the restore Job logs. See the [state restore runbook](../operator-guide/runbooks/state-restore.md). |
 | `StateLocked` | Warning | any provisioned kind | Something else holds the state lock (`StateReadable` False, reason `StateLocked`). | Wait, or find the holder. See the [stale lock runbook](../operator-guide/runbooks/stale-lock.md). |
 | `ForceUnlocked` | Warning | any provisioned kind | CAPTF force-unlocked a stale state lock. | Find out why the previous Job died. Alert: [`CAPTFForceUnlocks`](alerts.md#captfforceunlocks). |
 | `StateUnreadable` | Warning | any provisioned kind | The state could not be read. | See the [state unreadable runbook](../operator-guide/runbooks/state-unreadable.md). Alert: [`CAPTFStateUnreadable`](alerts.md#captfstateunreadable). |
-| `StateLost` | Warning | any provisioned kind | A provisioned object's state is gone or carries no inputs hash (`StateReadable` False, reason `StateLost`). | Restore from a backup. See the [total state loss runbook](../operator-guide/runbooks/total-state-loss.md). |
+| `StateLost` | Warning | any provisioned kind | A provisioned object's state is gone or carries no inputs hash (`StateReadable` False, reason `StateLost`), or an apply whose outcome is unconfirmed may have left resources no state records (`ApplyOutcomeUnknown`). | Restore from a backup. See the [total state loss runbook](../operator-guide/runbooks/total-state-loss.md). |
 | `OwnerReferencesRepaired` | Normal | any provisioned kind | Secrets of the object (state, backups, durable inputs, plan key or its credential mirror entry) had no owner reference, or one to an earlier UID, as a management-cluster restore leaves them. They are owned by the object again. | None. See the [move runbook](../operator-guide/runbooks/move.md). |
 
 ## Drift and health

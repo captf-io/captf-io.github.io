@@ -43,7 +43,7 @@ A reconcile that reaches the end of the pass runs through, in order:
    deleted with no state and no running Job, in which case the finalizer is
    dropped at once: there is nothing to destroy. An owner reference whose
    target is gone does not stop deletion; a destroy still runs from the
-   durable inputs. An owner gate such as the owning `Cluster`'s
+   recorded inputs. An owner gate such as the owning `Cluster`'s
    infrastructure reference not naming a `TerraformCluster` sets
    `DependenciesReady` and stops the pass, unless the object is being
    deleted, in which case deletion proceeds anyway. The lookup also
@@ -211,7 +211,7 @@ gone before its own destroy runs; machines and machine pools carry no such
 wait of their own. An owner reference whose target has already been
 removed does not block a destroy: deletion still runs from the durable
 inputs. Once a destroy succeeds, or deletion finds no state to destroy at
-all, the reconcile deletes the object's state and durable inputs, releases
+all, the reconcile deletes the object's state and inputs Secrets (durable and applied), releases
 its leases, drops it from its credential mirror's owners, and removes the
 finalizer. See [Secrets](../operator-guide/secrets.md) for what those
 Secrets are and [RBAC](../operator-guide/rbac.md) for the namespace RBAC

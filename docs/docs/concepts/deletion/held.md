@@ -56,6 +56,7 @@ applied.
 | `StateCorrupt` | The payload cannot be decoded, exceeds the reader's caps, or has an unsupported version | Restore a backup taken before it broke |
 | `StateEncrypted` | The state carries OpenTofu's client-side encryption envelope; CAPTF cannot read it | No backup exists (an unreadable state is never backed up) |
 | `StateInconsistent` | The chunks do not form one complete state | A missing or duplicated chunk, or a stray Secret in the set |
+| `ApplyOutcomeUnknown` | No state, the object never applied before, and an apply Job ended without a result or vanished | The apply may have created resources before any state was written; see [Apply outcome unknown](#apply-outcome-unknown) |
 
 The condition message adds how to leave the hold: the restore annotation,
 or `spec.deletionPolicy: Retain`. Each reason's cause and
@@ -65,11 +66,37 @@ repair are in [Unreadable State](../../operator-guide/runbooks/state-unreadable.
 its Job waits `lockTimeoutSeconds` for a lock someone else holds and then
 fails. See [Stale State Lock](../../operator-guide/runbooks/stale-lock.md).
 
+### Apply outcome unknown
+
+`StateReadable=False`/`ApplyOutcomeUnknown` is a hold for an object with no
+state that has not applied before (no applied marker, no applied record, no
+backup, not provisioned), when an apply Job ended without a runner result
+after its runner started (an OOM kill, a node loss), or disappeared while it
+ran. That Job may have created resources before any state was written, so a
+second first apply would create a second set. The controller records the Job
+as `captf.io/unconfirmed-apply` on the durable inputs Secret, for every kind
+including immutable machines. No apply runs, and a deleting object keeps its
+finalizer. The message names the Job and the exits. Entering the state emits a
+`StateLost` Warning event. An object that applied before gets `StateLost`
+instead, which takes precedence.
+
+The exits:
+
+- Restore a backup (`captf.io/restore-state`). A successful restore newer
+  than the newest apply also clears the record and the
+  `captf.io/may-have-applied` mark.
+- Check the cloud, then set `captf.io/confirm-no-resources=<job>` on the
+  object. It is consumed when the value names the recorded Job: the record is
+  cleared and the annotation removed, and in the same pass a live object
+  applies again and a deleting object drops its finalizer. A value naming
+  another Job is ignored and logged.
+- `deletionPolicy: Retain`, when deleting.
+
 ## What ends a hold
 
 ```mermaid
 flowchart TD
-    A[Deleting, state lost or unreadable] --> B{deletionPolicy<br/>Retain?}
+    A[Deleting, state lost, unreadable or unconfirmed] --> B{deletionPolicy<br/>Retain?}
     B -- yes --> X[Retain: keep state, backups and inputs,<br/>finalizer off, InfrastructureRetained]
     B -- no --> C{restore-state names<br/>a complete backup?}
     C -- yes --> R[Restore Job]
@@ -100,7 +127,7 @@ See [Backups and restore](../secret-management/backups.md#restore) and the
 Setting `spec.deletionPolicy: Retain` on the deleting object removes the
 finalizer without a destroy. Unlike a restore it needs no backup, and
 unlike stripping the finalizer by hand it loses nothing: the state Secrets
-that exist, the state backups and the durable inputs are kept, without
+that exist, the state backups and the durable and applied inputs are kept, without
 owner references, labeled `captf.io/retained-from-uid` with the object's
 UID, for a later object of the same name to adopt. See [Retain and
 Adopt](retain.md).
@@ -115,7 +142,7 @@ It releases more than a hold on the state:
 | --- | --- |
 | Held on the state | `StateReadable` is `False` |
 | The last destroy failed | `status.lastRun` is a destroy and `ApplyJobSucceeded` is `False` (also after a restore) |
-| The durable inputs are gone | `ApplyJobSucceeded=False`/`DestroyFailed` with no Job, because the destroy cannot be rendered |
+| The inputs Secrets are gone | `ApplyJobSucceeded=False`/`DestroyFailed` with no Job, because the destroy cannot be rendered |
 | The identity does not allow the namespace | `ApplyJobSucceeded=False`/`IdentityNotAllowed` |
 | The credentials cannot be prepared | The `Deleting` message says the destroy waits for its credentials |
 

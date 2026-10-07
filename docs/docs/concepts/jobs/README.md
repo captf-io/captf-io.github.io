@@ -13,7 +13,9 @@ subtitle: "How runner Jobs are managed"
 # Jobs, Retries and Concurrency
 
 Every Terraform or OpenTofu run CAPTF does is one Kubernetes Job, started by
-the controller, watched to the end and counted. This chapter follows a Job
+the controller, watched to the end and counted. A Job counts for an object
+only when that object controls it by UID, so an earlier object of the same
+name leaves nothing behind that skews attempts or backoff. This chapter follows a Job
 from the decision to run it to the bookkeeping after it finishes, and
 explains the machinery that keeps those Jobs from colliding: the names that
 make creation idempotent, the retry rules, the deadlines, the leases, the

@@ -47,8 +47,8 @@ If the object ever applied, deletion is **held** while its state is
 missing or unreadable: the destroy cannot run safely without the state, and
 dropping the finalizer would leave the infrastructure running with no
 record of it. "Ever applied" means the object was provisioned, a state
-backup exists, the durable inputs Secret pins an image digest, or that
-Secret carries the `captf.io/applied: "true"` marker (see [the applied
+backup exists, an applied record `captf-applied-*` exists, or the durable
+inputs Secret carries the `captf.io/applied: "true"` marker (see [the applied
 marker](#the-applied-marker)). The
 controller keeps the finalizer, `StateReadable` stays `False` with the
 reason `StateLost`, `StateEncrypted`, `StateCorrupt` or
