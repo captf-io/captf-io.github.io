@@ -1,10 +1,11 @@
 ---
+title: "No-op Machine Module"
 description: "The no-op machine role: the stand-in instance it records, the contract inputs it reads, its provider ID, address and image labels."
 icon: lucide/server
 subtitle: "A stand-in instance per Machine"
 ---
 
-# Machine
+# No-op Machine Module
 
 The no-op machine module stands in for one instance per `Machine`. Its
 image is `ghcr.io/captf-io/module-images/noop-machine`.

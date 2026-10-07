@@ -1,4 +1,5 @@
 ---
+title: "Azure Reference Modules"
 description: "Build a workload cluster in an Azure virtual network you bring: the images, prerequisites, identity Secret, quick start, endpoint, exports and tags."
 git_creation_date_localized: "October 2, 2026"
 git_revision_date_localized: "October 2, 2026"
@@ -10,7 +11,7 @@ icon: lucide/cloudy
 subtitle: "Standard LB, VMs, scale sets"
 ---
 
-# Azure
+# Azure Reference Modules
 
 The Azure modules run a Kubernetes cluster on Azure virtual machines. The
 cluster role creates one resource group per cluster, holding the API

@@ -1,4 +1,5 @@
 ---
+title: "Google Cloud MachinePool Module"
 description: "Look up what the Google Cloud machinepool module creates, its inputs, outputs, health, lifecycle and limits, with an example."
 git_creation_date_localized: "October 2, 2026"
 git_revision_date_localized: "October 2, 2026"
@@ -10,7 +11,7 @@ icon: lucide/boxes
 subtitle: "Managed instance group"
 ---
 
-# MachinePool
+# Google Cloud MachinePool Module
 
 The `ghcr.io/captf-io/module-images/gcp-machinepool` image implements the
 [machinepool role](../../module-author/contract/v1alpha1/machinepool.md)

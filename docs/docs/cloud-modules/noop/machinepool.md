@@ -1,10 +1,11 @@
 ---
+title: "No-op MachinePool Module"
 description: "The no-op machinepool role: the stand-in scaling group it records, the contract inputs it reads, and the provider IDs and instances it returns."
 icon: lucide/boxes
 subtitle: "A stand-in group per MachinePool"
 ---
 
-# MachinePool
+# No-op MachinePool Module
 
 The no-op machinepool module stands in for one native scaling group per
 `MachinePool`. Its image is `ghcr.io/captf-io/module-images/noop-machinepool`.

@@ -1,4 +1,5 @@
 ---
+title: "Azure MachinePool Module"
 description: "Look up what the Azure machinepool module creates, its inputs, outputs, health, lifecycle and limits, with an example."
 git_creation_date_localized: "October 2, 2026"
 git_revision_date_localized: "October 2, 2026"
@@ -10,7 +11,7 @@ icon: lucide/boxes
 subtitle: "Virtual machine scale set"
 ---
 
-# MachinePool
+# Azure MachinePool Module
 
 The `ghcr.io/captf-io/module-images/azure-machinepool` image implements the
 [machinepool role](../../module-author/contract/v1alpha1/machinepool.md) on

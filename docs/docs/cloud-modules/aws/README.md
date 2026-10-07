@@ -1,4 +1,5 @@
 ---
+title: "AWS Reference Modules"
 description: "Build a workload cluster in an AWS VPC you bring: the images, prerequisites, identity Secret, quick start, API endpoint, exports and tags."
 git_creation_date_localized: "October 2, 2026"
 git_revision_date_localized: "October 2, 2026"
@@ -10,7 +11,7 @@ icon: lucide/cloud
 subtitle: "NLB, EC2, Auto Scaling groups"
 ---
 
-# AWS
+# AWS Reference Modules
 
 The AWS modules build a workload cluster's infrastructure inside a VPC you
 bring. The cluster role creates the API server's Network Load Balancer, the

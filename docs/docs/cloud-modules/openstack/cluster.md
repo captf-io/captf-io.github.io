@@ -1,4 +1,5 @@
 ---
+title: "OpenStack Cluster Module"
 description: "Look up what the OpenStack cluster module creates, its inputs, outputs, health reporting and limits, with an example."
 git_creation_date_localized: "October 2, 2026"
 git_revision_date_localized: "October 2, 2026"
@@ -10,7 +11,7 @@ icon: lucide/network
 subtitle: "Network, router, Octavia LB"
 ---
 
-# Cluster
+# OpenStack Cluster Module
 
 The `ghcr.io/captf-io/module-images/openstack-cluster` image implements the
 [cluster role](../../module-author/contract/v1alpha1/cluster.md) for a

@@ -1,10 +1,11 @@
 ---
+title: "No-op Cluster Module"
 description: "The no-op cluster role: the stand-in resource it records, the contract inputs it reads, and the endpoint, failure domain and exports it returns."
 icon: lucide/network
 subtitle: "A stand-in load balancer"
 ---
 
-# Cluster
+# No-op Cluster Module
 
 The no-op cluster module stands in for what a real cluster module creates
 around a workload cluster's nodes. Its image is

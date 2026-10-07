@@ -1,4 +1,5 @@
 ---
+title: "OCI Reference Modules"
 description: "Build a workload cluster on an OCI VCN you bring: the images, prerequisites, identity Secret, quick start, API endpoint, exports and tags."
 git_creation_date_localized: "October 2, 2026"
 git_revision_date_localized: "October 2, 2026"
@@ -10,7 +11,7 @@ icon: lucide/database
 subtitle: "Network LB, instances, pools"
 ---
 
-# OCI
+# OCI Reference Modules
 
 The OCI modules build a self-managed Kubernetes cluster on Oracle Cloud
 Infrastructure, on a VCN you bring. The cluster role creates the nodes'

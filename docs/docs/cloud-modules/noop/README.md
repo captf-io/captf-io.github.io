@@ -1,10 +1,11 @@
 ---
+title: "No-op Reference Modules"
 description: "Try CAPTF or test a management cluster with no cloud account: the no-op module images, what they return, and a quick start."
 icon: lucide/flask-conical
 subtitle: "Real plans and state, no cloud"
 ---
 
-# No-op
+# No-op Reference Modules
 
 The no-op modules implement all three roles of the
 [v1alpha1 module contract](../../module-author/contract/v1alpha1/README.md)

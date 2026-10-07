@@ -1,4 +1,5 @@
 ---
+title: "OpenStack Reference Modules"
 description: "Build a workload cluster on an OpenStack network you bring: the images, prerequisites, identity Secret, quick start, endpoint, exports and tags."
 git_creation_date_localized: "October 2, 2026"
 git_revision_date_localized: "October 2, 2026"
@@ -10,7 +11,7 @@ icon: lucide/container
 subtitle: "Octavia LB, Nova servers"
 ---
 
-# OpenStack
+# OpenStack Reference Modules
 
 The OpenStack modules provision a cluster on a network and subnet you
 bring. The cluster role creates the node and control-plane security groups,

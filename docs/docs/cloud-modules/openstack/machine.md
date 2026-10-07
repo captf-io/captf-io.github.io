@@ -1,4 +1,5 @@
 ---
+title: "OpenStack Machine Module"
 description: "Look up what the OpenStack machine module creates, its inputs, outputs, health, lifecycle and limits, with an example."
 git_creation_date_localized: "October 2, 2026"
 git_revision_date_localized: "October 2, 2026"
@@ -10,7 +11,7 @@ icon: lucide/server
 subtitle: "One Nova server"
 ---
 
-# Machine
+# OpenStack Machine Module
 
 The `ghcr.io/captf-io/module-images/openstack-machine` image implements the
 [machine role](../../module-author/contract/v1alpha1/machine.md) for a

@@ -1,4 +1,5 @@
 ---
+title: "Google Cloud Reference Modules"
 description: "Build a workload cluster in a Google Cloud VPC network you bring: the images, prerequisites, identity Secret, quick start, endpoint, exports and labels."
 git_creation_date_localized: "October 2, 2026"
 git_revision_date_localized: "October 2, 2026"
@@ -10,7 +11,7 @@ icon: lucide/cloud-cog
 subtitle: "Proxy NLB, VMs, instance groups"
 ---
 
-# Google Cloud
+# Google Cloud Reference Modules
 
 The Google Cloud modules create, in a VPC network you bring, a Cluster API
 cluster's API load balancer (an internal proxy Network Load Balancer by
