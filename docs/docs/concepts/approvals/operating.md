@@ -43,7 +43,7 @@ through `clusterctl move`.
 
 | Transition | When | Event |
 | --- | --- | --- |
-| `Pending` to `Approved` | `spec.approved` becomes `true` | `PlanApproved` on the target, naming `approvedBy` |
+| `Pending` to `Approved` | `spec.approved` becomes `true` | `PlanApproved` on the target, naming `approvedBy`, when bookkeeping first sees the approval |
 | `Approved` to `Applied` | The apply Job annotated with the plan succeeded | `PlanApplied` |
 | `Approved` to `Failed` | The approved apply planned other changes and stopped | `PlanChanged` (Warning) |
 | `Pending` or `Approved` to `Superseded` | A newer plan of the target exists, or the plan became moot | `PlanSuperseded` |
@@ -121,8 +121,8 @@ kubectl get terraformcluster <name> -n <namespace> \
 
 | Status / reason | Meaning | What to do |
 | --- | --- | --- |
-| `Unknown`/`PlanAwaitingApproval` | `Manual`: a plan is ready and nothing applies until it is approved. The message names the `TerraformPlan`, its counts and the approve command | Review the plan and the plan Job's log, then approve |
-| `Unknown`/`PlanChanged` | The approved apply planned other changes and applied nothing. The message names the failed plan, the new plan and the approve command | Review the new plan, then approve it |
+| `Unknown`/`PlanAwaitingApproval` | `Manual`: a plan is ready and nothing applies until it is approved. The message starts `TerraformPlan <name> plans inputs hash <hash>: <counts>. Nothing is applied until it is approved:` and ends with the approve command | Review the plan and the plan Job's log, then approve |
+| `Unknown`/`PlanChanged` | The approved apply planned other changes and applied nothing. The message reads `Job <apply>: the plan changed since TerraformPlan <old> was approved, so nothing was applied. TerraformPlan <new> plans ...` and gives the approve command. For a `Destructive` plan no new plan exists and the next apply plans again | Review the new plan, then approve it |
 | `False`/`DestructivePlanBlocked` | A guarded apply stopped before a plan that deletes or replaces something. The message says what, and names the `TerraformPlan` to approve. On a pool, the plan is for a change of the cluster's exports | Review the plan, then approve the `TerraformPlan` |
 | `True`/`ApplySucceeded` | The last apply succeeded | None |
 | `False`/`ApplyFailed` | The apply failed; the message names the failing step | See [Failing Jobs](../../operator-guide/runbooks/job-failures.md) |
@@ -140,12 +140,12 @@ list of reasons is in [Conditions](../../reference/conditions.md#applyjobsucceed
 
 | Event | Type | When |
 | --- | --- | --- |
-| `PlanReady` | Normal | A `Manual` plan was created, from a plan Job or as a new plan after `PlanChanged`. It names the plan, its counts and the approve command |
+| `PlanReady` | Normal | A `Manual` plan was created, from a plan Job or as a new plan after `PlanChanged`. It names the plan, its counts and the approve command. Also when a `Manual` plan Job's plan changes nothing: the note says the apply runs without an approval, and no plan is created |
 | `DestructivePlanBlocked` | Warning | A guarded apply stopped on a delete or replace; once per blocked Job. It names the plan and the approve command |
-| `PlanApproved` | Normal | A plan of the target was approved; names it and `approvedBy` |
+| `PlanApproved` | Normal | Bookkeeping first saw `spec.approved` on a plan of the target (not when the apply starts); names it and `approvedBy` |
 | `PlanApplied` | Normal | The apply of an approved plan succeeded |
-| `PlanChanged` | Warning | An approved apply planned other changes; the plan is `Failed` |
-| `PlanSuperseded` | Normal, Warning when the plan was approved | A plan was superseded; names why and the current plan |
+| `PlanChanged` | Warning | An approved apply planned other changes; the plan is `Failed`. Once per such apply, for `Manual` and `Destructive` plans alike |
+| `PlanSuperseded` | Normal, Warning when the plan was approved | A plan was superseded; names why and the current plan. The Warning also covers an approval that lost a race with the supersession |
 
 An `InputsChanged` event also marks the start of a plan. See
 [Events](../../reference/events.md) for the full list.

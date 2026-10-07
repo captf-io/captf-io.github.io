@@ -115,16 +115,18 @@ Manual`, and are emitted on the target of a
 
 | Reason | Type | On | Fires when | Action |
 | --- | --- | --- | --- | --- |
-| `PlanReady` | Normal | `TerraformCluster` | A `Manual` `TerraformPlan` was created, from a plan Job or as a new plan after `PlanChanged`. The note names the plan, its counts and the approve command. | Review the plan, then approve it. |
-| `PlanApproved` | Normal | `TerraformCluster`, `TerraformMachinePool` | A `TerraformPlan` of the target was approved. The note names the plan and `approvedBy`. | None. |
+| `PlanReady` | Normal | `TerraformCluster` | A `Manual` `TerraformPlan` was created, from a plan Job or as a new plan after `PlanChanged`. The note names the plan, its counts and the approve command. Also emitted when a `Manual` plan Job's plan changes nothing: the note says there are no changes, so the apply runs without an approval, and no `TerraformPlan` is created. | Review the plan, then approve it. |
+| `PlanApproved` | Normal | `TerraformCluster`, `TerraformMachinePool` | Bookkeeping first saw `spec.approved` on a `TerraformPlan` of the target (not when the apply starts). The note names the plan and `approvedBy`. | None. |
 | `PlanApplied` | Normal | `TerraformCluster`, `TerraformMachinePool` | The apply of an approved plan succeeded and the plan is `Applied`. | None. |
-| `PlanChanged` | Warning | `TerraformCluster` | An approved apply planned other changes and stopped before applying them; the plan is `Failed`. Once per such Job. | Review the new plan and approve it. |
-| `PlanSuperseded` | Normal, Warning when the plan was approved | `TerraformCluster`, `TerraformMachinePool` | A plan was superseded by a newer plan, or became moot. The note names why and the current plan. An approved plan's approval is ignored, hence the warning. | Review the current plan, if there is one. |
+| `PlanChanged` | Warning | `TerraformCluster` | An approved apply planned other changes and stopped before applying them; the plan is `Failed`. Once per approved apply that found the plan changed, for `Manual` and `Destructive` plans alike. A `Manual` plan gets a new plan; for a `Destructive` plan none is created and the next apply plans again. | Review the new plan, if any, and approve it. |
+| `PlanSuperseded` | Normal, Warning when the plan was approved | `TerraformCluster`, `TerraformMachinePool` | A plan was superseded by a newer plan, or became moot. The note names why and the current plan. An approved plan's approval is ignored, hence the warning; this also covers an approval that lost a race with the supersession. | Review the current plan, if there is one. |
 | `DestructivePlanBlocked` | Warning | `TerraformCluster` | An apply stopped before a plan that deletes or replaces resources. Once per blocked Job, in place of `JobFailed`. The note names the `TerraformPlan` and the approve command. | Read the plan and approve it if the deletes are intended. See [Destructive guard](../concepts/approvals/destructive-guard.md). |
 
 `DestructivePlanBlocked` is also recorded for a `TerraformMachinePool`
-apply that would change the cluster's exports. The pool keeps applying with
-the exports of its last successful apply until you approve the change's `TerraformPlan`. If an
+apply that would change the cluster's exports. While the change's
+`TerraformPlan` waits, bootstrap rotations keep applying with the exports of
+the pool's last successful apply; any other input change guards the change
+again and makes a new plan. Approve the plan to apply the change. If an
 earlier apply may have left such a change partly applied, the pool waits for
 the approval, as a cluster does.
 

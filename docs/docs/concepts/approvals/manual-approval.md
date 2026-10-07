@@ -68,7 +68,7 @@ sequenceDiagram
    Drift and health checks continue while a plan waits.
 4. **Approve.** You set `spec.approved` and `spec.approvedBy` on the plan.
    It becomes `Approved`, and the controller emits `PlanApproved` on the
-   target, naming `approvedBy`.
+   target, naming `approvedBy`, when bookkeeping first sees the approval.
 5. **Apply.** The controller starts the apply Job with
    `--expect-plan=<spec.planHash>`, the same plan key mount, and the Job
    annotations `captf.io/approved-plan` and `captf.io/plan` (the plan's
@@ -117,7 +117,7 @@ or `delete`.
   moves, is not an empty plan and waits for approval.
 - **Not an empty plan.** A plan with no resource, output, import or move
   change creates no `TerraformPlan`, and the apply runs at once with
-  `--expect-plan` of the empty plan (no `PlanApproved` event). It still plans
+  `--expect-plan` of the empty plan (no `PlanApproved` event, but a `PlanReady` event that says there are no changes). It still plans
   again first, and stops if the plan is no longer empty.
 
 !!! warning "Approving a plan also approves the deletes and replacements it lists"

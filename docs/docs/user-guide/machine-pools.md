@@ -400,8 +400,12 @@ deletes or replaces anything, it stops before the apply step and the change is
 version rolls, replica changes and spec edits apply as usual while the exports
 are unchanged.
 
-While a change is held, the pool keeps applying everything else with the
-exports of its last successful apply, and `ApplyJobSucceeded` shows
+While a change is held, bootstrap rotations keep applying at once with the
+exports of its last successful apply. Any other input change (a version roll, a
+replicas or spec edit) changes the approval hash, so the change is guarded
+again: one more guarded apply runs with the new exports and blocks, its plan
+supersedes the old one, and the pool holds again and applies that upgrade or
+edit with the held exports. `ApplyJobSucceeded` meanwhile `ApplyJobSucceeded` shows
 `False`/`DestructivePlanBlocked` (so the pool's `Ready` is `False`) with what
 the plan would delete or replace and the pool's approval hash. After you have
 read the plan, approve it:
@@ -417,7 +421,9 @@ without `bootstrap_data`, so it survives bootstrap rotations and changes on any
 other input change. Anyone who may patch `terraformplans` may approve it. If
 the exports return to the applied ones, the change is withdrawn and the plan is
 superseded; if they move to another change, or the spec changes the approval
-hash, the old plan is superseded and a new one is made. After a guarded apply fails part-way, every apply of the pool is
+hash, the old plan is superseded and a new one is made. If the exports return
+to a change whose plan was superseded, it is guarded again and a new plan is
+made before it is held. After a guarded apply fails part-way, every apply of the pool is
 guarded until one succeeds. See [The destructive-plan
 guard](../concepts/approvals/destructive-guard.md#machine-pools) for the full
 behavior and its limits.

@@ -251,7 +251,7 @@ list, and `clusterctl move` does not carry status over.
 | `status.failureDomains[].controlPlane` | boolean | Whether control-plane machines may use this domain. |
 | `status.failureDomains[].attributes` | map | Free-form string attributes the module reports for the domain. |
 | `status.exports` | any JSON value | A copy of the module's `exports` output, published for consumers outside CAPTF to read through the Kubernetes API. Absent or null exports publish `{}`. Not published, and the field cleared, when the compact JSON exceeds 64 KiB (65536 bytes); the manager then emits the `ExportsNotPublished` Warning event. Not set for an externally managed cluster. Readable by anyone who can `get` the object, so it must never hold secrets. The controller never reads it back. |
-| `status.pendingPlanRef` | object | The cluster's live [`TerraformPlan`](terraformplan.md), in the phase `Pending` or `Approved`. Omitted when no plan is live. Approve it by patching that plan; see [Plan approval](../../user-guide/plan-approval.md). |
+| `status.pendingPlanRef` | object | The cluster's live [`TerraformPlan`](terraformplan.md), in the phase `Pending` or `Approved`. Omitted when no plan is live. Updated at the end of every reconcile pass, paused ones too. Approve it by patching that plan; see [Plan approval](../../user-guide/plan-approval.md). |
 | `status.pendingPlanRef.name` | string | **Required** when the reference is set. The name of the `TerraformPlan`, in the cluster's namespace. **Range:** 1 to 253 characters. |
 
 `status` must set at least one property when present.

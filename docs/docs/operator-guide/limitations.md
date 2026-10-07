@@ -48,7 +48,7 @@ what has and has not been tested, see [Compatibility](compatibility.md).
   exports is **held**: the pool keeps applying with the exports of its last
   successful apply until the change is approved. The guard needs the record of
   the last applied exports, which shares the durable Secret's budget with the
-  rendered inputs, and `clusterctl move` re-runs a blocked plan once. Keep
+  rendered inputs, and `clusterctl move` carries the plan but not the Jobs, so a moved plan still gates the apply. Keep
   shared and destructive infrastructure in the cluster module, keep exports
   stable, and use `prevent_destroy` on what must not go. See [Machine
   pools](../concepts/approvals/destructive-guard.md#machine-pools) and

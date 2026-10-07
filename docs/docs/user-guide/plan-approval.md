@@ -71,7 +71,7 @@ it.
 
     The admission webhook requires `approvedBy` to equal the username of the
     request, so the field says who approved. The plan moves to `Approved`, and
-    the controller emits `PlanApproved` on the target.
+    the controller emits `PlanApproved` on the target when it first sees the approval.
 
 3. The apply runs with `--expect-plan=<spec.planHash>`. It plans again and
    applies only if the new plan has the same hash. After it succeeds, the

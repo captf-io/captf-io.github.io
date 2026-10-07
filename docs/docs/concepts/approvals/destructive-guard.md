@@ -64,7 +64,11 @@ you approved is run as it is, and the plan has the reason `Manual`.
 - `ApplyJobSucceeded` is `False`/`DestructivePlanBlocked`. The message names
   the affected addresses and actions (`<address> (delete)` or `(replace)`),
   says nothing was applied, and names the `TerraformPlan` to approve with
-  the command to do it. `status.pendingPlanRef.name` names the same plan.
+  the command to do it. `status.pendingPlanRef.name` names the same plan; the
+  controller updates it at the end of every reconcile pass, paused ones too,
+  from the live plan. After `clusterctl move`, which moves plans but not Jobs,
+  a wait with no blocked Job has a message that starts `TerraformPlan <name>
+  plans inputs hash ...` and emits no event.
 - A `DestructivePlanBlocked` warning event is emitted once per blocked Job,
   in place of the generic failure event, and names the plan and the command.
 - The Job is annotated `captf.io/destructive-plan-blocked`, and, once it is
@@ -77,7 +81,9 @@ that hash starts, and the controller re-checks at least every ten minutes.
 The apply waits for the plan's approval even when no Job exists any more:
 after `clusterctl move`, which moves plans but not Jobs, the moved plan
 still gates the apply. A blocked apply whose result has no plan creates no
-`TerraformPlan` and is retried after `RetryMax` (ten minutes).
+`TerraformPlan`: `ApplyJobSucceeded` says "The runner reported no plan to
+approve, so the apply plans again later", and the guarded apply runs again
+`RetryMax` (ten minutes) after the block.
 What else pauses depends on why the apply was due:
 
 - A blocked **input change** pauses drift and health checks too, since they
@@ -153,8 +159,12 @@ after the successful apply it approved.
 
 A blocked apply of a change of the exports is **held**, not retried:
 
-- The pool **keeps applying everything else** (rotations, upgrades, edits)
-  with the exports of its last successful apply, so it keeps working.
+- The pool holds the change only while its `ExportsChange` plan waits for
+  approval (`Pending`) and the plan's approval hash is the current one. While
+  it holds, **bootstrap rotations keep applying at once** with the exports of
+  its last successful apply, so the pool keeps working. Any other input change
+  (a version roll, a replicas or spec edit) changes the approval hash, so the
+  change is guarded again: see the warning below.
 - **Refresh and drift render the held exports**, so the waiting change does
   not read as drift.
 - `ApplyJobSucceeded` stays `False`/`DestructivePlanBlocked`, with what the
@@ -163,26 +173,28 @@ A blocked apply of a change of the exports is **held**, not retried:
 - One `Warning` event, `DestructivePlanBlocked`, is emitted per blocked Job.
 - The change is recorded in the durable Secret
   (`captf.io/pending-cluster-outputs`).
-- The pool holds only as long as the plan's approval hash is the current
-  one.
 
 ### Withdrawn and superseded
 
 - **Withdrawn.** If the exports return to the applied ones, nothing waits. The
   condition reports the last apply's real outcome and names the withdrawn Job,
   and the plan is `Superseded`, so an approval of that change is ignored. If
-  the change comes back, it is held again and needs a new plan and a fresh
-  approval.
+  the exports return to that change later, it is not held: its apply is
+  guarded again, the block makes a new plan, and only then is the change held
+  and approvable.
 - **Superseded.** If the exports move to a different change, or the pool's
   spec changes the approval hash, the old plan is `Superseded`. An approval is
   for one change.
 
-!!! warning "A spec edit of a held pool makes it re-guard"
+!!! warning "An edit other than a rotation makes a held pool re-guard"
 
-    The tradeoff of binding the approval hash: an edit of the pool's spec
-    while a change is held changes the hash. The pool then re-guards: a new
-    guarded apply blocks again and creates a new `TerraformPlan`, which
-    supersedes the old one, instead of keeping the old approval.
+    The tradeoff of binding the approval hash: a version roll, a replicas
+    change or a spec edit while a change is held changes the hash, and only
+    bootstrap rotations do not. The change is then guarded again: one more
+    guarded apply runs with the new exports and blocks, its new
+    `TerraformPlan` supersedes the old one, and the pool holds again and
+    applies that upgrade or edit with the held exports. The old approval does
+    not carry over.
 
 ### Partly applied
 

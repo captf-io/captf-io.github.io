@@ -233,7 +233,7 @@ other workload kinds are documented on [Common Fields](common-fields.md).
 | `status.stateSecretSuffix` | string | The state Secret's backend suffix, derived by the controller. See [State](common-fields.md#state). |
 | `status.stateBackups` | list | The state backups the controller keeps, newest first. See [State](common-fields.md#state). |
 | `status.source` | object | What the last Job actually ran. See [Image in use](common-fields.md#image-in-use). |
-| `status.pendingPlanRef` | object | The pool's live [`TerraformPlan`](terraformplan.md), in the phase `Pending` or `Approved`: a change of the cluster's exports that waits for an approval. Omitted when no plan is live. |
+| `status.pendingPlanRef` | object | The pool's live [`TerraformPlan`](terraformplan.md), in the phase `Pending` or `Approved`: a change of the cluster's exports that waits for an approval. Omitted when no plan is live. Updated at the end of every reconcile pass, paused ones too. |
 | `status.pendingPlanRef.name` | string | **Required** when the reference is set. The name of the `TerraformPlan`, in the pool's namespace. **Range:** 1 to 253 characters. |
 
 The whole status block is reported under [Workspace status](common-fields.md#workspace-status).

@@ -63,8 +63,9 @@ change in a cluster plan needs approval under `Manual`. After that apply
 succeeds, the new exports change the inputs of each `TerraformMachinePool`,
 which is mutable, and the pool applies them. That apply is **guarded**: if its
 plan deletes or replaces anything, it stops and the change is **held**. The
-pool keeps applying with the exports of its last successful apply until
-someone approves the change with the pool's approval hash. See [Machine
+pool applies bootstrap rotations with the exports of its last successful apply
+until someone approves the change's plan. Any other input change guards the
+change again and makes a new plan. See [Machine
 pools](destructive-guard.md#machine-pools).
 
 What the guard does not cover:
