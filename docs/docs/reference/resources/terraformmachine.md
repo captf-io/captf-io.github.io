@@ -333,7 +333,9 @@ as noted in the field tables.
 - `spec.jobs`: neither the container nor the pod security context may weaken
   the hardened defaults (privileged, privilege escalation, added capabilities,
   a writable root filesystem, `procMount: Unmasked`, running as root, an
-  `Unconfined` seccomp profile, a Windows host process). Checked on create,
+  `Unconfined` seccomp or AppArmor profile, a SELinux type outside the
+  baseline set or a SELinux user or role, a Windows host process, a sysctl
+  outside the Pod Security safe set at pod scope). Checked on create,
   and update when `spec.jobs` changed.
 - `spec.jobs.lockTimeoutSeconds` must be less than `activeDeadlineSeconds`. A
   lone value is compared with the other's built-in default. A merge with the

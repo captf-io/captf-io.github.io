@@ -82,8 +82,8 @@ names `spec.jobs.env` may not set at all.
 !!! warning "There is no way to turn on provider debug logging in a Job"
 
     `TF_LOG` falls under the dropped `TF_*` names above; `spec.jobs.env` cannot set it
-    either, since any name starting with `TF_` or `KUBE_` is silently
-    left out of the Job rather than passed through.
+    either: the webhook rejects any name starting with `TF_` or `KUBE_`, and
+    the Job builder leaves one out rather than passing it through.
 
 A module author debugging a
 provider needs to reproduce the run outside a Job: pull the pinned image,

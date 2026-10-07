@@ -80,7 +80,7 @@ spec:
         - {name: TMPDIR, value: /tmp}
         - {name: KUBE_NAMESPACE, value: default}
         - {name: CHECKPOINT_DISABLE, value: "1"}
-        # ... then the entries of spec.jobs.env that are not TF_* or KUBE_*
+        # ... then the entries of spec.jobs.env that are not reserved names
         envFrom:
         - secretRef: {name: captf-creds-<identity>}   # the credentials mirror
         volumeMounts:
@@ -95,7 +95,7 @@ spec:
           capabilities: {drop: [ALL]}
           readOnlyRootFilesystem: true
         resources:
-          requests: {cpu: 250m, memory: 512Mi}
+          requests: {cpu: 250m, memory: 2Gi}
           limits: {memory: 2Gi}
         terminationMessagePolicy: ReadFile  # the runner writes its result here
 ```
@@ -136,7 +136,7 @@ unchanged, except `HOME`, which the runner sets again to the same value.
 | `CHECKPOINT_DISABLE` | `1` | Stops Terraform from calling `checkpoint-api.hashicorp.com` on every command. A pod that holds cloud credentials otherwise makes that call, and it can stall on its timeout when a namespace drops egress silently. |
 
 The Job builds `env` from these six, then appends the entries of
-`spec.jobs.env` that do not begin with `TF_` or `KUBE_`; see
+`spec.jobs.env` that are not reserved; see
 [`spec.jobs.env` rejected names](#specjobsenv-rejected-names). The Job does
 not set `TF_DATA_DIR` or `TF_CLI_CONFIG_FILE`. The runner sets both for the
 runtime; see [What the runner changes](#what-the-runner-changes).
@@ -205,11 +205,16 @@ module, so its resources are fixed and not configurable.
 | --- | --- | --- |
 | init (`runner`) | requests | `cpu=10m`, `memory=32Mi` |
 | init (`runner`) | limits | `cpu=100m`, `memory=64Mi` |
-| main (`source`), when `spec.jobs.resources` is unset | requests | `cpu=250m`, `memory=512Mi` |
+| main (`source`), when `spec.jobs.resources` is unset | requests | `cpu=250m`, `memory=2Gi` |
 | main (`source`), when `spec.jobs.resources` is unset | limits | `memory=2Gi`, and no CPU limit |
 
 The main container has no default CPU limit because throttling a slow apply
-is worse than a slow apply. A pod with no requests at all runs at the
+is worse than a slow apply. The memory request equals the limit, so the pod
+is Burstable but its memory is guaranteed: the kubelet ranks pods for
+eviction by memory usage above the request. Apply, destroy and restore Jobs
+also carry `cluster-autoscaler.kubernetes.io/safe-to-evict: "false"`, so the
+cluster autoscaler does not remove their node mid-run; plan, refresh and
+drift Jobs do not. A pod with no requests at all runs at the
 BestEffort class, which Kubernetes evicts or OOM-kills first on a crowded
 node, and that is the wrong place for a Terraform process with several large
 providers. Setting `spec.jobs.resources` replaces the default as a whole;
@@ -371,17 +376,20 @@ Contract](../module-author/image-contract.md#provider-mirror-layout).
 ## `spec.jobs.env` rejected names
 
 `spec.jobs.env` adds variables to the main container, up to 64 entries.
-The Job reserves every name that begins with `TF_` or `KUBE_`: the runner
-and the Job own those two prefixes. That covers the three the Job sets
+The Job reserves every name that begins with `TF_`, `KUBE_` or `KUBERNETES_`,
+and the names `HOME`, `TMPDIR` and `CHECKPOINT_DISABLE`: the runner and the
+Job own them. That covers the three the Job sets
 itself (`TF_IN_AUTOMATION`, `TF_INPUT` and `KUBE_NAMESPACE`) and every
 setting a person might reach for, such as `TF_LOG`, `TF_VAR_*`,
 `TF_WORKSPACE`, `TF_CLI_ARGS*`, `TF_CLI_CONFIG_FILE` and `KUBE_CONFIG_PATH`.
 
-!!! warning "A reserved name is dropped without an error or an event"
+!!! warning "A reserved name is rejected at admission"
 
-    The API accepts an entry with a `TF_` or `KUBE_` name and the Job
-    builder leaves it out. Nothing reports it, and the entry stays in the
-    object's spec. If a variable has no effect, check its prefix first.
+    The webhook rejects an entry with a reserved name, on create and when
+    `spec.jobs` changes, with the message "the name is reserved". An entry
+    that gets past it (the webhook is unavailable, or the object predates
+    the rule) is left out by the Job builder without an event, so the
+    built-in value wins.
 
 Other names are applied, including `HOME`, `TMPDIR` and
 `CHECKPOINT_DISABLE`, which the Job also sets. The runner forces `HOME`

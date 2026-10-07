@@ -38,7 +38,7 @@ Job's exact shape (containers, mounts, args) see
 ## Resources
 
 `spec.jobs.resources` sets the main container's `resources` as a whole;
-when unset the controller applies its own default (250m CPU / 512Mi memory
+when unset the controller applies its own default (250m CPU / 2Gi memory
 requested, 2Gi memory limit, deliberately no CPU limit — throttling a slow
 apply is worse than a slow apply). Raise it when a module pulls large
 provider plugins or holds a large plan in memory; the init container that
@@ -90,16 +90,19 @@ computed.
 
 ## Environment variables
 
-`spec.jobs.env` adds environment variables to the main container. Entries
-named `TF_*` or `KUBE_*` are reserved for the runner and the Job's own
+`spec.jobs.env` adds environment variables to the main container. Names
+matching `TF_*`, `KUBE_*` or `KUBERNETES_*`, and `HOME`, `TMPDIR` and
+`CHECKPOINT_DISABLE`, are reserved for the runner and the Job's own
 environment (`TF_IN_AUTOMATION`, `KUBE_NAMESPACE`, and so on): See
 [`spec.jobs.env` rejected names](../reference/environment.md#specjobsenv-rejected-names)
 for the full list of names the Job already sets.
 
-!!! warning "A reserved environment name is silently dropped"
+!!! warning "A reserved environment name is rejected"
 
-    An entry using a `TF_*` or `KUBE_*` name is dropped instead of
-    applied, with no error.
+    The webhook rejects an entry with a reserved name, on create and when
+    `spec.jobs` changes. If one gets past it (the webhook is down, or the
+    object predates the rule), the Job builder still leaves it out, so the
+    built-in value wins.
 
 ## Image pull secrets
 
@@ -123,9 +126,12 @@ it, is covered in [RBAC](../operator-guide/rbac.md).
 `spec.jobs.securityContext` sets the main container's `securityContext`. The
 container holds cloud credentials, so the webhook rejects `privileged: true`,
 `allowPrivilegeEscalation: true`, any `capabilities.add`,
-`readOnlyRootFilesystem: false`, a `seccompProfile` of `Unconfined`,
-`procMount: Unmasked`, `windowsOptions.hostProcess` and an explicit
-`runAsUser: 0` or `runAsNonRoot: false` on it, whatever else the policy sets.
+`readOnlyRootFilesystem: false`, a `seccompProfile` or `appArmorProfile` of
+`Unconfined`, `procMount: Unmasked`, `windowsOptions.hostProcess`, a
+`seLinuxOptions` type outside the baseline set (`container_t`,
+`container_init_t`, `container_kvm_t`, `container_engine_t`) or any SELinux
+`user` or `role`, and an explicit `runAsUser: 0` or `runAsNonRoot: false` on
+it, whatever else the policy sets.
 Every other field you set is applied on top of the controller's defaults (no
 privilege escalation, every capability dropped, a read-only root filesystem).
 `capabilities` always drops `ALL`, even when you supply a `capabilities`

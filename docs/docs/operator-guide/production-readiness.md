@@ -99,8 +99,10 @@ provide.
   burst of Jobs every half hour. The jitter spreads it by up to a tenth of
   the interval; set longer intervals if that is too much. See [Requeue
   intervals and schedules](../concepts/jobs/schedules.md).
-- [ ] **Job pods.** The runner's default request is 250m CPU and 512Mi, with a
-  2Gi memory limit and no CPU limit. A large plan needs more: set
+- [ ] **Job pods.** The runner's default request is 250m CPU and 2Gi memory, with a
+  2Gi memory limit and no CPU limit. The pod is Burstable, but its memory is
+  guaranteed, so the kubelet ranks it for eviction by usage above a request
+  that already equals the limit. A large plan needs more: set
   `spec.jobs.resources`. See [Tuning Jobs](../user-guide/job-tuning.md).
 
 ## Webhook certificates

@@ -417,8 +417,10 @@ reports every violation it finds at once.
     - The container and pod security contexts may not weaken the
       hardened defaults: no privileged mode, privilege escalation, added
       capabilities, writable root filesystem, unmasked `/proc`,
-      `runAsNonRoot: false`, `runAsUser: 0`, `Unconfined` seccomp profile
-      or Windows host process.
+      `runAsNonRoot: false`, `runAsUser: 0`, `Unconfined` seccomp or
+      AppArmor profile, a SELinux type outside the baseline set or a
+      SELinux user or role, or Windows host process. The pod context
+      may also set only the sysctls of the Pod Security safe set.
     - `lockTimeoutSeconds` must be less than `activeDeadlineSeconds`. When
       only one is set, it is compared with the other's built-in default
       (a 300 second lock timeout, a 3600 second deadline).

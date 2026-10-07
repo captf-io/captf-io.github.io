@@ -381,8 +381,10 @@ come from the controller at reconcile.
 - **Job policy.** `spec.jobs` may not weaken the hardened security context:
   no privileged container, privilege escalation, added capabilities,
   writable root filesystem, unmasked `/proc`, `runAsNonRoot: false`, UID 0,
-  `Unconfined` seccomp profile or Windows host process, in the container or
-  pod context. `lockTimeoutSeconds` must be less than
+  `Unconfined` seccomp or AppArmor profile, a SELinux type outside the
+  baseline set, a SELinux user or role, or Windows host process, in the
+  container or pod context (the pod context also limits sysctls to the Pod
+  Security safe set). `lockTimeoutSeconds` must be less than
   `activeDeadlineSeconds`; an unset one is compared with the other's built-in
   default. The check runs on create, and on update only when `spec.jobs`
   changed, never on a deleting object, so a stored policy cannot block a

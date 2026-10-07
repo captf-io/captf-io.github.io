@@ -197,7 +197,7 @@ Which fields a spec writer can change also differs by kind. A
   backups of each, the durable inputs, the plan key, the mirror, and a
   per-run Secret per running Job) and Leases (a run lease per object, a write
   lease per Cluster and a state lock per object). The default Job pod requests
-  250m CPU and 512Mi, sets a 2Gi memory limit and **no CPU limit**. If the
+  250m CPU and 2Gi memory, sets a 2Gi memory limit and **no CPU limit**. If the
   quota covers `limits.cpu`, add a `LimitRange` that defaults a CPU limit, or
   pods without one are refused (Kubernetes behavior). CAPTF has no
   quota-specific condition: a refusal appears as a reconcile error or a Job

@@ -141,7 +141,7 @@ machine's deadline without replacing it.
 | `spec.jobs.lockTimeoutSeconds` | `integer` | How long the runtime waits for the state lock, passed as `-lock-timeout`. **Default:** 300, applied at reconcile. **Range:** 0 to 3600. Must be less than `activeDeadlineSeconds`. |
 | `spec.jobs.serviceAccountName` | `string` | Overrides the runner ServiceAccount. **Default:** the controller creates `captf-runner`, bound to the static `captf-runner` ClusterRole. An override must exist and carry the label `captf.io/runner=true`, or no Job is created. **Range:** 1 to 253 characters. |
 | `spec.jobs.imagePullSecrets` | `[]object` | Pull secrets for the Job pod. They cover both the source image and the runner's init image. Each item is a Kubernetes `LocalObjectReference` (`name`). **Range:** 1 to 10 items. See [Kubernetes fields](#kubernetes-fields). |
-| `spec.jobs.resources` | `object` | Resource requests and limits of the main container. **Default:** requests of 250m CPU and 512Mi memory, a 2Gi memory limit and no CPU limit. See [Kubernetes fields](#kubernetes-fields). |
+| `spec.jobs.resources` | `object` | Resource requests and limits of the main container. **Default:** requests of 250m CPU and 2Gi memory, a 2Gi memory limit and no CPU limit. See [Kubernetes fields](#kubernetes-fields). |
 | `spec.jobs.env` | `[]object` | Environment variables added to the main container. Keyed by `name`. **Range:** 1 to 64 items. See [Kubernetes fields](#kubernetes-fields). |
 | `spec.jobs.securityContext` | `object` | Security context of the main container. Hardened defaults apply and the webhook rejects weakening it. See [Kubernetes fields](#kubernetes-fields). |
 | `spec.jobs.podSecurityContext` | `object` | Security context of the Job pod. See [Kubernetes fields](#kubernetes-fields). |
@@ -194,10 +194,10 @@ see the linked Kubernetes API reference for each.
 
 `spec.jobs.env`
 :   A list of [`EnvVar`](https://kubernetes.io/docs/reference/kubernetes-api/core/pod-v1/#EnvVar)
-    added to the main container (the one that runs your module). An entry
-    whose name starts with `TF_` or `KUBE_` is accepted but silently left
-    out of the Job, with no event: the runner and the Job own that
-    namespace. See
+    added to the main container (the one that runs your module). The webhook
+    rejects an entry whose name starts with `TF_`, `KUBE_` or `KUBERNETES_`,
+    or is `HOME`, `TMPDIR` or `CHECKPOINT_DISABLE`: the runner and the Job
+    own those names. The Job builder still leaves out any that get through. See
     [Job Environment](../environment.md#specjobsenv-rejected-names).
 
 `spec.jobs.resources`
@@ -214,17 +214,21 @@ see the linked Kubernetes API reference for each.
     `true`. `runAsNonRoot` is not defaulted. The container holds cloud
     credentials, so the webhook rejects `privileged: true`,
     `allowPrivilegeEscalation: true`, any `capabilities.add`,
-    `readOnlyRootFilesystem: false`, an `Unconfined` seccomp profile,
-    `procMount: Unmasked`, `windowsOptions.hostProcess: true`, and an
-    explicit `runAsUser: 0` or `runAsNonRoot: false`.
+    `readOnlyRootFilesystem: false`, an `Unconfined` seccomp or AppArmor
+    profile, `procMount: Unmasked`, `windowsOptions.hostProcess: true`, a
+    SELinux type outside the baseline set (`container_t`,
+    `container_init_t`, `container_kvm_t`, `container_engine_t`), any
+    SELinux `user` or `role`, and an explicit `runAsUser: 0` or
+    `runAsNonRoot: false`.
 
 `spec.jobs.podSecurityContext`
 :   A [`PodSecurityContext`](https://kubernetes.io/docs/reference/kubernetes-api/core/pod-v1/#PodSecurityContext)
     for the Job pod. The controller defaults `seccompProfile` to
     `RuntimeDefault` and `fsGroup` to the runner's UID (65532), so a
     non-root image user can read the 0440 credential files through the
-    group. The webhook applies the same seccomp, root and host-process
-    rules as for the container.
+    group. The webhook applies the same seccomp, AppArmor, SELinux, root and
+    host-process rules as for the container, and allows only the sysctls
+    of the Pod Security safe set.
 
 `spec.jobs.imagePullSecrets`
 :   A list of [`LocalObjectReference`](https://kubernetes.io/docs/reference/kubernetes-api/definitions/local-object-reference-v1/)

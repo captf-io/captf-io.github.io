@@ -211,15 +211,20 @@ an image built `FROM hashicorp/terraform` runs as root unless it sets
 
 Regardless of profile, the admission webhook rejects `privileged: true`,
 `allowPrivilegeEscalation: true`, any `capabilities.add`,
-`readOnlyRootFilesystem: false`, a `seccompProfile` of `Unconfined`,
-`procMount: Unmasked`, `windowsOptions.hostProcess` and an explicit
-`runAsUser: 0` or `runAsNonRoot: false` in `jobs.securityContext`, on every
+`readOnlyRootFilesystem: false`, a `seccompProfile` or `appArmorProfile` of
+`Unconfined`, `procMount: Unmasked`, `windowsOptions.hostProcess`, a
+`seLinuxOptions` type outside the Pod Security baseline set (`container_t`,
+`container_init_t`, `container_kvm_t`, `container_engine_t` or unset) or any
+SELinux `user` or `role`, and an explicit `runAsUser: 0` or
+`runAsNonRoot: false` in `jobs.securityContext`, on every
 object and template that carries a jobs policy (`spec.jobs`,
 `spec.defaults.jobs` on a `TerraformCluster`, and the same field on a
 `TerraformMachine`, `TerraformMachinePool` and all three `*Template` kinds),
 because that container holds the resolved identity's cloud credentials. Pod
 Security Admission remains the namespace-wide control for everything else a
-jobs policy does not set, such as host namespaces and volume types.
+jobs policy does not set, such as host namespaces and volume types. The pod
+security context carries the same rules, and additionally allows only the
+sysctls of the Pod Security safe set.
 
 These stricter rules apply on create and whenever the jobs policy changes.
 An existing object with an older, weaker policy still accepts unrelated
