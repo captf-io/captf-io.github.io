@@ -1,5 +1,5 @@
 ---
-date: 2026-10-02
+date: 2026-10-04 20:00:00
 slug: reference-cloud-modules
 title: Reference modules for five clouds
 description: "Reference modules for AWS, Google Cloud, Azure, OCI and OpenStack, plus a no-op set: what each creates, how they ship, and their status."

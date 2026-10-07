@@ -1,5 +1,5 @@
 ---
-date: 2026-10-06
+date: 2026-10-06 13:00:00
 slug: tfcapi-lint-action
 title: Lint your module in CI with one step
 description: "tfcapi-lint now ships as a signed container image and a GitHub Action: check a module and its image against the CAPTF contract on every pull request."

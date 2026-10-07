@@ -1,5 +1,5 @@
 ---
-date: 2026-10-06
+date: 2026-10-06 19:30:00
 slug: terraform-opentofu-state
 title: Terraform, OpenTofu and the 1 MiB Secret
 description: "Both runtimes keep CAPTF state in Kubernetes Secrets, but only Terraform splits it past 1 MiB. What that means and how to choose a runtime."

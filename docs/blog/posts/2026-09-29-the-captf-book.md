@@ -1,5 +1,5 @@
 ---
-date: 2026-09-29
+date: 2026-09-29 13:15:00
 slug: the-captf-book
 title: The CAPTF book is online
 description: "The CAPTF documentation is published at captf.io/docs: a book organized by reader, from the quick start to runbooks and a reference checked against the source."

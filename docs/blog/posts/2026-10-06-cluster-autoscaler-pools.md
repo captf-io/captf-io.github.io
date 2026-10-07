@@ -1,5 +1,5 @@
 ---
-date: 2026-10-06
+date: 2026-10-06 10:30:00
 slug: cluster-autoscaler-pools
 title: The Cluster Autoscaler on CAPTF machine pools
 description: "Run the Kubernetes Cluster Autoscaler against a CAPTF pool on AWS, Azure or OCI with the new autoscaler = external module setting."
