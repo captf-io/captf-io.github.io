@@ -1,0 +1,11 @@
+# clusterctl configuration for CAPTF, the Cluster API Provider Terraform.
+#
+#   clusterctl init --config https://captf.io/clusterctl.yaml --infrastructure terraform
+#   clusterctl init --config https://captf.io/clusterctl.yaml --infrastructure terraform:vX.Y.Z
+#
+# "latest" is resolved by clusterctl: the newest stable release for the
+# Cluster API contract. Name a version to install any tagged release.
+providers:
+- name: terraform
+  type: InfrastructureProvider
+  url: https://github.com/captf-io/cluster-api-provider-terraform/releases/latest/infrastructure-components.yaml
