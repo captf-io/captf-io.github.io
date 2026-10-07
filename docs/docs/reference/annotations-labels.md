@@ -211,6 +211,7 @@ apply. Unlike `status`, these annotations move with the Secrets.
 | --- | --- | --- | --- |
 | `captf.io/image` | annotation | Durable inputs Secret, applied Secret, per-run Secret | `spec.source.image` of that attempt or apply |
 | `captf.io/inputs-hash` | annotation | Durable inputs Secret, applied Secret, per-run Secret (and the state Secret and Jobs) | The inputs hash the files were rendered with |
+| `captf.io/unpullable-images` | annotation | Durable inputs Secret | JSON list (at most 3, oldest first) of image references a destroy, refresh, drift or restore Job could not pull. The next such Job skips them. A successful apply removes it |
 | `captf.io/job` | annotation | Durable inputs Secret, applied Secret | The apply Job the record belongs to |
 | `captf.io/image-digest` | annotation | Applied Secret only | The digest the image resolved to in the pod of the last successful apply. It always pairs with the applied files; the durable Secret no longer carries it |
 | `captf.io/may-have-applied` | annotation | Durable inputs Secret | `true` when the newest apply may have run its apply step: it newly failed after the step may have run (the result lists it, or there is no result and the runner started, or the pod is gone), or its Job vanished. The next attempt write removes it, and so does a successful restore. A destroy then renders this record |
@@ -239,6 +240,7 @@ apply. Unlike `status`, these annotations move with the Secrets.
 | `captf.io/approved-plan` | annotation | Job | The plan hash (`--expect-plan`) an apply Job was created to satisfy |
 | `captf.io/after-failed-apply` | annotation | Job | That the apply started while the newest apply had failed, so an earlier failure still counts and the apply waits for approval instead of being dropped |
 | `captf.io/after-interrupted-apply` | annotation | Job | The unconfirmed apply Job that this apply started after. Its success removes the `captf.io/unconfirmed-apply` record |
+| `captf.io/image-fallbacks` | annotation | Destroy, refresh, drift and restore Job | JSON list of the images the Job falls back to, in order, if its own image does not pull. Absent on the last candidate |
 | `captf.io/restore-serial` | annotation | Restore Job | The backup serial the Job pushes |
 | `captf.io/approval-hash` | annotation | Pool apply Job | The approval hash of a pool apply guarded for a change of the cluster's exports: the `spec.inputsHash` of the `ExportsChange` `TerraformPlan`, and the value of `--allow-deletes-hash` |
 | `captf.io/cluster-outputs-hash` | annotation | Pool apply Job | The hash of the cluster exports the apply renders |

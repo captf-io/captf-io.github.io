@@ -110,11 +110,20 @@ Notes:
 | `destroy` | The recorded inputs the state describes (see [Which record a destroy renders](../deletion/destroy-job.md#which-record-a-destroy-renders)) | No |
 | `restore` | None: a backend-only root and the backup chunks | No |
 
-Only `apply` and `plan` run the spec's image as written. Every other op runs
-the digest of the record it renders, when it has one: the applied record's
-digest (the pod's digest of the last successful apply). An attempt record has
-no digest, so an op that renders it runs the spec reference and emits
-`DigestUnknown`.
+Only `apply` and `plan` run the spec's image as written. Every other op (destroy,
+refresh, drift, restore) tries images in this order:
+
+1. the pinned digest of the record it runs (the applied record's digest, the
+   pod's digest of the last successful apply);
+2. that record's image tag;
+3. `spec.source.image`.
+
+Each later image is used only after the earlier one failed to pull for 2
+minutes (`captf.io/unpullable-images` on the durable Secret). A successful
+apply re-pins and clears the list. An attempt record has no digest, so an op
+that renders it starts at its tag, and `DigestUnknown` still fires when no
+digest is pinned. See [image pull
+failures](../../operator-guide/runbooks/job-failures.md#destroy-refresh-drift-and-restore-fall-back-to-another-image).
 
 !!! related "See also"
 

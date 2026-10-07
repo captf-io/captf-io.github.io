@@ -195,7 +195,7 @@ The outcome of the newest apply, plan or destroy Job, and the reason one waits
 or cannot start. A plan Job stands for the apply it plans. After one has
 completed the status is not `Unknown`, except while the next operation waits
 for a lease or an approval. A running apply keeps the last result. The three
-lease reasons are shared with [`DriftJobSucceeded`](#driftjobsucceeded) and
+lease reasons and `ImagePullFailed` are shared with [`DriftJobSucceeded`](#driftjobsucceeded) and
 [`RestoreJobSucceeded`](#restorejobsucceeded). To diagnose a failure, read
 `status.lastRun` and the Job's pod logs; see [Failing
 Jobs](../operator-guide/runbooks/job-failures.md).
@@ -209,7 +209,7 @@ Jobs](../operator-guide/runbooks/job-failures.md).
 | `False` | `DestructivePlanBlocked` | An apply stopped before a plan that deletes or replaces resources, and no approved `TerraformPlan` names exactly this plan. The message says what the apply would delete or replace, and names the `TerraformPlan` to approve with the command. After `clusterctl move`, a wait with no blocked Job has a message that starts `TerraformPlan <name> plans inputs hash ...` and emits no event. If the runner reported no plan, no `TerraformPlan` exists: the message says "The runner reported no plan to approve, so the apply plans again later", and the apply runs again after `RetryMax` (10 minutes). On a `TerraformCluster`, which includes a drift remediation, no apply of the inputs runs until the plan is approved or the inputs change. On a `TerraformMachinePool`, it is an apply of a change of the cluster's exports that stopped, and the plan (reason `ExportsChange`) binds the pool's approval hash (the inputs hash without `bootstrap_data`). The reason stays while the change waits. The pool keeps applying everything else with the exports of its last successful apply, and the condition reports that apply, `True`, again once the change is approved, or the exports change or return to the applied ones. A pool that cannot fall back to those exports waits for approval as a cluster does, and the message says why. See the [destructive-plan guard](../concepts/approvals/destructive-guard.md#machine-pools). |
 | `False` | `IdentityNotAllowed` | No Job could be created because the identity does not allow the namespace or is gone. Allow the namespace again, or set [`deletionPolicy: Retain`](../concepts/deletion/retain.md) on a deleting object. |
 | `False` | `ImageInvalid` | The runner reported an image-layout error: no `/captf/module` or a non-executable command. Rebuild the image to the [image contract](../module-author/image-contract.md). |
-| `False` | `ImagePullFailed` | The pod stayed in `ErrImagePull` or `ImagePullBackOff` past `activeDeadlineSeconds`. See [image pull failures](../operator-guide/runbooks/job-failures.md#image-pull-failures). |
+| `False` | `ImagePullFailed` | The pod stayed in `ErrImagePull` or `ImagePullBackOff` past `activeDeadlineSeconds`, or, for a destroy that still runs, its last fallback image cannot be pulled (the message names the image and the exits, Retain among them). See [image pull failures](../operator-guide/runbooks/job-failures.md#image-pull-failures). |
 | `False` | `InputsTooLarge` | The rendered root module and variables exceed what a Secret can carry, so no Job starts. See [size limits](../operator-guide/runbooks/size-limits.md). |
 | `False` | `JobDeadlineExceeded` | The Job hit `activeDeadlineSeconds`. See [deadlines](../concepts/jobs/deadlines.md). |
 | `False` | `JobPolicyInvalid` | The effective job policy, the object's own merged over the cluster defaults and the built-in defaults, gives a `lockTimeoutSeconds` that is not below `activeDeadlineSeconds`, so no Job starts. See [the merged-policy check](../concepts/jobs/deadlines.md#the-merged-policy-check). |
@@ -256,6 +256,7 @@ backup, or a restore that waits for a lease, is reported here too. See
 | --- | --- | --- |
 | `True` | `StateRestored` | The restore Job pushed the backup into the backend. |
 | `False` | `RestoreBackupNotFound` | The annotation names no existing backup, or is not a serial. No Job starts. Pick a serial from `status.stateBackups`. |
+| `False` | `ImagePullFailed` | The restore Job's last image cannot be pulled. It is set while the Job runs, and the Job fails at its deadline. |
 | `False` | `RestoreFailed` | The restore Job failed. CAPTF does not retry it for the same serial, in `status.lastRestoredSerial`. To retry, remove the annotation, wait for `lastRestoredSerial` to clear and set it again. |
 | `Unknown` | `WaitingForClusterOperation` | A machine's or pool's restore waits for its `TerraformCluster`'s operation to finish. |
 | `Unknown` | `WaitingForMachineOperations` | A `TerraformCluster`'s restore waits for the operations of its machines and pools in flight. |
@@ -343,6 +344,7 @@ The outcome of the newest refresh or drift Job. See [Drift](../user-guide/drift.
 | --- | --- | --- |
 | `True` | `DriftChecked` | The newest refresh or drift Job succeeded. |
 | `False` | `DriftJobDeadlineExceeded` | The drift Job hit `activeDeadlineSeconds`. Raise the deadline. |
+| `False` | `ImagePullFailed` | A refresh or drift Job's last image cannot be pulled. It is set while the Job runs, and the Job fails at its deadline. See [image pull failures](../operator-guide/runbooks/job-failures.md#destroy-refresh-drift-and-restore-fall-back-to-another-image). |
 | `False` | `DriftJobFailed` | The drift Job failed. The check retries with backoff. Read the Job's logs. |
 | `Unknown` | `DriftJobRunning` | A drift Job runs. |
 | `Unknown` | `DriftNotChecked` | No drift check has completed, or drift checks are disabled. |

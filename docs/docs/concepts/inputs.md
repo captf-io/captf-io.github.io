@@ -375,7 +375,7 @@ The durable Secret (the attempt record) and the applied Secret each hold
 exactly two data keys, `main.tf.json` and `terraform.tfvars.json`, plus
 annotations recording the execution context: `captf.io/image`,
 `captf.io/identity`, `captf.io/identity-kind`, `captf.io/inputs-hash` and
-`captf.io/job`. Only the applied Secret carries `captf.io/image-digest`. The
+`captf.io/job`. Only the applied Secret carries `captf.io/image-digest`. The durable Secret also records `captf.io/unpullable-images`, the images a non-apply Job could not pull. The
 durable Secret also carries `captf.io/may-have-applied` and the other
 bookkeeping annotations listed in [Annotations, Labels and
 Finalizers](../reference/annotations-labels.md#on-the-durable-inputs-secret).

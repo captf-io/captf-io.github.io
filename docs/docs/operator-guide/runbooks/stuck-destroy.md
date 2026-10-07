@@ -22,6 +22,13 @@ This page walks through recovering: back up what the destroy would remove,
 clean up the cloud resources another way, then remove the object's
 finalizer by hand, or use Retain to keep the state.
 
+A destroy stuck only because the registry garbage collected the pinned
+digest falls back on its own to the applied tag and then `spec.source.image`
+(see [image pull
+failures](job-failures.md#destroy-refresh-drift-and-restore-fall-back-to-another-image)).
+On the last image the condition reads `ImagePullFailed` and its message names
+Retain.
+
 !!! danger "Removing the finalizer deletes the only record of your cloud resources"
 
     Removing the finalizer garbage-collects the state Secrets, the state backups and the durable and applied inputs Secrets through their owner references, which are **the only record of the live cloud resources**. Back them up, or un-own them, before you do that.
@@ -50,6 +57,8 @@ at least these four cases, which are the ones a destroy cannot get past:
   `ApplyJobSucceeded` is `False`).
 - The destroy cannot be rendered because the inputs Secrets (durable and
   applied) are gone (`ApplyJobSucceeded` is `False`/`DestroyFailed`).
+- The module image cannot be pulled at all: the condition reads
+  `ApplyJobSucceeded=False`/`ImagePullFailed` and no other image is left.
 - The destroy cannot start because the identity no longer allows the
   namespace or was deleted (`IdentityNotAllowed`), or the runner
   credentials cannot be prepared (the `Deleting` condition says the destroy
@@ -183,7 +192,9 @@ docker run --rm --entrypoint /captf/runtime \
   -var-file=terraform.tfvars.json
 ```
 
-- `<image>@<digest>` is the repository from `backup-applied.yaml`'s
+- `<image>@<digest>`: the digest may have been garbage collected (check
+  `captf.io/unpullable-images` on the durable Secret). Then use the
+  `captf.io/image` tag, or the spec image, instead. It is the repository from `backup-applied.yaml`'s
   `captf.io/image` annotation (drop any `:tag`) plus `@` and the digest
   from its `captf.io/image-digest` annotation.
 - `<labels>` must be the same HCL object the Job itself would pass, or

@@ -39,8 +39,13 @@ pieces behave.
   clear. The controller sets it before it creates a Job, persists it before
   the Job exists, and clears it once no Job is active, also while paused. A
   Job the Job cache has not shown yet keeps the annotation: the controller
-  checks the API server and the live run lease before it clears. See [The
-  clusterctl move block](../lifecycle.md#the-clusterctl-move-block).
+  checks the API server and the live run lease before it clears. A
+  destroy, refresh, drift or restore Job whose module image cannot be pulled
+  for 2 minutes is deleted while the object is paused, so it cannot hold the
+  annotation until its deadline; the operation starts again, on the next
+  image, once the object is unpaused. See [The
+  clusterctl move block](../lifecycle.md#the-clusterctl-move-block) and
+  [image pull failures](../../operator-guide/runbooks/job-failures.md#destroy-refresh-drift-and-restore-fall-back-to-another-image).
 
 ## What moves
 

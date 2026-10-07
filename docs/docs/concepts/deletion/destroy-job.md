@@ -42,8 +42,10 @@ refreshes or checks drift.
   identity recorded with the record it renders, not the current
   spec, so changing a template cannot change how an existing machine is torn
   down. The Job runs the digest of that record: the applied record has one,
-  an attempt record has none, so a destroy that renders it runs the spec image
-  and emits `DigestUnknown`.
+  an attempt record has none, so a destroy that renders it starts from its
+  image tag and emits `DigestUnknown`. If the pinned digest cannot be pulled,
+  the destroy falls back to the tag and then `spec.source.image` (see
+  [Jobs: operations](../jobs/operations.md#what-each-op-reads-and-writes)).
 
 ## Which record a destroy renders
 

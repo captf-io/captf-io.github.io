@@ -40,6 +40,7 @@ holds:
 | `captf.io/job` | The apply Job the record belongs to |
 | `captf.io/may-have-applied` | Set when the newest apply may have run its apply step and failed or vanished; see [Which record a destroy renders](../deletion/destroy-job.md#which-record-a-destroy-renders) |
 | `captf.io/applied` | The applied marker, set after the first successful apply |
+| `captf.io/unpullable-images` | JSON list (at most 3) of images a destroy, refresh, drift or restore Job could not pull; cleared by a successful apply |
 
 It also keeps the hub annotations other features use: pending and partial
 pool exports, `captf.io/unconfirmed-apply` and `applied-cluster-outputs.json`.

@@ -89,11 +89,12 @@ event is in [Conditions](conditions.md).
 
 | Reason | Type | On | Fires when | Action |
 | --- | --- | --- | --- | --- |
-| `JobCreated` | Normal | any provisioned kind | A Job started. The note gives the operation, attempt, image and why. | None. |
+| `JobCreated` | Normal | any provisioned kind | A Job started. The note gives the operation, attempt, image and why, and says when the Job falls back to another image. | None. |
 | `JobSucceeded` | Normal | any provisioned kind | An apply, destroy, refresh or drift Job succeeded. | None. |
 | `JobFailed` | Warning | any provisioned kind | A Job failed, or an apply or destroy could not start. | Read the Job logs and `status.lastRun`. See the [job failures runbook](../operator-guide/runbooks/job-failures.md). |
 | `JobDeadlineExceeded` | Warning | any provisioned kind | A Job hit `activeDeadlineSeconds`. | Find the slow step in the runner events, then raise the deadline or fix the module. See the [slow jobs runbook](../operator-guide/runbooks/slow-jobs.md). |
 | `JobInterrupted` | Warning | any provisioned kind | Something outside CAPTF stopped the Job, such as a node drain, an eviction or a deletion. CAPTF retries without backoff. | None if it was planned. Otherwise check node pressure and preemption. |
+| `ImagePullFallback` | Warning | any provisioned kind | A destroy, refresh, drift or restore Job could not pull its module image for 2 minutes (for example a digest garbage collected by the registry). The Job was deleted and the operation starts again on the next image: the applied tag, then `spec.source.image`. | None if the next image works. Exclude digests from registry lifecycle rules. See [image pull failures](../operator-guide/runbooks/job-failures.md#destroy-refresh-drift-and-restore-fall-back-to-another-image). |
 | `StuckJobDeleted` | Warning | any provisioned kind | A Job that could never start, because its per-run Secret is missing, was deleted so it can start again. | None. Repeats mean something removes the Secret. |
 
 ## Ordering and leases
