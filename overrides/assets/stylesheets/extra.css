@@ -1617,6 +1617,13 @@
     border-bottom: none;
 }
 
+/* No scrollbar gutter on a page that fits the window (gutter.js), where it
+ * would be an empty strip beside the banner, header and footer. Pages that
+ * scroll keep the theme's stable gutter. */
+html.captf-fits {
+    scrollbar-gutter: auto;
+}
+
 /* 14. Diagrams --------------------------------------------------------------
  * The theme draws each Mermaid diagram in a closed shadow root, so CSS here
  * styles only the box around it and the --md-mermaid-* colours (custom

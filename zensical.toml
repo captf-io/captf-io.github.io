@@ -27,8 +27,9 @@ edit_uri = "edit/main/docs/"
 copyright = "Copyright &copy; The CAPTF Authors. Apache-2.0."
 site_dir = "site"
 extra_css = ["assets/stylesheets/extra.css"]
-# Table break points, the site nav, doc tabs and Mermaid settings (see each file).
-extra_javascript = ["assets/javascripts/tables.js", "assets/javascripts/sitenav.js", "assets/javascripts/doctabs.js", "assets/javascripts/mermaid.js"]
+# Table break points, the site nav, doc tabs, Mermaid settings and the
+# scrollbar gutter (see each file).
+extra_javascript = ["assets/javascripts/tables.js", "assets/javascripts/sitenav.js", "assets/javascripts/doctabs.js", "assets/javascripts/mermaid.js", "assets/javascripts/gutter.js"]
 
 # The book organized by reader and task: one tab per reader.
 nav = [
