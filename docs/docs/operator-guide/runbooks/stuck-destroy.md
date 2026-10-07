@@ -1,6 +1,6 @@
 ---
 title: "Runbook: Stuck Destroy Job"
-description: "Recover from a destroy Job that cannot succeed: back up state, clean up cloud resources, then remove or abandon the finalizer."
+description: "Recover from a destroy Job that cannot succeed: back up state, clean up cloud resources, then Retain or remove the finalizer."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 1, 2026"
 git_creation_date_iso: "2026-09-29"
@@ -13,14 +13,14 @@ subtitle: "Unstick a destroy that hangs"
 
 # Stuck Destroy
 
-CAPTF has no skip-destroy annotation, only an abandon one (see
-[Abandon instead](#abandon-instead)): if a `destroy` Job keeps failing, the
+CAPTF has no skip-destroy switch, only `spec.deletionPolicy: Retain` (see
+[Retain instead](#retain-instead)): if a `destroy` Job keeps failing, the
 object stays with `ApplyJobSucceeded=False`/`DestroyFailed` (so `Ready=False`)
 and the controller retries with backoff forever. This applies the same way
 to a `TerraformCluster`, a `TerraformMachine` and a `TerraformMachinePool`.
 This page walks through recovering: back up what the destroy would remove,
 clean up the cloud resources another way, then remove the object's
-finalizer by hand.
+finalizer by hand, or use Retain to keep the state.
 
 !!! danger "Removing the finalizer deletes the only record of your cloud resources"
 
@@ -38,11 +38,11 @@ before removing anything by hand.
     A stuck destroy on a control-plane machine also blocks KubeadmControlPlane/RKE2ControlPlane remediation, scale and upgrade until it is resolved.
 
 
-## Abandon instead
+## Retain instead
 
-`captf.io/abandon-infrastructure` releases a deleting `TerraformCluster`,
-`TerraformMachine` or `TerraformMachinePool` whose destroy cannot run. It
-covers four cases:
+`spec.deletionPolicy: Retain` releases a deleting `TerraformCluster`,
+`TerraformMachine` or `TerraformMachinePool` without a destroy. It covers
+at least these four cases, which are the ones a destroy cannot get past:
 
 - The deletion is held because the state is missing or unreadable
   (`StateReadable` is `False`).
@@ -55,24 +55,43 @@ covers four cases:
   credentials cannot be prepared (the `Deleting` condition says the destroy
   waits for its credentials).
 
-Set it to the object's `metadata.uid`; any other value is ignored. The
-controller removes the finalizer without a destroy and records an
-`InfrastructureAbandoned` `Warning` event naming the cause. Whatever the
-module created keeps running, untracked, and the state backups are deleted
-with the object, so back up what you need and clean the cloud resources up
-yourself (steps 2 and 4 below). The controller checks the annotation before
-restore and destroy, so it also works while a restore is pending.
+Patch the field on the deleting object; updates are allowed while it is
+being deleted:
 
-An object whose state reads and whose destroy can start is destroyed as
-usual, even with the annotation set: it takes effect once that destroy
-fails or turns out unable to start. For the commands, see [deleting while
-state is unreadable](state-unreadable.md#deleting-while-state-is-unreadable).
+```sh
+kubectl patch <kind> <name> -n <ns> --type merge \
+  -p '{"spec":{"deletionPolicy":"Retain"}}'
+```
+
+The controller waits for any running Job, then removes the finalizer
+without a destroy and emits an `InfrastructureRetained` event. It keeps the
+state Secrets, the state backups and the durable inputs Secret, removes
+their owner references so they are not garbage-collected, and labels each
+`captf.io/retained-from-uid=<uid>`. Whatever the module created keeps
+running, with nothing managing it, so you either clean the cloud resources
+up yourself (step 4 below) or adopt them later: a new object of the same
+kind, namespace and name with `spec.adoptRetainedState: true` takes the
+retained state over. See [Retain and
+Adopt](../../concepts/deletion/retain.md#adopting-retained-state). Because the
+state and backups survive, backing them up first (step 2) is not required
+for Retain. Retain is decided before restore and destroy, so it also works
+while a restore is pending.
+
+Retain does not wait for a destroy to fail: with `Retain` set, even a
+deletion whose destroy could succeed runs no destroy. For machines created
+from an immutable `TerraformMachineTemplate`, set the policy on the
+`TerraformCluster` (`spec.defaults.deletionPolicy` or `spec.deletionPolicy`)
+or patch the `TerraformMachine` itself, because changing the template rolls
+the machines. To discard the retained state instead, see [discarding
+retained state](../../concepts/deletion/retain.md#discarding-retained-state).
+For more on a held delete, see [deleting while state is
+unreadable](state-unreadable.md#deleting-while-state-is-unreadable).
 
 ## Terminating namespaces
 
 A deleting object needs credentials only when it runs a Job. With the
 namespace terminating, an object that never applied finishes at once, and
-a held one can be abandoned. A destroy or restore waiting on credentials
+a held one can be retained. A destroy or restore waiting on credentials
 shows the `Deleting` condition message `The <op> Job waits for its
 credentials: …` and retries.
 
@@ -252,11 +271,11 @@ To recover:
   4): without the rendered `main.tf.json` and `terraform.tfvars.json`,
   running the module by hand needs reconstructing them, but the state
   lists every resource the module created. Instead of removing
-  the finalizer by hand, [abandon](#abandon-instead) releases the object
+  the finalizer by hand, [Retain](#retain-instead) releases the object
   without a destroy and records the cause. `status.source.image` and
   `status.source.imageDigest` still name the image the last Job ran. Then
   remove the finalizer (step 5). **Removing the finalizer without cleaning
-  up the cloud resources first abandons them**: they stay in the cloud,
+  up the cloud resources first leaves them running**: they stay in the cloud,
   unmanaged, with nothing in Kubernetes recording that they ever existed.
 
 !!! related "See also"

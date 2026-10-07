@@ -399,6 +399,10 @@
     "icon": "lucide/circle-pause",
     "subtitle": "Why a deletion is held"
   },
+  "concepts/deletion/retain.md": {
+    "icon": "lucide/archive",
+    "subtitle": "Delete, keep, adopt later"
+  },
   "operator-guide/runbooks/stuck-destroy.md": {
     "icon": "lucide/bug",
     "subtitle": "Unstick a destroy that hangs"

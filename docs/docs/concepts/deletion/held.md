@@ -1,6 +1,6 @@
 ---
 title: "Held Deletions and Why They Wait"
-description: Understand why CAPTF holds a deletion when state is lost or unreadable, what ends the hold, and how the abandon annotation works.
+description: "Understand why CAPTF holds a deletion when state is lost or unreadable, what ends the hold, and how deletionPolicy Retain releases it."
 tags:
   - Troubleshooting
 git_creation_date_localized: "October 1, 2026"
@@ -20,7 +20,8 @@ controller cannot tell what the module created, and removing the finalizer
 would leave that infrastructure running with nothing tracking it. So it
 holds the deletion instead: no destroy runs, the finalizer stays, and the
 state backups stay with it. This page covers what triggers a hold, what
-ends one, and the abandon annotation, which ends it without a destroy.
+ends one, and `spec.deletionPolicy: Retain`, which ends it without a
+destroy and without losing anything.
 
 ## Ever applied
 
@@ -57,7 +58,7 @@ applied.
 | `StateInconsistent` | The chunks do not form one complete state | A missing or duplicated chunk, or a stray Secret in the set |
 
 The condition message adds how to leave the hold: the restore annotation,
-and the abandon annotation with this object's UID. Each reason's cause and
+or `spec.deletionPolicy: Retain`. Each reason's cause and
 repair are in [Unreadable State](../../operator-guide/runbooks/state-unreadable.md).
 
 `StateLocked` is **not** a hold. The state reads, so the destroy starts, and
@@ -68,8 +69,8 @@ fails. See [Stale State Lock](../../operator-guide/runbooks/stale-lock.md).
 
 ```mermaid
 flowchart TD
-    A[Deleting, state lost or unreadable] --> B{abandon annotation<br/>equals the UID?}
-    B -- yes --> X[Abandon: cleanup, finalizer off,<br/>InfrastructureAbandoned Warning]
+    A[Deleting, state lost or unreadable] --> B{deletionPolicy<br/>Retain?}
+    B -- yes --> X[Retain: keep state, backups and inputs,<br/>finalizer off, InfrastructureRetained]
     B -- no --> C{restore-state names<br/>a complete backup?}
     C -- yes --> R[Restore Job]
     R --> S{state reads again?}
@@ -78,9 +79,10 @@ flowchart TD
     C -- no --> H[Held: requeue every minute]
 ```
 
-The order inside one pass matters: the controller checks the abandon
-annotation **before** the restore and the destroy decisions, so a pending
-restore that cannot start does not hide it.
+The order inside one pass matters: the controller checks the deletion
+policy **before** the restore and the destroy decisions, right after
+waiting for a Job that still runs, so neither a pending restore that
+cannot start nor a destroy that keeps failing hides it.
 
 ### Restore, then destroy
 
@@ -93,55 +95,44 @@ is never gated, and is not retried for the same serial after a failure.
 See [Backups and restore](../secret-management/backups.md#restore) and the
 [State Restore runbook](../../operator-guide/runbooks/state-restore.md).
 
-### Abandon
+### Retain
 
-`captf.io/abandon-infrastructure=<metadata.uid>` removes the finalizer
-without a destroy. The value must equal the object's UID exactly; any other
-value is ignored, and a held object says so in its `StateReadable` message.
-The annotation releases a deletion in these cases, and the controller
-records which one in the event:
-
-| Case | How the controller sees it | Cause in the event |
-| --- | --- | --- |
-| Held on the state | `StateReadable` is `False` | `StateReadable <reason>` |
-| The last destroy failed | `status.lastRun` is a destroy and `ApplyJobSucceeded` is `False` (also after a restore) | `the last destroy failed: ApplyJobSucceeded <reason>` |
-| The durable inputs are gone | `ApplyJobSucceeded=False`/`DestroyFailed` with no Job, because the destroy cannot be rendered | `the destroy cannot start: …` |
-| The identity does not allow the namespace | `ApplyJobSucceeded=False`/`IdentityNotAllowed` | `the destroy cannot start: …` |
-| The credentials cannot be prepared | The `Deleting` message says the destroy waits for its credentials | `the destroy cannot start: it waits for its credentials: …` |
-
-!!! warning "An object whose state reads and whose destroy can start is destroyed anyway"
-
-    Even with the annotation set. The annotation would only skip a teardown that may well succeed. It takes effect once that destroy fails or turns out unable to start. The cases that are decided only when the destroy is about to start (the last three) are checked where it stops, not up front.
-
-
-What the abandon does:
-
-- Runs the same [cleanup](cleanup.md) as a successful destroy: the state
-  Secrets, the lock Lease, the durable inputs, the plan key, the leases and
-  the mirror ownership go. **Back up the state first** if you need it: the
-  [stuck destroy runbook](../../operator-guide/runbooks/stuck-destroy.md#2-back-up-the-state-and-inputs-secrets)
-  shows how. The backups are not deleted by cleanup but are garbage
-  collected with the object.
-- Waits while a Job still holds a live run lease (five-second retries),
-  like every other release.
-- Emits a `Warning` event `InfrastructureAbandoned`: `Removed finalizer <name>
-  without a destroy (<cause>): captf.io/abandon-infrastructure names this
-  object's uid. Whatever the module created keeps running and is no longer
-  managed; the state backups go with the object`.
-- Leaves the infrastructure running and untracked. Clean it up through the
-  cloud provider.
-
-!!! danger "Abandoning leaves the infrastructure running and untracked"
-
-    Whatever the module created keeps running and is no longer managed, and the state backups go with the object. Back up the state first if you need it.
+Setting `spec.deletionPolicy: Retain` on the deleting object removes the
+finalizer without a destroy. Unlike a restore it needs no backup, and
+unlike stripping the finalizer by hand it loses nothing: the state Secrets
+that exist, the state backups and the durable inputs are kept, without
+owner references, labeled `captf.io/retained-from-uid` with the object's
+UID, for a later object of the same name to adopt. See [Retain and
+Adopt](retain.md).
 
 ```sh
-uid=$(kubectl get <kind> -n <ns> <name> -o jsonpath='{.metadata.uid}')
-kubectl annotate <kind> -n <ns> <name> captf.io/abandon-infrastructure="$uid"
+kubectl patch <kind> <name> -n <ns> --type merge -p '{"spec":{"deletionPolicy":"Retain"}}'
 ```
+
+It releases more than a hold on the state:
+
+| Case | How the controller sees it |
+| --- | --- |
+| Held on the state | `StateReadable` is `False` |
+| The last destroy failed | `status.lastRun` is a destroy and `ApplyJobSucceeded` is `False` (also after a restore) |
+| The durable inputs are gone | `ApplyJobSucceeded=False`/`DestroyFailed` with no Job, because the destroy cannot be rendered |
+| The identity does not allow the namespace | `ApplyJobSucceeded=False`/`IdentityNotAllowed` |
+| The credentials cannot be prepared | The `Deleting` message says the destroy waits for its credentials |
+
+The messages of all five name `spec.deletionPolicy: Retain`. Retain waits
+while a Job still holds a live run lease (five-second retries), like every
+other release, then emits a `Normal` event `InfrastructureRetained`
+counting what it kept.
+
+!!! warning "Retain leaves the infrastructure running"
+
+    Nothing is destroyed. Whatever the module created keeps running and
+    costing money until an object adopts it, or you delete it through the
+    cloud provider.
 
 !!! related "See also"
 
     - [Unreadable State](../../operator-guide/runbooks/state-unreadable.md#deleting-while-state-is-unreadable).
-    - [Stuck Destroy: abandon instead](../../operator-guide/runbooks/stuck-destroy.md#abandon-instead).
-    - [Other manual actions](../approvals/other-manual-actions.md#abandon-an-object).
+    - [Retain and Adopt](retain.md).
+    - [Stuck Destroy: retain instead](../../operator-guide/runbooks/stuck-destroy.md#retain-instead).
+    - [Other manual actions](../approvals/other-manual-actions.md#retain-an-object).

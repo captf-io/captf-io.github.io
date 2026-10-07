@@ -81,8 +81,8 @@ If the identity stops allowing a namespace, because you narrowed
 namespace's mirror on the next reconcile and the objects there report
 `IdentityAllowed=False`/`NamespaceNotAllowed`. A destroy that needs the
 identity then waits with `ApplyJobSucceeded=False`/`IdentityNotAllowed` and
-requeues; the way out is to allow the namespace again or to [abandon the
-infrastructure](../../operator-guide/runbooks/stuck-destroy.md#abandon-instead).
+requeues; the way out is to allow the namespace again or to [retain the
+infrastructure](../../operator-guide/runbooks/stuck-destroy.md#retain-instead).
 
 When the last object using the mirror is removed, cleanup removes its own
 owner reference and deletes the mirror. You cannot delete an identity while

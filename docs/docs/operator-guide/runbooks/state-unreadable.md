@@ -1,6 +1,6 @@
 ---
 title: "Runbook: Unreadable Terraform State"
-description: Read the StateReadable reason and fix lost, locked, encrypted, corrupt or inconsistent state, including held deletions and abandon.
+description: "Read the StateReadable reason and fix lost, locked, encrypted, corrupt, inconsistent or retained state, including held deletions and Retain."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 1, 2026"
 git_creation_date_iso: "2026-09-29"
@@ -34,8 +34,8 @@ kubectl get <kind> -n <ns> <name> \
 ```
 
 Also check for a `Warning` event: a reason that turns `False` emits one,
-named either `StateLost`, `StateLocked` or, for the three read errors
-below, `StateUnreadable`.
+named either `StateLost`, `StateLocked`, `RetainedStateFound` or, for the
+three read errors below, `StateUnreadable`.
 
 ```sh
 kubectl events --for <kind>/<name> -n <ns>
@@ -62,28 +62,30 @@ Two ways out:
   `status.stateBackups`, as in the [state restore runbook](state-restore.md).
   On a held delete the restore runs first, and the normal destroy follows
   once the state reads again.
-- **Abandon the infrastructure.** Set `captf.io/abandon-infrastructure` to
-  the object's `metadata.uid`. The controller checks it before restore
-  and destroy, so it works even while a restore is pending. It removes the
-  finalizer without running a destroy and emits a `Warning` event,
-  `InfrastructureAbandoned`, naming the cause.
+- **Retain the infrastructure.** Set `spec.deletionPolicy: Retain`. The
+  controller decides it before restore and destroy, so it works even while
+  a restore is pending. It removes the finalizer without running a destroy,
+  keeps the state Secrets, the state backups and the durable inputs under a
+  `captf.io/retained-from-uid` label, and emits a `Normal` event,
+  `InfrastructureRetained`.
 
-!!! danger "Abandoning leaves the infrastructure running and untracked"
+!!! danger "Retain leaves the infrastructure running"
 
-    The infrastructure keeps running and is no longer tracked by anything in Kubernetes; delete it through the cloud provider. The state backups are garbage-collected with the object, so copy out anything you want to keep first (see the [stuck destroy runbook](stuck-destroy.md#2-back-up-the-state-and-inputs-secrets)).
+    The infrastructure keeps running and nothing in Kubernetes manages it until a new object adopts the retained state; otherwise delete it through the cloud provider. Whatever state and backups survive are kept, so no backup is needed first. If the state itself is lost, the retained Secrets describe no usable state; see the [total state loss runbook](total-state-loss.md#route-2-retain-then-recreate).
 
 ```sh
-uid=$(kubectl get <kind> -n <ns> <name> -o jsonpath='{.metadata.uid}')
-kubectl annotate <kind> -n <ns> <name> captf.io/abandon-infrastructure="$uid"
+kubectl patch <kind> <name> -n <ns> --type merge \
+  -p '{"spec":{"deletionPolicy":"Retain"}}'
 ```
 
-The value must equal the UID exactly; the controller ignores any other
-value, so a stale annotation copied from another object does nothing.
-
-A held delete is one of four cases the annotation releases; the [stuck
-destroy runbook](stuck-destroy.md#abandon-instead) lists all of them. An
-object whose state reads and whose destroy can start is destroyed as
-usual, even with the annotation set.
+Updates are allowed while the object is being deleted. A held delete is one
+of several cases `Retain` releases; the [stuck destroy
+runbook](stuck-destroy.md#retain-instead) lists all of them. Unlike a
+release that waits for a destroy to fail, `Retain` skips the destroy even
+where it could succeed. To manage the infrastructure again, create an
+object of the same kind, namespace and name with
+`spec.adoptRetainedState: true`; see [Retain and
+Adopt](../../concepts/deletion/retain.md#adopting-retained-state).
 
 ### The applied marker
 
@@ -207,6 +209,31 @@ inconsistent state is never backed up, so restore the newest backup from
 before the inconsistency appeared with the
 [state restore runbook](state-restore.md); the reader's own limits are at
 [Chunking and size caps](../../concepts/state.md#chunking-and-size-caps).
+
+## RetainedStateFound
+
+`False`. The object's state Secrets, state backups or durable inputs carry
+`captf.io/retained-from-uid` with another object's UID: an earlier object
+of the same kind, namespace and name was deleted with
+`spec.deletionPolicy: Retain`, and the infrastructure it managed may still
+be running. CAPTF never adopts it silently, so no Job runs and none of
+those Secrets is owned, backed up or read into status.
+
+Decide whether this object should manage that infrastructure:
+
+- **Adopt it.** Set `spec.adoptRetainedState: true`. The controller removes
+  the label, owns the Secrets from the next reconcile, and carries on from
+  the retained state.
+- **Start afresh.** Delete the retained Secrets, which leaves the old
+  infrastructure running and unmanaged:
+
+    ```sh
+    kubectl delete secret -n <ns> -l captf.io/retained-from-uid=<uid>
+    ```
+
+Deleting the object instead removes its finalizer at once and leaves the
+retained Secrets untouched. See [Retain and
+Adopt](../../concepts/deletion/retain.md#a-recreated-object-holds).
 
 ## Confirm it worked
 

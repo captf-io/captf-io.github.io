@@ -1,5 +1,5 @@
 ---
-description: "Every annotation, label and finalizer CAPTF reads or sets: the keys you set to restore or abandon, its own bookkeeping keys and the captf_tags modules receive."
+description: "Every annotation, label and finalizer CAPTF reads or sets: the keys you set to restore a state, its own bookkeeping keys and the captf_tags modules receive."
 git_creation_date_localized: "September 29, 2026"
 git_revision_date_localized: "October 2, 2026"
 git_creation_date_iso: "2026-09-29"
@@ -12,8 +12,9 @@ subtitle: "Keys CAPTF reads and sets"
 
 # Annotations, Labels and Finalizers
 
-CAPTF reads a few keys that you set to restore a state or release a stuck
-deletion. (Plans are approved on a `TerraformPlan`, not with an annotation.) It writes many more for its own bookkeeping, owns
+CAPTF reads a few keys that you set to restore a state. (Plans are approved on a
+`TerraformPlan`, and a stuck deletion is released with `spec.deletionPolicy:
+Retain`, not with an annotation.) It writes many more for its own bookkeeping, owns
 three finalizers, and honors several Cluster API and clusterctl keys. This
 page lists all of them, grouped by who uses them.
 
@@ -22,7 +23,6 @@ page lists all of them, grouped by who uses them.
 | Key | Put it on | Value | Effect |
 | --- | --- | --- | --- |
 | `captf.io/restore-state` | `TerraformCluster`, `TerraformMachine`, `TerraformMachinePool` | Serial from `status.stateBackups` | Pushes that backup back as the state |
-| `captf.io/abandon-infrastructure` | A deleting `Terraform*` object | The object's `metadata.uid` | Removes the finalizer without a destroy |
 | `captf.io/variables` | A `ConfigMap` or `Secret` | `true` | Allows it as a `variablesFrom` source |
 | `captf.io/runner` | A `ServiceAccount` | `true` | Allows it as a custom runner account |
 
@@ -64,42 +64,6 @@ kubectl annotate terraformcluster <name> -n <namespace> \
 <namespace> -o jsonpath='{.status.stateBackups}'`. See the [state restore
 runbook](../operator-guide/runbooks/state-restore.md) and [Backups and
 Restore](../concepts/secret-management/backups.md#restore).
-
-### `captf.io/abandon-infrastructure`
-
-Releases a deletion that cannot finish, without running a destroy.
-
-| | |
-| --- | --- |
-| Kinds | `TerraformCluster`, `TerraformMachine`, `TerraformMachinePool`, while deleting |
-| Value | The object's `metadata.uid`. Any other value is ignored |
-| Removed by CAPTF | No. The object is deleted with it |
-
-The annotation applies when the deletion is held because the state is
-missing or unreadable, the last destroy failed, or the destroy cannot
-start: the durable inputs are gone, the identity no longer allows the
-namespace or no longer exists, or the runner credentials cannot be
-prepared. CAPTF then runs its normal cleanup, removes the finalizer
-without a destroy, and records an `InfrastructureAbandoned` `Warning`
-event naming the cause. An object whose state reads and whose destroy can
-start is destroyed as usual, even with the annotation set.
-
-!!! danger "Abandoning leaves the infrastructure running and untracked"
-
-    CAPTF does not destroy anything. Whatever the module created keeps
-    running and costing money, and the state backups are deleted with the
-    object. Back up what you need and clean up the resources yourself.
-
-```sh
-kubectl annotate terraformcluster <name> -n <namespace> \
-  captf.io/abandon-infrastructure="$(kubectl get terraformcluster <name> \
-  -n <namespace> -o jsonpath='{.metadata.uid}')"
-```
-
-See [Held Deletions](../concepts/deletion/held.md#abandon) and the [stuck
-destroy runbook](../operator-guide/runbooks/stuck-destroy.md#abandon-instead).
-Prefer this key to removing the finalizer by hand, which skips cleanup;
-see [Stripping a Finalizer by Hand](../concepts/deletion/manual-finalizer.md).
 
 ### `captf.io/variables`
 
@@ -187,8 +151,17 @@ integration API: their keys and values are frozen for `v1alpha1`.
 | `captf.io/state-backup-set` | annotation | Backup chunk Secrets | Groups the chunks of one backup |
 | `captf.io/state-backup-chunk` | annotation | Backup chunk Secrets | The chunk's index within its set |
 | `captf.io/state-backup-chunks` | annotation | Backup chunk Secrets | The set's total chunk count |
+| `captf.io/retained-from-uid` | label | State Secrets, backup chunk Secrets, the durable inputs Secret | That `deletionPolicy: Retain` kept the Secret when its object was deleted; the value is that object's `metadata.uid`. Such a Secret has no owner reference |
 
 The `captf.io/inputs-hash` key is an annotation, not a label.
+
+`captf.io/retained-from-uid` is the one key here you may act on. A new
+object of the same kind, namespace and name finds the Secrets that carry
+it and holds with `StateReadable=False`/`RetainedStateFound` until you set
+its `spec.adoptRetainedState: true`, which removes the label. To discard
+retained state instead, delete the Secrets it selects:
+`kubectl delete secret -n <namespace> -l captf.io/retained-from-uid=<uid>`.
+See [Retain and Adopt](../concepts/deletion/retain.md).
 
 ### On leases and the identity mirror
 
@@ -254,7 +227,9 @@ cleaned up its Secrets.
 Nothing external depends on an identity directly, so a delete webhook
 protects an identity that is still in use instead. When a deletion is
 stuck, see [Held Deletions](../concepts/deletion/held.md); the finalizer is
-removed by the controller, or by [`captf.io/abandon-infrastructure`](#captfioabandon-infrastructure).
+removed by the controller, after a destroy or, with
+[`spec.deletionPolicy: Retain`](../concepts/deletion/retain.md), without
+one.
 Each kind's page under [Resources](resources/README.md) names its
 finalizer.
 

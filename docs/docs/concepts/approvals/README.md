@@ -33,7 +33,7 @@ The pages:
 5. [Operating the gates](operating.md): the `TerraformPlan` lifecycle,
    conditions, events, retries, who can approve and a tiered auto-approval
    policy.
-6. [Other manual actions](other-manual-actions.md): restores, abandoning
+6. [Other manual actions](other-manual-actions.md): restores, retaining
    an object, and the fixes that are not approvals.
 7. [Limits](limits.md): what an approval does and does not promise.
 

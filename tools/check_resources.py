@@ -70,6 +70,7 @@ COMMON_PAGE = "common-fields.md"
 # as jobs. Below these, a kind's page need not go: common-fields.md does.
 COMMON = [
     "spec.source", "spec.identityRef", "spec.jobs", "spec.variables", "spec.variablesFrom",
+    "spec.deletionPolicy", "spec.adoptRetainedState",
     "status.initialization", "status.activeJob", "status.lastRun", "status.lastDriftCheck",
     "status.lastRefresh", "status.pendingRefreshes", "status.source", "status.stateBackups",
 ]

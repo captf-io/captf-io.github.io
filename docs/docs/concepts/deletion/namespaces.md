@@ -28,8 +28,8 @@ sorts a deleting object by whether it needs a Job at all.
 | Situation | Needs a Job | Result |
 | --- | --- | --- |
 | The object never applied and has no state | No | The finalizer comes off at once |
-| Held on lost or unreadable state | No | Held; [abandon](held.md#abandon) releases it |
-| Abandoned | No | The finalizer comes off at once |
+| Held on lost or unreadable state | No | Held; [Retain](held.md#retain) releases it |
+| Retained | No | The finalizer comes off at once |
 | A destroy of readable state | Yes | Waits, as below |
 | A restore of a held state | Yes | Waits, as below |
 
@@ -54,8 +54,8 @@ the error and controller-runtime retries it with backoff. A rejected create
 gives the run and cluster leases back, so nothing else waits on a Job that
 does not exist.
 
-Either wait is a case the abandon annotation releases, with the cause `it
-waits for its credentials`. Where the namespace deletion has already removed
+Either wait is a case `Retain` releases: it needs no Job, so setting
+`spec.deletionPolicy: Retain` removes the finalizer at once. Where the namespace deletion has already removed
 the state Secrets, the object is held, not released:
 `status.initialization.provisioned` still marks it as applied, so the
 missing state reads as `StateLost`, not as nothing to destroy.

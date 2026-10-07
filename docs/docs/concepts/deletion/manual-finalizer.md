@@ -18,8 +18,9 @@ Removing the finalizer yourself (`kubectl patch ... remove
 /metadata/finalizers`) skips the controller entirely: no destroy, no
 cleanup, no event. Sometimes that is the last resort, for example after a
 destroy that can never succeed and a manual cloud cleanup. Prefer the
-[abandon annotation](held.md#abandon), which releases the same cases but
-runs the cleanup and records why. This page lists what a bare strip
+[`Retain`](held.md#retain), which releases the same cases but
+deletes only the run data, keeps the state, its backups and the inputs
+for a later adoption, and records it in an event. This page lists what a bare strip
 causes, so you can decide what to preserve first. The commands are in the
 [stuck destroy runbook](../../operator-guide/runbooks/stuck-destroy.md).
 
@@ -70,6 +71,6 @@ Two of those bite later:
 
 !!! related "See also"
 
-    - [Held deletions](held.md#abandon).
+    - [Held deletions](held.md#retain) and [Retain and Adopt](retain.md).
     - [Cleanup and garbage collection](cleanup.md).
     - [Stuck Destroy](../../operator-guide/runbooks/stuck-destroy.md).

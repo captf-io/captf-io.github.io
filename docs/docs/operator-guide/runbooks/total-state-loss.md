@@ -1,5 +1,5 @@
 ---
-description: "Recover an object whose Terraform state is lost with no backup: rebuild the state from a workstation, or abandon and recreate it with import blocks."
+description: "Recover an object whose Terraform state is lost with no backup: rebuild the state from a workstation, or retain and recreate it with import blocks."
 git_creation_date_localized: "October 1, 2026"
 git_revision_date_localized: "October 1, 2026"
 git_creation_date_iso: "2026-10-01"
@@ -42,7 +42,7 @@ flowchart TD
     C -- never --> N[Import blocks work on the first apply]
     C -- yes --> H[StateLost: every Job is held]
     H --> R1[Route 1: rebuild the state<br/>from a workstation]
-    H --> R2[Route 2: abandon and recreate<br/>with import blocks]
+    H --> R2[Route 2: retain, then recreate<br/>with import blocks]
 ```
 
 "Ever applied" means **any** of: `status.initialization.provisioned`, the
@@ -193,52 +193,58 @@ the state. If it is a pool or cluster, pause its Cluster
 7. **Unpause** the Cluster, if you paused it, and confirm: see [Confirm it
     worked](#confirm-it-worked).
 
-## Route 2: abandon and recreate
+## Route 2: retain, then recreate
 
 Use this when you cannot rebuild the state, or the object cannot continue. It
-releases the object without a destroy, recreates it, and has the new object's
-**first apply adopt the existing infrastructure through `import` blocks**. It
-needs a module written for it; see [Write import blocks that are safe to leave
+releases the object without a destroy, clears what Retain keeps, recreates the
+object, and has the new object's **first apply adopt the existing
+infrastructure through `import` blocks**. It needs a module written for it;
+see [Write import blocks that are safe to leave
 in](#write-import-blocks-that-are-safe-to-leave-in).
 
-!!! danger "Abandoning deletes the state and leaves the infrastructure running"
+!!! danger "Retain leaves the infrastructure running"
 
-    The abandon deletes the state, the durable inputs and the plan key, and
-    the infrastructure keeps running with nothing managing it until the new
-    object adopts it. A wrong import id adopts the wrong resource.
+    The infrastructure keeps running with nothing managing it until the new
+    object adopts it through the imports. A wrong import id adopts the wrong
+    resource.
 
-1. **Unpause the Cluster.** A paused object never runs a delete, so an
-    abandon does nothing while the Cluster is paused.
+1. **Unpause the Cluster.** A paused object never runs a delete, so Retain
+    does nothing while the Cluster is paused.
 2. **Delete the dependents first** where there are any. A `TerraformCluster`
     with machines or pools of its own waits at `DeletionBlocked` and is not
-    released until they are gone, even with the abandon annotation. See [Order
+    released until they are gone, even with `Retain` set. See [Order
     and finalizers](../../concepts/deletion/order.md#the-cluster-waits-for-its-machines).
-3. **Delete the object and abandon it.** The annotation is honored for a
-    deletion held on `StateLost`:
+3. **Set Retain and delete the object.** `Retain` is decided before the
+    deletion is held on `StateLost`, so the finalizer comes off without a
+    destroy:
 
     ```sh
+    kubectl patch <kind> <name> -n <ns> --type merge \
+      -p '{"spec":{"deletionPolicy":"Retain"}}'
     kubectl delete <kind> -n <ns> <name> --wait=false
-    uid=$(kubectl get <kind> -n <ns> <name> -o jsonpath='{.metadata.uid}')
-    kubectl annotate <kind> -n <ns> <name> captf.io/abandon-infrastructure="$uid"
     ```
 
-    The controller removes the finalizer, runs its cleanup and emits an
-    `InfrastructureAbandoned` event. The infrastructure keeps running. See
-    [Held deletions](../../concepts/deletion/held.md#abandon).
-4. **Wait for the leftovers to go**, before you reuse the name. The abandon
-    deletes the state, the durable inputs and the plan key. The state backups
-    are removed by garbage collection once the old object is gone:
+    The controller removes the finalizer and emits an
+    `InfrastructureRetained` event. The infrastructure keeps running, and the
+    durable inputs and any backups are kept, labeled
+    `captf.io/retained-from-uid`. See [Held
+    deletions](../../concepts/deletion/held.md#retain).
+4. **Delete the retained Secrets**, before you reuse the name. They describe
+    no usable state, and a recreated object would otherwise hold on
+    `RetainedStateFound`. Adopting them would only hold again on `StateLost`,
+    since there is no state. This matters because the state suffix and the
+    backup selectors depend on the namespace, kind and name, **not on the
+    UID**, so a new object with the same name finds them:
 
     ```sh
-    kubectl get secret -n <ns> -l captf.io/state-backup=true
+    kubectl get secret -n <ns> -l captf.io/retained-from-uid
+    kubectl delete secret -n <ns> -l captf.io/retained-from-uid=<uid>
     ```
 
-    Wait until none of the old object's backups remain. This matters because
-    the state suffix depends on the namespace, kind and name, **not on the UID**,
-    so a new object with the same name has the same suffix and finds the old
-    object's backups. Any backup still present makes the new object read as
-    "ever applied" with no state, so it is held on `StateLost` again. Delete any
-    such backup by hand.
+    Use the old object's UID, which the `InfrastructureRetained` event and the
+    label show. This leaves the infrastructure running and unmanaged. See
+    [discarding retained
+    state](../../concepts/deletion/retain.md#discarding-retained-state).
 5. **Recreate the object** with the same spec plus the variables that drive the
     imports (below). Reusing the name keeps the Cluster API links; a new name
     needs the links changed. See [Cluster API objects](#cluster-api-objects).

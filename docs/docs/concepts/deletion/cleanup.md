@@ -19,11 +19,11 @@ a finalizer that comes off early.
 
 ## The controller's cleanup
 
-Cleanup runs in exactly three situations: after a successful destroy, on a
-deletion with nothing to destroy, and on [abandon](held.md#abandon). It
-never runs while a state Secret may still describe live resources, and it
-waits (five-second retries) while a Job of the object still holds a live
-run lease. Its steps, in order:
+Cleanup runs in exactly two situations: after a successful destroy, and
+on a deletion with nothing to destroy. It never runs while a state Secret
+may still describe live resources, and it waits (five-second retries)
+while a Job of the object still holds a live run lease. Its steps, in
+order:
 
 1. **The state Secrets**, every chunk, deleted one by one (the manager role
    has no `deletecollection`), then the **state lock Lease**
@@ -41,9 +41,16 @@ run lease. Its steps, in order:
    this was its last owner, with a `MirrorRemoved` event.
 6. **The finalizer**, in the same patch that writes the status.
 
+[Retain](held.md#retain) runs a different set: it keeps the state
+Secrets, the state backups and the durable inputs Secret, taking their
+owner references away and labeling them `captf.io/retained-from-uid`, and
+only then runs steps 3 to 6 after deleting the state lock Lease (see
+[Retain and Adopt](retain.md#what-retain-keeps)). It waits for a live run
+lease the same way.
+
 A destroy then reports a `Destroyed` event ("Infrastructure destroyed;
-state and inputs removed") and `FinalizerRemoved`; an abandon reports the
-`InfrastructureAbandoned` warning; a no-state deletion reports only
+state and inputs removed") and `FinalizerRemoved`; a Retain reports the
+`InfrastructureRetained` event; a no-state deletion reports only
 `FinalizerRemoved`. The object's per-object metric series go with the
 finalizer.
 
@@ -57,7 +64,7 @@ when the object does, after the finalizer:
 | State backups `captf-state-backup-<suffix>-<serial>` | The object, not as a controller | Deliberately not deleted by cleanup; the finalizer keeps them for a held deletion |
 | Jobs and their pods | The object, as a controller | Also pruned earlier by the history limits |
 | Per-run Secrets | Their Job | Normally deleted much earlier, when the Job finishes and is bookkept |
-| Anything left of the state chunks, durable inputs or plan key | The object | Only when cleanup did not run: a stripped finalizer |
+| Anything left of the state chunks, durable inputs or plan key | The object | Only when cleanup did not run: a stripped finalizer. After a Retain the kept Secrets have no owner reference, so nothing collects them |
 
 !!! note "Owner references never delay the owner's deletion"
 
@@ -66,7 +73,7 @@ when the object does, after the finalizer:
 
 ## What nothing deletes
 
-- **The cloud resources**, after an abandon or a stripped finalizer.
+- **The cloud resources**, after a Retain or a stripped finalizer.
 - **The credential source Secret** and the `TerraformClusterIdentity`. A
   `variablesFrom` ConfigMap or Secret. A Cluster Cluster API still owns.
 - **The runner ServiceAccount and RoleBinding**, until the namespace is

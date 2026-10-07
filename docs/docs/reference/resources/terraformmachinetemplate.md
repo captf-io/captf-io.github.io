@@ -88,6 +88,8 @@ field of the same name:
 | `spec.template.spec.variablesFrom` | list | Variable sources for each machine. See [`spec.variablesFrom`](terraformmachine.md#spec). |
 | `spec.template.spec.drift` | object | Drift check policy of each machine. See [Drift](terraformmachine.md#drift). |
 | `spec.template.spec.remediation` | object | Remediation policy of each machine. See [Remediation](terraformmachine.md#remediation). |
+| `spec.template.spec.deletionPolicy` | string | Deletion policy of each machine. Usually left unset, so machines follow their `TerraformCluster`, whose policy can change without a rollout. See [Deletion policy](common-fields.md#deletion-policy). |
+| `spec.template.spec.adoptRetainedState` | boolean | Lets each machine adopt the state an earlier machine of its name retained. See [Deletion policy](common-fields.md#deletion-policy). |
 | `spec.template.spec.providerID` | string | Must be empty. The controller assigns a provider ID to each machine. See [Provider ID](terraformmachine.md#provider-id). |
 
 The fields under `spec.template.spec` are documented once, on

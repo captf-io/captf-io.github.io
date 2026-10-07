@@ -34,6 +34,25 @@ compatibility guarantee (see [`README.md`](README.md#versioning)
   equal the approving user and lets only the manager change the phase label.
   A guarded apply that blocks now also reports its plan in the runner result,
   so it fails closed when the plan key cannot be read.
+- `spec.deletionPolicy` (`Destroy` | `Retain`) and `spec.adoptRetainedState`
+  on `TerraformCluster`, `TerraformMachine` and `TerraformMachinePool`,
+  and `spec.defaults.deletionPolicy` on `TerraformCluster`. `Retain`
+  removes the finalizer without a destroy and keeps the state Secrets,
+  the state backups and the durable inputs, unowned and labeled
+  `captf.io/retained-from-uid`; it also releases a held deletion. A
+  same-name object holds on retained state with `StateReadable`
+  `False`/`RetainedStateFound` until `spec.adoptRetainedState: true`.
+  New events `InfrastructureRetained`, `RetainedStateFound` and
+  `RetainedStateAdopted`. See
+  [Retain and Adopt](../../../concepts/deletion/retain.md).
+- `TerraformCluster.spec.defaults.remediation` and
+  `spec.defaults.membershipRefreshIntervalSeconds`, and an `action` in
+  `spec.defaults.drift` (now a `DriftPolicy`), which pools inherit before
+  the cluster's own `spec.drift.action`. Operational policy inherits own,
+  then `spec.defaults`, then the cluster's own field, then the built-in
+  default ([the inheritance rule](../../../concepts/kinds.md#the-inheritance-rule)).
+  Machines and pools watch their `TerraformCluster`.
+
 - Machinepool role, including native autoscaling (additive
   within v1alpha1; `machinepool.md`, `README.md` "Roles and CAPI
   mapping"): the v1 controller now reconciles `TerraformMachinePool`.
@@ -354,6 +373,10 @@ compatibility guarantee (see [`README.md`](README.md#versioning)
   metric `captf_destructive_plan_approvals_consumed_total` are gone, and so
   is the controller removing an approval once the apply succeeded. You approve
   a plan by setting `spec.approved` on its `TerraformPlan`.
+- The `captf.io/abandon-infrastructure` annotation and the
+  `InfrastructureAbandoned` event: `spec.deletionPolicy: Retain` releases
+  the same deletions without deleting the state.
+
 - `jobs.backoffLimit` (Jobs always get `backoffLimit: 0`) and
   `jobs.ttlSecondsAfterFinished` (Jobs never get a TTL): the controller
   owns retries, and backoff, digest pinning and conditions are derived

@@ -132,6 +132,8 @@ Job-running kinds are documented on
 | `spec.jobs` | object | Job policy: deadline, lock timeout, resources, service account, security context and history limits. See [Jobs](common-fields.md#jobs). **Mutable.** |
 | `spec.variables` | object | Inline module variables, a JSON object. See [Variables](common-fields.md#variables). **Mutable.** |
 | `spec.variablesFrom` | array | ConfigMaps and Secrets that supply module variables, at most 16. See [Variable sources](common-fields.md#variable-sources). **Mutable.** |
+| `spec.deletionPolicy` | string | `Destroy` or `Retain`: whether deleting the cluster destroys its infrastructure or keeps it, with its state, for a later adoption. **Default:** `Destroy`; the cluster's own `spec.defaults` do not apply to it. Machines and pools without a policy of their own or in `spec.defaults` inherit it. See [Deletion policy](common-fields.md#deletion-policy). **Mutable.** |
+| `spec.adoptRetainedState` | boolean | Adopt the state an earlier `TerraformCluster` of this name retained. See [Deletion policy](common-fields.md#deletion-policy). **Mutable.** |
 | `spec.controlPlaneEndpoint` | object | The API server endpoint. See [Control-plane endpoint](#control-plane-endpoint). |
 | `spec.drift` | object | Drift detection policy. See [Drift](#drift). **Mutable.** |
 | `spec.applyPolicy` | string | When a change is applied. See [Apply policy](#apply-policy). **Default:** `Automatic`. **Mutable.** |
@@ -203,9 +205,14 @@ and [Manual approval](../../concepts/approvals/manual-approval.md).
 
 `spec.defaults` holds values the cluster's `TerraformMachine` and
 `TerraformMachinePool` objects inherit field by field: a value a machine
-or pool sets wins, an unset one comes from here. The values never apply
-to the `TerraformCluster` itself, and there is no `source` because every
-role names its own image.
+or pool sets wins, an unset one comes from here, and where the
+`TerraformCluster` has a field of the same name (`identityRef`,
+`drift.action`, `deletionPolicy`) an unset default falls back to that
+field before the built-in default. The values never apply to the
+`TerraformCluster` itself. Module inputs (`source`, `variables`,
+`variablesFrom`) and `adoptRetainedState` are never inherited: every role
+names its own image. See [the inheritance
+rule](../../concepts/kinds.md#the-inheritance-rule).
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -213,8 +220,18 @@ role names its own image.
 | `spec.defaults.identityRef` | object | The identity of machines and pools that set no `identityRef`. **Default:** `spec.identityRef`. Same shape as [Identity reference](common-fields.md#identity-reference). |
 | `spec.defaults.identityRef.name` | string | The name of the `TerraformClusterIdentity`. |
 | `spec.defaults.jobs` | object | A Job policy merged field by field under each machine's or pool's own `jobs`. Same type as `spec.jobs`; see [Jobs](common-fields.md#jobs). It is validated like `spec.jobs`. |
-| `spec.defaults.drift` | object | A drift policy merged field by field under each machine's or pool's own `drift`. It has no `action`: a machine always reports, and a pool sets its own. |
+| `spec.defaults.drift` | object | A drift policy merged field by field under each machine's or pool's own `drift`. |
 | `spec.defaults.drift.intervalSeconds` | integer | **Default:** the manager's `--drift-default-interval`. **Range:** 0 or more. `0` disables a machine's drift checks but not a pool's, which then uses the manager default. |
+| `spec.defaults.drift.action` | string | The drift action of pools that set none. **Default:** `spec.drift.action`, else `Report`. **Allowed values:** `Report`, `Remediate`. Machines ignore it: a machine's drift is always reported. |
+| `spec.defaults.remediation` | object | A remediation policy merged field by field under each machine's own `remediation`. Pools have none. Same shape as a machine's [Remediation](terraformmachine.md#remediation). |
+| `spec.defaults.remediation.annotateMachine` | boolean | Whether machines that do not set it annotate their `Machine` for remediation. A machine's own `false` wins. |
+| `spec.defaults.remediation.unhealthyThreshold` | integer | **Range:** 1 to 100. **Default:** 3. |
+| `spec.defaults.remediation.healthCheckIntervalSeconds` | integer | **Range:** 60 to 86400. **Default:** 300. |
+| `spec.defaults.membershipRefreshIntervalSeconds` | integer | The membership refresh interval of pools that set none. **Range:** 15 to 86400. **Default:** 60. Machines have none. |
+| `spec.defaults.deletionPolicy` | string | The deletion policy of machines and pools that set none. **Default:** `spec.deletionPolicy`, else `Destroy`. **Allowed values:** `Destroy`, `Retain`. See [Deletion policy](common-fields.md#deletion-policy). |
+
+Machines and pools watch their `TerraformCluster`, so a change here
+reaches them at once, not at their next periodic reconcile.
 
 See [Templates and ClusterClass](../../user-guide/clusterclass.md) and
 [Identities](../../user-guide/identities.md) for the usual setup.
@@ -384,9 +401,14 @@ reports every violation it finds at once.
 - `spec.controlPlaneEndpoint` must set both `host` and `port`, or neither.
   `host` is 1 to 512 characters and `port` is 1 to 65535.
 - `spec.applyPolicy` must be `Automatic` or `Manual`.
-- `spec.drift.action` must be `Report` or `Remediate`.
-  `spec.drift.intervalSeconds` and `spec.defaults.drift.intervalSeconds`
-  must be 0 or more.
+- `spec.drift.action` and `spec.defaults.drift.action` must be `Report`
+  or `Remediate`. `spec.drift.intervalSeconds` and
+  `spec.defaults.drift.intervalSeconds` must be 0 or more.
+- `spec.deletionPolicy` and `spec.defaults.deletionPolicy` must be
+  `Destroy` or `Retain`.
+- `spec.defaults.remediation.unhealthyThreshold` must be 1 to 100,
+  `spec.defaults.remediation.healthCheckIntervalSeconds` 60 to 86400, and
+  `spec.defaults.membershipRefreshIntervalSeconds` 15 to 86400.
 - `spec.jobs` and `spec.defaults.jobs` are validated only when they
   change, so an older policy never blocks a finalizer patch:
     - The container and pod security contexts may not weaken the
@@ -408,9 +430,10 @@ reports every violation it finds at once.
   at most 100.
 
 **Defaulting.** The CRD declares no defaults. The controller applies
-`Automatic` for `spec.applyPolicy`, `Report` for `spec.drift.action` and
-the manager's `--drift-default-interval` for `spec.drift.intervalSeconds`
-at reconcile; the stored object stays as you wrote it.
+`Automatic` for `spec.applyPolicy`, `Report` for `spec.drift.action`,
+`Destroy` for `spec.deletionPolicy` and the manager's
+`--drift-default-interval` for `spec.drift.intervalSeconds` at reconcile;
+the stored object stays as you wrote it.
 
 Deleting a `TerraformCluster` is always admitted. On a deleting object the
 Job policy rules are skipped, so its finalizer stays removable.
@@ -439,8 +462,11 @@ refresh and drift Jobs on the interval in `spec.drift`; see
 On delete, the controller holds the destroy while any machine or pool
 of the cluster still exists (`DeletionBlocked`), then runs a destroy Job
 and removes the finalizer. A missing or unreadable state, or a failed
-destroy, holds the deletion until you restore the state or abandon the
-object. See [Deletion](../../concepts/deletion/README.md) and
+destroy, holds the deletion until you restore the state or set
+`spec.deletionPolicy: Retain`. With `Retain` no destroy runs: the
+finalizer comes off and the state, its backups and the durable inputs
+stay for a later adoption. See [Deletion](../../concepts/deletion/README.md),
+[Retain and Adopt](../../concepts/deletion/retain.md) and
 [Deletion order](../../concepts/lifecycle.md#deletion-order).
 
 !!! related "See also"

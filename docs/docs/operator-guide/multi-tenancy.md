@@ -86,7 +86,7 @@ variables and read-only files.
 - **Revocation.** Drop a namespace from `allowedNamespaces` and the manager
   deletes the mirror there, whatever still references it, and starts no new
   Job for the namespace's objects. A destroy waits, with `IdentityNotAllowed`,
-  until access returns, or the object is abandoned. See [Revoke
+  until access returns, or the object is retained. See [Revoke
   access](../user-guide/identities.md#revoke-access).
 - **The mirror is a Secret the tenant's workloads can read.** Anyone with
   `get` on Secrets in the namespace can read the credentials. Scope the
@@ -142,10 +142,10 @@ subject. See [Custom ServiceAccounts](rbac.md#custom-serviceaccounts-and-the-run
 Approval is Kubernetes RBAC, by design. An approval is a patch of a
 `TerraformPlan` (`spec.approved`), so it is authorized by who may `patch`
 `terraformplans`, not by any right on the target. The manual-action
-annotations (`captf.io/restore-state`, `captf.io/abandon-infrastructure`) are
+annotation (`captf.io/restore-state`) and `spec.deletionPolicy` are
 authorized by who may `patch` the object, and the webhooks do not restrict
-them. Whoever holds `patch` on a `TerraformCluster` can edit its spec and set
-those annotations.
+them. Whoever holds `patch` on a `TerraformCluster` can edit its spec, set
+`spec.deletionPolicy` and set that annotation.
 
 `create` on `terraformplans` equals approve, because the webhook accepts a plan
 created approved (`clusterctl move` creates plans again). Grant it only to the

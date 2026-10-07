@@ -130,6 +130,8 @@ The fields embedded from the shared workspace spec are documented in depth on
 | `spec.jobs` | object | Tuning of the Jobs that run the module. See [Jobs](common-fields.md#jobs). **Mutable.** **Default:** merged field by field over the cluster's `spec.defaults.jobs`, then the built-in per-field defaults. |
 | `spec.variables` | object | Inline module variables, a JSON object. See [Variables](common-fields.md#variables). **Mutable.** A change re-applies the pool. Wins over `spec.variablesFrom`. |
 | `spec.variablesFrom` | list | ConfigMaps and Secrets that supply module variables. See [Variable sources](common-fields.md#variable-sources). **Mutable.** |
+| `spec.deletionPolicy` | string | `Destroy` or `Retain`: whether deleting the pool destroys its group or keeps it, with its state, for a later adoption. **Default:** the cluster's `spec.defaults.deletionPolicy`, else the `TerraformCluster`'s `spec.deletionPolicy`, else `Destroy`. See [Deletion policy](common-fields.md#deletion-policy). **Mutable.** |
+| `spec.adoptRetainedState` | boolean | Adopt the state an earlier `TerraformMachinePool` of this name retained. See [Deletion policy](common-fields.md#deletion-policy). **Mutable.** |
 | `spec.providerID` | string | The scaling group's provider ID. See [Provider IDs](#provider-ids). |
 | `spec.providerIDList` | list of strings | The provider IDs of every non-terminated member. See [Provider IDs](#provider-ids). |
 | `spec.drift` | object | How often to check for drift and what to do about it. See [Drift](#drift). **Mutable.** |
@@ -158,7 +160,7 @@ See [Drift](../../user-guide/drift.md) for the task guide and
 | Field | Type | Description |
 | --- | --- | --- |
 | `spec.drift.intervalSeconds` | integer | Seconds between drift checks. **Mutable.** **Default:** the cluster's `spec.defaults.drift.intervalSeconds` when positive, else the manager's `--drift-default-interval` (30 minutes; see [Manager Flags](../manager-flags.md)). **Range:** 1 or more. |
-| `spec.drift.action` | string | What CAPTF does when a check finds changes. **Mutable.** **Default:** `Report`. **Allowed values:** `Report` records the difference in the `DriftDetected` condition only; `Remediate` applies the pool's current inputs to remove it. |
+| `spec.drift.action` | string | What CAPTF does when a check finds changes. **Mutable.** **Default:** the cluster's `spec.defaults.drift.action`, else the `TerraformCluster`'s own `spec.drift.action`, else `Report`. **Allowed values:** `Report` records the difference in the `DriftDetected` condition only; `Remediate` applies the pool's current inputs to remove it. |
 
 A pool's drift cannot be disabled, so `0` is rejected for
 `spec.drift.intervalSeconds`, and an inherited `0` from the cluster's
@@ -176,7 +178,7 @@ scaling change would never register.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `spec.membershipRefreshIntervalSeconds` | integer | Seconds between `apply -refresh-only` runs that pick up members joining or leaving the group between applies. **Optional.** **Mutable.** **Default:** 60 when unset or 0. **Range:** 15 to 86400. |
+| `spec.membershipRefreshIntervalSeconds` | integer | Seconds between `apply -refresh-only` runs that pick up members joining or leaving the group between applies. **Optional.** **Mutable.** **Default:** when unset or 0, the cluster's `spec.defaults.membershipRefreshIntervalSeconds`, else 60. **Range:** 15 to 86400. |
 
 The schema minimum of 15 means `0` is never a valid explicit value, so it
 always reads as unset. The controller also refreshes right after every apply.
@@ -403,7 +405,10 @@ come from the controller at reconcile.
   membership refreshes on `spec.membershipRefreshIntervalSeconds`.
 - **Delete.** Nothing blocks the deletion. The controller runs a destroy Job
   from the stored inputs and removes the finalizer once it succeeds, even if
-  the `MachinePool` or `Cluster` no longer exists. See
+  the `MachinePool` or `Cluster` no longer exists. With
+  `spec.deletionPolicy: Retain` it runs no destroy and keeps the group and
+  its state for a later adoption; see [Retain and
+  Adopt](../../concepts/deletion/retain.md). See
   [The reconcile lifecycle](../../concepts/lifecycle.md#deletion-order).
 
 !!! related "See also"

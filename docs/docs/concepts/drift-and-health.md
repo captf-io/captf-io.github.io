@@ -94,11 +94,13 @@ corrected, per the object's drift action, `Report` or `Remediate`:
 - **`Remediate`** additionally re-applies the object's current inputs to
   remove the drift.
 
-Only a `TerraformCluster`'s own `spec.drift.action` and a
-`TerraformMachinePool`'s own `spec.drift.action` (never inherited from
-the cluster's `spec.defaults.drift`, which has no action field at all)
-can select `Remediate`. A `TerraformMachine`'s drift policy has no action
-field either, and is always `Report`: a machine's instance is immutable
+A `TerraformCluster` selects `Remediate` with its own
+`spec.drift.action`. A `TerraformMachinePool` takes its own
+`spec.drift.action`, else the cluster's `spec.defaults.drift.action`,
+else the `TerraformCluster`'s own `spec.drift.action`, else `Report`
+([the inheritance rule](kinds.md#the-inheritance-rule)). A
+`TerraformMachine`'s drift policy has no action field, ignores an
+inherited one, and is always `Report`: a machine's instance is immutable
 infrastructure, replaced by a Cluster API rollout, not reconciled in
 place by a re-apply.
 

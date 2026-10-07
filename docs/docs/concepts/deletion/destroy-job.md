@@ -61,7 +61,7 @@ A live object prepares its runner credentials (the identity check, the
 credential mirror and the runner ServiceAccount and RoleBinding) on every
 pass. A deleting object does it only when a Job is about to start
 (`deletionCredentials`). A deletion that needs no Job, such as an object
-that never applied or one released by abandon, therefore never waits on
+that never applied or one released by Retain, therefore never waits on
 credentials. Why this matters in a terminating namespace is on [that
 page](namespaces.md).
 
@@ -75,8 +75,7 @@ the first condition that is not `True`:
   for its credentials: <condition> is <status> (<reason>)`, naming
   `IdentityAllowed`, `CredentialsMirrored` or `RunnerRBACReady`.
 
-Both retry every 30 seconds. Both are among the cases the [abandon
-annotation](held.md#abandon) releases.
+Both retry every 30 seconds. Both are among the cases [Retain](held.md#retain) releases.
 
 ## Results and retries
 
@@ -101,7 +100,7 @@ always hangs must reach the cap. See [Failing Jobs](../../operator-guide/runbook
     A destroy that can never succeed stays at
     `ApplyJobSucceeded=False`/`DestroyFailed` and `Ready=False`, and
     [`CAPTFDestroyStuck`](../../reference/alerts.md#captfdestroystuck)
-    fires. The way out is to fix the cause, to [abandon](held.md#abandon),
+    fires. The way out is to fix the cause, to [Retain](held.md#retain),
     or to clean up and [strip the finalizer](manual-finalizer.md).
 
 A failed destroy may have destroyed part of the infrastructure. The next

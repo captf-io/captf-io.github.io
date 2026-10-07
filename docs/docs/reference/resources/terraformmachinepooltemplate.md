@@ -77,6 +77,8 @@ The `spec` block holds one field, `spec.template`, and `spec.template.spec` is r
 | `spec.template.spec.variablesFrom` | list | Variable sources. See [`spec.variablesFrom`](terraformmachinepool.md#spec). |
 | `spec.template.spec.drift` | object | Drift interval and action. See [Drift](terraformmachinepool.md#drift). |
 | `spec.template.spec.membershipRefreshIntervalSeconds` | integer | Membership refresh interval. See [Membership refresh](terraformmachinepool.md#membership-refresh). |
+| `spec.template.spec.deletionPolicy` | string | Deletion policy of the pool. See [Deletion policy](common-fields.md#deletion-policy). |
+| `spec.template.spec.adoptRetainedState` | boolean | Lets the pool adopt the state an earlier pool of its name retained. See [Deletion policy](common-fields.md#deletion-policy). |
 | `spec.template.spec.providerID` | string | Accepted but not meaningful: the controller writes it on the created pool. See [Provider IDs](terraformmachinepool.md#provider-ids). |
 | `spec.template.spec.providerIDList` | list of strings | Accepted but not meaningful: the controller writes it on the created pool. See [Provider IDs](terraformmachinepool.md#provider-ids). |
 

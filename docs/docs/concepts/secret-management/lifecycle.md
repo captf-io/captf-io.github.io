@@ -125,8 +125,8 @@ the state, the backups and the durable inputs together with the objects.
 Two consequences follow:
 
 - An object whose namespace is terminating that never applied finishes at
-  once. One that applied is held, and you can [abandon
-  it](../../operator-guide/runbooks/stuck-destroy.md#abandon-instead). A
+  once. One that applied is held, and you can [retain
+  it](../../operator-guide/runbooks/stuck-destroy.md#retain-instead). A
   destroy or restore that waits on credentials shows that in the
   `Deleting` condition and retries.
 - After a move, an object in a namespace that is then deleted cannot be told
@@ -160,9 +160,11 @@ backups are preserved. You choose:
 - **Restore**, with `captf.io/restore-state=<serial>` from
   `status.stateBackups`. The restore runs first, then the normal destroy
   (see [Backups and restore](backups.md#restore)).
-- **Abandon**, with `captf.io/abandon-infrastructure=<uid>`. The finalizer
-  is removed without a destroy, the infrastructure stays running untracked,
-  and the backups go with the object.
+- **Retain**, with `spec.deletionPolicy: Retain`. The finalizer is removed
+  without a destroy and the infrastructure stays running. The state, the
+  backups and the durable inputs are kept, labeled
+  `captf.io/retained-from-uid`, for a later
+  [adoption](../deletion/retain.md#adopting-retained-state).
 
 An object that never applied has nothing to lose, so it is deleted
 immediately. The runbooks are [unreadable

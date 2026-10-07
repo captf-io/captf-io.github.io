@@ -188,8 +188,9 @@ state, the durable inputs and the plan key by label, whoever owns them.
   Terraform made after it, the live resources it does not list are untracked.
   Run a drift check (`drift.action: Report`) before you let anything apply,
   and compare the report with the cloud's own inventory.
-- **`captf.io/abandon-infrastructure`** takes the object's UID. A restored
-  object has a new UID, so a value copied from the old one does nothing.
+- **`spec.deletionPolicy`** is part of the spec, so a restored object has the
+  value its manifest carries. Check it before you delete a restored object:
+  `Retain` leaves the infrastructure running.
 
 ## Move instead of rebuild
 
@@ -211,23 +212,25 @@ by what you have:
 | An in-cluster backup | Annotate `captf.io/restore-state=<serial>`. See [State Restore](runbooks/state-restore.md) |
 | An external copy of the state Secrets | Restore them without `ownerReferences`, as above; the next reconcile reads them |
 | A state file from elsewhere | `terraform state push` it to the object's backend, then reconcile; see [Manual recovery](runbooks/state-restore.md#manual-recovery-with-no-backup) |
-| Nothing | Re-import, or abandon: see [Total State Loss and Import](runbooks/total-state-loss.md) |
+| Nothing | Re-import, or retain and recreate: see [Total State Loss and Import](runbooks/total-state-loss.md) |
 
 **Re-import** and the other routes, with commands and the module side, are in
 the [Total State Loss and Import runbook](runbooks/total-state-loss.md).
 In short: for an object that applied before, every Job is held while its state
 is gone, so a module's `import` blocks cannot run; rebuild the state from a
-workstation (route 1), or abandon the object and recreate it with `import`
-blocks (route 2). An object that never applied can import on its first apply.
+workstation (route 1), or retain the object, clear the retained state and recreate it with
+`import` blocks (route 2). An object that never applied can import on its first apply.
 That flow has not been exercised end to end, and whichever route you use, run a
 drift check before anything applies.
 
-!!! danger "Abandon leaves the infrastructure running and untracked"
+!!! danger "Retain leaves the infrastructure running"
 
-    **Abandon** applies to a deleting object. If the object must go and its state
-    is lost or unreadable, the abandon annotation releases the finalizer without
-    a destroy and leaves the infrastructure running and untracked. Clean it up
-    through the cloud. See [Held deletions](../concepts/deletion/held.md#abandon).
+    **Retain** applies to a deleting object. If the object must go and its state
+    is lost or unreadable, `spec.deletionPolicy: Retain` releases the finalizer
+    without a destroy and leaves the infrastructure running, with nothing
+    managing it. Adopt the retained state later or clean the infrastructure up
+    through the cloud. See [Held deletions](../concepts/deletion/held.md#retain)
+    and [Retain and Adopt](../concepts/deletion/retain.md).
 
 ## What a deleted namespace loses
 
@@ -235,7 +238,7 @@ Every Secret CAPTF keeps is in the object's namespace, so a deleted namespace
 removes the state, **the backups**, the durable inputs, the plan key, the
 mirror, the Leases, the Jobs and the runner ServiceAccount, while the cloud
 resources stay. An object whose status marks it provisioned and whose state
-is gone is held (`StateLost`) and can be abandoned. A *moved* object looks
+is gone is held (`StateLost`) and can be retained. A *moved* object looks
 never-applied once its Secrets are gone; see [Terminating
 namespaces](../concepts/deletion/namespaces.md#the-known-limit). Only the
 cluster-scoped identity and a source Secret in another namespace survive.

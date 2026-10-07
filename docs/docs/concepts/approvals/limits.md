@@ -96,7 +96,7 @@ plan from a destructive one; for that, add an admission policy (see
 
 ## Approvals do not cover state surgery
 
-Restoring a state, abandoning an object and unlocking a state lock are not
+Restoring a state, retaining an object and unlocking a state lock are not
 approvals and are not gated: they act on whoever can annotate or patch the
 object. 
 

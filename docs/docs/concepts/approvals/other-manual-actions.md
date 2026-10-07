@@ -1,6 +1,6 @@
 ---
 title: "Other Manual Actions on CAPTF Objects"
-description: "The manual actions besides plan approval: restore state, abandon an object, fix a Job policy, release a foreign lock and opt a ServiceAccount in."
+description: "The manual actions besides plan approval: restore state, retain an object, fix a Job policy, release a foreign lock and opt a ServiceAccount in."
 tags:
   - Operators
 git_creation_date_localized: "October 1, 2026"
@@ -34,21 +34,25 @@ toward backoff. To retry it: remove the annotation, wait until
 `status.lastRestoredSerial` clears, then set the annotation again. Deleting
 the failed Job does not retry.
 
-## Abandon an object
+## Retain an object
 
-`captf.io/abandon-infrastructure=<metadata.uid>` releases a deleting
-object whose destroy cannot run: held on missing or unreadable state, a
-failed last destroy, a missing durable inputs Secret, or an identity or
-credentials the destroy cannot start with. The value must equal the UID;
-anything else is ignored.
+`spec.deletionPolicy: Retain` releases a deleting object without a destroy,
+whatever holds it: missing or unreadable state, a failed last destroy, a
+missing durable inputs Secret, or an identity or credentials the destroy
+cannot start with. It is a field, not an annotation, and it can be set at
+any time, also while the object is being deleted. The controller keeps the
+state, the state backups and the durable inputs under a
+`captf.io/retained-from-uid` label, so a later object can adopt them. See
+[Retain and Adopt](../deletion/retain.md).
 
-!!! danger "Abandoning leaves the infrastructure running, untracked"
+!!! danger "Retain leaves the infrastructure running"
 
-    The infrastructure keeps running, untracked. An object whose destroy can
-    run is destroyed as usual, even with the annotation set.
+    The infrastructure keeps running, with nothing managing it until you
+    adopt the retained state or clean it up through the cloud.
 
 See the [stuck destroy
-runbook](../../operator-guide/runbooks/stuck-destroy.md#abandon-instead).
+runbook](../../operator-guide/runbooks/stuck-destroy.md#retain-instead) and
+[`deletionPolicy`](../../reference/resources/common-fields.md#deletion-policy).
 
 ## Fix an inconsistent Job policy
 

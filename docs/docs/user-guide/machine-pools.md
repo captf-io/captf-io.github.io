@@ -333,7 +333,8 @@ below.
 
 Between applies, the controller runs a refresh to pick up members joining
 or leaving the group, on `spec.membershipRefreshIntervalSeconds` (15–86400
-seconds; unset or 0 means 60):
+seconds; unset or 0 means the cluster's
+`spec.defaults.membershipRefreshIntervalSeconds`, else 60):
 
 ```yaml
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1

@@ -50,6 +50,22 @@ spec:
 machine's whole life, unlike `spec.source` and `spec.identityRef`, which
 are fixed at creation.
 
+To turn it on for every machine of a cluster at once, without touching
+the machine templates (which are immutable, so a change would roll the
+machines), set it in the cluster's defaults instead. Each machine merges
+its own `spec.remediation` over them field by field, so a machine can
+still opt out with `annotateMachine: false`:
+
+```yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: TerraformCluster
+spec:
+  defaults:
+    remediation:
+      annotateMachine: true
+      unhealthyThreshold: 5
+```
+
 ## Tune the threshold and sampling interval
 
 ```yaml

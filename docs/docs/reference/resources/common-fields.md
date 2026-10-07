@@ -1,6 +1,6 @@
 ---
 title: "Common Fields in CAPTF Custom Resources"
-description: "Reference for the spec and status fields that TerraformCluster, TerraformMachine and TerraformMachinePool share: source, identity, Job policy, variables and run status."
+description: "Reference for the spec and status fields TerraformCluster, TerraformMachine and TerraformMachinePool share: source, identity, Jobs, variables, deletion, status."
 icon: lucide/component
 subtitle: "Fields the module kinds share"
 ---
@@ -18,10 +18,10 @@ differs for that kind, and links here for the details.
 `TerraformCluster` also takes the same Job policy as `spec.defaults.jobs`,
 which its machines and pools inherit; see [Jobs](#jobs).
 
-Kind-specific behavior shows up in three places on this page: whether a
+Kind-specific behavior shows up in four places on this page: whether a
 field can change after creation, whether `spec.identityRef` is required,
-and how `spec.jobs` merges with the cluster's defaults. Each is called out
-per field.
+how `spec.jobs` merges with the cluster's defaults, and where an unset
+`spec.deletionPolicy` comes from. Each is called out per field.
 
 Defaults on this page come from the admission webhook, the controllers or
 the manager's flags. The CRDs declare no schema defaults, so an unset field
@@ -357,6 +357,37 @@ and apply output. It is still stored in the inputs Secrets and in state.
     move, a `TerraformCluster` or `TerraformMachinePool` waits at
     `VariablesSourceNotFound` until you recreate the source in the target
     cluster.
+
+## Deletion policy
+
+`spec.deletionPolicy` decides what deleting the object does with the
+infrastructure it manages, and `spec.adoptRetainedState` lets a new object
+take over what an earlier one of the same name kept. See [Retain and
+Adopt](../../concepts/deletion/retain.md) for the whole story.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `spec.deletionPolicy` | `string` | **Allowed values:** `Destroy` (run a destroy Job, then delete the state), `Retain` (remove the finalizer without a destroy, leave the infrastructure running, and keep the state Secrets, the state backups and the durable inputs, labeled `captf.io/retained-from-uid`). **Default:** inherited, else `Destroy`, applied at reconcile. **Mutable**, also while the object is being deleted. |
+| `spec.adoptRetainedState` | `boolean` | `true` lets the object adopt state an earlier object of the same kind, namespace and name retained. Without it such state is never adopted: `StateReadable` is `False` with reason `RetainedStateFound` and no Job runs. **Default:** unset (`false`). Never inherited. **Mutable.** |
+
+**Inheritance.** An unset `spec.deletionPolicy` on a `TerraformMachine` or
+`TerraformMachinePool` comes from its cluster's
+`spec.defaults.deletionPolicy`, else from the `TerraformCluster`'s own
+`spec.deletionPolicy`, else `Destroy`. A `TerraformCluster` uses only its
+own value. Because the cluster's fields are mutable, setting `Retain` there
+reaches machines whose template is immutable without a rollout. When the
+`TerraformCluster` cannot be found, a machine or pool uses only its own
+value.
+
+**While deleting.** Setting `Retain` on an object that is already being
+deleted releases it on the next reconcile, whatever holds it: a lost or
+unreadable state, a destroy that failed, or one that cannot start. A Job
+that is running finishes first.
+
+```yaml title="Keep the infrastructure when the object is deleted"
+spec:
+  deletionPolicy: Retain
+```
 
 ## Workspace status
 

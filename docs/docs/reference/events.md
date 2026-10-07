@@ -182,7 +182,9 @@ See [Deletion](../concepts/deletion/README.md).
 | `DeletionStarted` | Normal | any provisioned kind | The first reconcile with a `deletionTimestamp`. | None. |
 | `Destroyed` | Normal | any provisioned kind | The destroy succeeded and cleanup ran. | None. |
 | `FinalizerRemoved` | Normal | any provisioned kind | The finalizer was removed. The object goes away. | None. |
-| `InfrastructureAbandoned` | Warning | any provisioned kind | A deletion held on lost or unreadable state, or whose destroy failed or cannot start, was released by `captf.io/abandon-infrastructure` naming the object's UID. The finalizer was removed without a destroy. | Delete the orphaned cloud resources by hand. See [Manual finalizer](../concepts/deletion/manual-finalizer.md). |
+| `InfrastructureRetained` | Normal | any provisioned kind | A deletion with `deletionPolicy: Retain` removed the finalizer without a destroy. The infrastructure keeps running; the state Secrets, state backups and durable inputs were kept, without owner references and labeled `captf.io/retained-from-uid=<uid>`. The note counts them. | None, unless you want the infrastructure gone: adopt it with a new object, or delete it through the cloud. See [Retain and Adopt](../concepts/deletion/retain.md). |
+| `RetainedStateFound` | Warning | any provisioned kind | `StateReadable` became `False`/`RetainedStateFound`: the object found state an earlier object of its kind, namespace and name retained. No Job runs. | Set `spec.adoptRetainedState: true`, or delete the retained Secrets. See [Retain and Adopt](../concepts/deletion/retain.md#a-recreated-object-holds). |
+| `RetainedStateAdopted` | Normal | any provisioned kind | With `spec.adoptRetainedState: true`, the object removed `captf.io/retained-from-uid` from the retained Secrets it found. It owns them from the next reconcile and manages that infrastructure. | None. |
 
 ## Pools and templates
 

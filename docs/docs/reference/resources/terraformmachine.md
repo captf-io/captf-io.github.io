@@ -128,6 +128,8 @@ The workspace fields below are shared with other kinds and documented on
 | `spec.jobs` | object | Tuning of the Jobs that run the module ([Jobs](common-fields.md#jobs)). **Optional.** **Mutable.** **Default:** merged field by field over the `TerraformCluster`'s `spec.defaults.jobs`; fields neither sets take the built-in defaults. |
 | `spec.variables` | object | Inline module variables, a JSON object ([Variables](common-fields.md#variables)). **Optional.** **Immutable.** |
 | `spec.variablesFrom` | list | ConfigMaps and Secrets that supply module variables ([Variable sources](common-fields.md#variable-sources)). **Optional.** **Immutable.** |
+| `spec.deletionPolicy` | string | `Destroy` or `Retain`: whether deleting the machine destroys its instance or keeps it, with its state, for a later adoption. **Default:** the cluster's `spec.defaults.deletionPolicy`, else the `TerraformCluster`'s `spec.deletionPolicy`, else `Destroy`. See [Deletion policy](common-fields.md#deletion-policy). **Optional.** **Mutable.** |
+| `spec.adoptRetainedState` | boolean | Adopt the state an earlier `TerraformMachine` of this name retained. See [Deletion policy](common-fields.md#deletion-policy). **Optional.** **Mutable.** |
 | `spec.drift` | object | How often drift is checked. See [Drift](#drift). **Optional.** **Mutable.** **Default:** merged over the `TerraformCluster`'s `spec.defaults.drift`. |
 | `spec.remediation` | object | How an unhealthy instance is signaled to Cluster API. See [Remediation](#remediation). **Optional.** **Mutable.** |
 
@@ -179,7 +181,9 @@ health](../../concepts/drift-and-health.md).
 
 ### Remediation
 
-`spec.remediation` lets CAPTF ask Cluster API to replace a bad instance. With
+`spec.remediation` lets CAPTF ask Cluster API to replace a bad instance. It
+is merged field by field over the cluster's `spec.defaults.remediation`: a
+field the machine sets wins, an unset one comes from there. With
 `annotateMachine: true`, CAPTF sets the `cluster.x-k8s.io/remediate-machine`
 annotation on the owner Machine when the instance has been unhealthy for
 `unhealthyThreshold` consecutive samples, or at once when it is terminated. A
@@ -373,7 +377,7 @@ lifecycle](../../concepts/lifecycle.md) and [Job inputs](../../concepts/inputs.m
 are pinned in a durable Secret: changing the cluster later does not re-apply
 the machine. To change an instance, change the template and roll the Machine
 through its MachineDeployment or KubeadmControlPlane. Policy fields
-(`jobs`, `drift`, `remediation`) can change at any time.
+(`jobs`, `drift`, `remediation`, `deletionPolicy`) can change at any time.
 Health and drift are sampled on the timers above.
 
 **Delete.** Delete the Machine, not the `TerraformMachine`. Cluster API drains
@@ -383,9 +387,10 @@ even when the Machine, the bootstrap Secret or the Cluster is already gone, then
 removes the state and the finalizer. A `TerraformCluster` waits for its
 machines to go before its own destroy. See [Deletion
 order](../../concepts/lifecycle.md#deletion-order).
-If state is missing or unreadable, deletion is held until you set
-`captf.io/abandon-infrastructure` (see
-[Annotations and labels](../annotations-labels.md)).
+If state is missing or unreadable, deletion is held until you restore it
+or set `spec.deletionPolicy: Retain`, which removes the finalizer without
+a destroy and keeps what is left for a later adoption (see [Retain and
+Adopt](../../concepts/deletion/retain.md)).
 
 !!! related "See also"
 

@@ -200,8 +200,8 @@ backups being taken. See [Metrics](../reference/metrics.md).
     `TerraformPlan` approves it, and needs nothing on the target. `create` on
     `terraformplans` equals approve, so only the manager and the
     `clusterctl move` identity get it. Whoever may `patch` a `TerraformCluster`
-    may set its manual actions (`captf.io/restore-state`,
-    `captf.io/abandon-infrastructure`), and the webhooks do not restrict them.
+    may set its manual action (`captf.io/restore-state`) and
+    `spec.deletionPolicy`, and the webhooks do not restrict them.
     Decide who holds each: approvers get `patch` on `terraformplans`, and
     everyone else's spec changes come through a reviewed path such as GitOps.
     See [Who can

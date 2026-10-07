@@ -107,9 +107,11 @@ spec:
 
     A `TerraformMachine`'s drift is always reported, never remediated: the
     underlying instance is immutable infrastructure, replaced by a rollout
-    rather than patched in place, so `spec.drift` has no `action` field.
-    `spec.defaults.drift` on the `TerraformCluster` has no `action` field
-    either: only a machine's or pool's own `spec.drift.action` sets it.
+    rather than patched in place, so `spec.drift` has no `action` field,
+    and a `spec.defaults.drift.action` on the `TerraformCluster` does not
+    apply to it. A pool without its own `spec.drift.action` takes the
+    cluster's `spec.defaults.drift.action`, else the `TerraformCluster`'s
+    own `spec.drift.action`.
 
 ## Disable drift checks
 

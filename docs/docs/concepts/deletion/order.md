@@ -109,8 +109,8 @@ controller removes it only in three cases:
 1. **After a successful destroy.**
 2. **On a deletion with nothing to destroy:** no state and the object never
    applied (see [ever applied](held.md#ever-applied)).
-3. **On abandon:** the annotation named the object's UID (see
-   [abandon](held.md#abandon)).
+3. **On Retain:** `spec.deletionPolicy` resolves to `Retain` (see
+   [Retain](held.md#retain)).
 
 And only once no Job of the object runs. Two checks guard that, because the
 Job list comes from the manager's cache, which can lag a Job the controller

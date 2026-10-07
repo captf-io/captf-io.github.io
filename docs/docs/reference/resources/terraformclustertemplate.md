@@ -77,6 +77,8 @@ error; see [Validation](#validation).
 | `spec.template.spec.drift` | object | Drift policy. See [Drift](terraformcluster.md#drift). |
 | `spec.template.spec.applyPolicy` | string | `Automatic` or `Manual`. See [Apply policy](terraformcluster.md#apply-policy). |
 | `spec.template.spec.defaults` | object | Values the cluster's machines and pools inherit. See [Defaults](terraformcluster.md#defaults). |
+| `spec.template.spec.deletionPolicy` | string | Deletion policy of the cluster, and of its machines and pools that set none. See [Deletion policy](common-fields.md#deletion-policy). |
+| `spec.template.spec.adoptRetainedState` | boolean | Lets the cluster adopt the state an earlier cluster of its name retained. See [Deletion policy](common-fields.md#deletion-policy). |
 
 Defaults are the same as for a `TerraformCluster`: the CRD declares none,
 and the controller applies them to the created object at reconcile.

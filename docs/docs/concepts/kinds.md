@@ -154,23 +154,41 @@ rotating and revoking credentials, and how they reach a Job.
 
 A `TerraformCluster`'s `spec.defaults` apply only to its
 `TerraformMachine`s and `TerraformMachinePool`s, never to the cluster
-itself, and are merged field by field: a field the machine or pool sets
-wins, an unset one comes from `spec.defaults`, and a field neither sets
-gets the built-in default. A machine or pool finds its `Cluster` by its
-own `cluster.x-k8s.io/cluster-name` label, then the `TerraformCluster`
-through the Cluster's `spec.infrastructureRef`.
+itself. A machine or pool finds its `Cluster` by its own
+`cluster.x-k8s.io/cluster-name` label, then the `TerraformCluster`
+through the Cluster's `spec.infrastructureRef`. Machines and pools watch
+that `TerraformCluster`, so a change to what they inherit reaches them at
+once.
 
-- **`identityRef`**: a machine or pool uses its own `identityRef` when it
-  sets one, else the cluster's `spec.defaults.identityRef`, else the
-  cluster's own `spec.identityRef`.
-- **`jobs`**: merged field by field with `spec.defaults.jobs`, own over
-  defaults; see [Tuning Jobs](../user-guide/job-tuning.md#inheriting-from-a-clusters-defaults)
-  for the full merge algorithm.
-- **`drift`**: only `intervalSeconds` is inherited — the object's own,
-  else `spec.defaults.drift.intervalSeconds`, else the manager's built-in
-  default. A pool's own `drift.action` is never inherited; unset, it
-  defaults to `Report` regardless of the cluster's defaults, which carry
-  no `action` to inherit.
+### The inheritance rule
+
+Operational policy, how and when CAPTF runs an object's module, always
+inherits in the same order, field by field:
+
+1. the machine's or pool's own field;
+2. the `TerraformCluster`'s `spec.defaults`;
+3. the `TerraformCluster`'s own field of the same name, where it has one;
+4. the built-in default.
+
+Module inputs are excluded: `source`, `variables` and `variablesFrom`
+are never inherited, because they define what the module builds.
+`adoptRetainedState` is not inherited either: adopting retained
+infrastructure is a decision about one object.
+
+| Field | Own | `spec.defaults` | The cluster's own field | Built-in |
+| --- | --- | --- | --- | --- |
+| `identityRef` | yes | `identityRef` | `spec.identityRef` | none |
+| `jobs` | merged field by field, see [Tuning Jobs](../user-guide/job-tuning.md#inheriting-from-a-clusters-defaults) | `jobs` | none | the Job builder's |
+| `drift.intervalSeconds` | yes | `drift.intervalSeconds` | none | the manager's `--drift-default-interval` |
+| `drift.action` (pools only) | yes | `drift.action` | `spec.drift.action` | `Report` |
+| `remediation` (machines only) | merged field by field | `remediation` | none | `annotateMachine: false`, threshold 3, interval 300 seconds |
+| `membershipRefreshIntervalSeconds` (pools only) | yes | `membershipRefreshIntervalSeconds` | none | 60 seconds |
+| `deletionPolicy` | yes | `deletionPolicy` | `spec.deletionPolicy` | `Destroy` |
+
+A machine's drift is always reported, never remediated, so it takes no
+`drift.action` from anywhere. When the `TerraformCluster` cannot be found
+(a machine whose `Machine` is gone, for example), only the object's own
+fields and the built-in defaults apply.
 
 !!! note "The pool exception"
 

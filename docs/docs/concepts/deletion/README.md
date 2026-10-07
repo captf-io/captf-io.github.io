@@ -29,16 +29,18 @@ The pages:
    finalizer comes off.
 3. [The destroy Job](destroy-job.md): what runs, what does not gate it, and
    how it fails.
-4. [Held deletions](held.md): missing or unreadable state, restore, and the
-   abandon annotation.
-5. [Terminating namespaces](namespaces.md): deletions that need no Job, and
+4. [Held deletions](held.md): missing or unreadable state, restore, and
+   `Retain`.
+5. [Retain and Adopt](retain.md): delete without a destroy, keep the state,
+   and adopt it later.
+6. [Terminating namespaces](namespaces.md): deletions that need no Job, and
    the Secrets that go with the namespace.
-6. [Cleanup and garbage collection](cleanup.md): what the controller deletes,
+7. [Cleanup and garbage collection](cleanup.md): what the controller deletes,
    what Kubernetes deletes, and the RBAC sweep.
-7. [`clusterctl move`](move.md): the delete that skips the delete path.
-8. [Stripping a finalizer by hand](manual-finalizer.md): the consequences.
-9. [My object will not delete](troubleshooting.md): a flowchart from the
-   symptom to the action.
+8. [`clusterctl move`](move.md): the delete that skips the delete path.
+9. [Stripping a finalizer by hand](manual-finalizer.md): the consequences.
+10. [My object will not delete](troubleshooting.md): a flowchart from the
+    symptom to the action.
 
 ## In this section
 
@@ -59,6 +61,14 @@ The pages:
     What runs, what does not gate it, and how it fails.
 
     [:octicons-arrow-right-24: The Destroy Job](destroy-job.md)
+
+-   :material-archive-arrow-down-outline:{ .lg .middle } __Retain and Adopt__
+
+    ---
+
+    Delete without a destroy, keep the state, and adopt it later.
+
+    [:octicons-arrow-right-24: Retain and Adopt](retain.md)
 
 -   :material-folder-remove-outline:{ .lg .middle } __Terminating Namespaces__
 
@@ -99,20 +109,21 @@ applies decides the pass.
 | No state, and the object never applied | The finalizer comes off at once | [Held](held.md#ever-applied) |
 | No state, and the object applied before | Held: `StateReadable=False`/`StateLost` | [Held](held.md) |
 | State exists but cannot be read | Held: `StateCorrupt`, `StateEncrypted` or `StateInconsistent` | [Held](held.md) |
+| `spec.deletionPolicy: Retain` | No destroy: the state, backups and durable inputs are kept, and the finalizer comes off | [Retain](retain.md) |
 | Readable state | A destroy Job runs; no gate or approval applies | [Destroy](destroy-job.md) |
 | The destroy succeeded | Cleanup runs and the finalizer comes off | [Cleanup](cleanup.md) |
-| The destroy failed or cannot start | Retried with backoff, forever; the abandon annotation releases it | [Held](held.md#abandon) |
+| The destroy failed or cannot start | Retried with backoff, forever; `Retain` releases it | [Held](held.md#retain) |
 
 ## What the controller never does
 
 - It never drops the finalizer while a state Secret may still describe
-  live resources, except on an explicit abandon.
+  live resources, except on an explicit `Retain`, which keeps the state.
 - It never destroys against a state it cannot read.
 - It never invents inputs to destroy with: the destroy renders from the
   durable inputs Secret (or, for a cluster or pool without one, the current
   inputs when they build).
 - It never skips the destroy because it failed. There is no skip-destroy
-  annotation, only the [abandon](held.md#abandon) one.
+  annotation, only [Retain](held.md#retain).
 
 !!! related "See also"
 
@@ -120,8 +131,9 @@ applies decides the pass.
       that runs all of this.
     - [Terraform State](../state.md#state-on-deletion) and [Lifecycle
       walkthroughs](../secret-management/lifecycle.md#delete) for the Secrets.
-    - [Other manual actions](../approvals/other-manual-actions.md#abandon-an-object)
-      for the abandon annotation next to the other manual fixes.
+    - [Retain and Adopt](retain.md) and [Other manual
+      actions](../approvals/other-manual-actions.md#retain-an-object) for
+      `Retain` next to the other manual fixes.
     - [Stuck Destroy](../../operator-guide/runbooks/stuck-destroy.md),
       [Unreadable State](../../operator-guide/runbooks/state-unreadable.md#deleting-while-state-is-unreadable),
       [State Restore](../../operator-guide/runbooks/state-restore.md) and
