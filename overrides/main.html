@@ -96,6 +96,15 @@
       which every consumer of the markup accepts. -#}
   {%- set logo = {"@type": "ImageObject", "url": site ~ "assets/landing/apple-touch-icon.png", "width": 180, "height": 180} -%}
   {%- set org = {"@type": "Organization", "name": "The CAPTF Authors", "url": "https://github.com/captf-io"} -%}
+  {#- A post's authors are its committers (tools/blog_authors.py), each a
+      Person; other pages are by the project. -#}
+  {%- set people = namespace(list=[], urls=[]) -%}
+  {%- if page is defined and page and page.authors is defined and page.authors -%}
+    {%- for person in page.authors -%}
+      {%- set people.list = people.list + [{"@type": "Person", "name": person.name, "url": person.url}] -%}
+      {%- set people.urls = people.urls + [person.url] -%}
+    {%- endfor -%}
+  {%- endif -%}
   {%- set publisher = {"@type": "Organization", "@id": site ~ "#organization", "name": config.site_name, "url": site, "logo": logo} -%}
   {#- Not on the 404 page, which has neither a url nor a canonical. -#}
   {%- if page is defined and page and (page.url or page.canonical_url) -%}
@@ -126,7 +135,7 @@
       {% if modified %}<meta property="article:modified_time" content="{{ modified }}">{% endif %}
       {% if section %}<meta property="article:section" content="{{ section }}">{% endif %}
       {% for tag in tags %}<meta property="article:tag" content="{{ tag }}">{% endfor %}
-      <meta property="article:author" content="The CAPTF Authors">
+      {% for url in people.urls or ["The CAPTF Authors"] %}<meta property="article:author" content="{{ url }}">{% endfor %}
     {% endif %}
 
     {#- Structured data. -#}
@@ -158,7 +167,7 @@
         "image": image,
         "datePublished": published,
         "dateModified": modified,
-        "author": org,
+        "author": people.list or org,
         "publisher": publisher,
         "inLanguage": "en",
         "keywords": tags,

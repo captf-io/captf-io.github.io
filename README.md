@@ -66,7 +66,8 @@ cover the workflow, the style and the site's moving parts. See
 
 The `Pages` workflow (`.github/workflows/pages.yml`) checks that `make gen`
 leaves the tree unchanged and runs `make build-pages` (the strict build,
-with each page's dates and the sitemap's `<lastmod>` taken from git) on
+with each page's dates, each post's authors and the sitemap's
+`<lastmod>` taken from git) on
 every pull request and push. A push to `main` also publishes the built
 site to GitHub Pages.
 

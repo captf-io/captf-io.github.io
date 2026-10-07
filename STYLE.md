@@ -14,7 +14,8 @@ the llms.txt sections (`tools/gen_llms.py`), which lists every page with
 its `description:`. Blog posts need `date`, `slug`, `title`,
 `description`, `authors: [maintainers]`, one category and a
 `<!-- more -->` excerpt break, and must state only what the docs or the
-project history back up.
+project history back up. Don't name people in `authors:`: the published
+build replaces it with the GitHub users who committed to the post.
 
 ## The rule
 

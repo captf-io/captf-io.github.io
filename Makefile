@@ -37,12 +37,14 @@ build: ## Build the site into site/, failing on any warning.
 	$(ZENSICAL) build --strict -f zensical.toml
 
 # The published build, as CI runs it: tools/git_dates.py dates each page
-# from git (rewriting front matter in the working tree, so don't commit
-# what it leaves; `git checkout docs/docs` undoes it), then the build, then
+# and tools/blog_authors.py credits each post to its committers, both from
+# git (rewriting front matter in the working tree, so don't commit what
+# they leave; `git checkout docs` undoes it), then the build, then
 # <lastmod> in the sitemap. Needs the whole history.
 .PHONY: build-pages
-build-pages: ## Build as CI publishes it: page dates and sitemap <lastmod> from git (rewrites front matter; CI only).
+build-pages: ## Build as CI publishes it: page dates, post authors and sitemap <lastmod> from git (rewrites front matter; CI only).
 	uv run python tools/git_dates.py --write
+	uv run python tools/blog_authors.py --write
 	$(ZENSICAL) build --strict -f zensical.toml
 	uv run python tools/git_dates.py --sitemap site/sitemap.xml
 

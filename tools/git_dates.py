@@ -165,7 +165,7 @@ def main(argv: list[str]) -> int:
     writing = "--write" in argv
     if writing and not os.environ.get("CI") and "--force" not in argv:
         print("git_dates.py --write rewrites front matter for the published build;"
-              " it runs in CI. Use --force to run it here, then `git checkout docs/docs`.",
+              " it runs in CI. Use --force to run it here, then `git checkout docs`.",
               file=sys.stderr)
         return 1
     if git("rev-parse", "--is-shallow-repository").strip() == "true":

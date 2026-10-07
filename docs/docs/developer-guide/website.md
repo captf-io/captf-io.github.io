@@ -155,7 +155,18 @@ sitemap.
 The dates are written into the working tree that CI builds from and
 discards, never committed, because a commit cannot carry its own date.
 Plain `make build` shows the stored dates. To preview the published
-dates, run `CI=1 make build-pages`, then `git checkout docs/docs`.
+dates, run `CI=1 make build-pages`, then `git checkout docs`.
+
+## Post authors
+
+A blog post's authors are the GitHub users who committed to it, and are
+not kept in the repository. In the same published build,
+`tools/blog_authors.py` follows each post's history, asks the GitHub API
+which account authored each commit, and sets the post's `authors:` and
+an author card for each from their GitHub profile; bots are left out. A
+post's front matter names `maintainers`, the project's own card, which
+is what a local build shows and what a post keeps if the API cannot be
+reached.
 
 ## The theme
 
