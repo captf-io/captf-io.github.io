@@ -47,6 +47,23 @@ Kubernetes cluster, calls a real cloud API, or invokes `terraform` or
   diagnostics) are unit-tested with fakes. They never start a process or
   touch `podman`.
 
+### Fixtures and timing
+
+- `newEnv` and `newEnvWith` deep-copy the objects they are given, and
+  `readyOwner()` is a constructor. A fixture shared by parallel subtests is
+  safe; mutating a shared package-level object is not.
+- Tests never sleep to order events. Use a client-go reactor that starts the
+  change on the nth call (`afterNthCall` in `test/framework/health`), a channel
+  handshake, or the fake clock.
+- Tests that swap the process-wide metrics registry (`internal/metrics`
+  `TestInstall`, the `cmd/manager/app` setup tests that use
+  `restoreMetricsRegistry`) must not use `t.Parallel`.
+- Engine coverage lives in `internal/controllers/shared` and the two adapter
+  packages: crash windows, deletion mid-apply, deletion while a plan awaits
+  approval, conflict injection (`conflictOnce` in `shared/conflict_test.go`),
+  and cross-kind parity cases that run the same flow through the real
+  TerraformCluster and TerraformMachinePool adapters.
+
 ## Test tiers
 
 | Tier | What | How it runs |
@@ -149,7 +166,7 @@ The environment is built so it cannot touch anything else on your host:
 | Target | Suite | What it proves |
 | --- | --- | --- |
 | `make e2e-foundation` | `TestFoundation` in `test/e2e/foundation` | In six ordered stages, a failed one stopping the run: the `captf-test-e2e` cluster builds, the base components and the CAPTF install are healthy, a real reconcile of a `TerraformClusterIdentity` works and the cluster holds still for a stability window, then a green light is written. |
-| `make e2e-noop` | `TestNoop` in `test/e2e/noop` | The published no-op modules, driven through real Cluster API objects, move data end to end with no cloud: the CAPI spec into the module inputs, the outputs into CAPTF status and on into CAPI, the cluster's exports into the machine and pool inputs, the pinned digests into every later Job, and deletion into a full cleanup. |
+| `make e2e-noop` | `TestNoop` in `test/e2e/noop` | The published no-op modules, driven through real Cluster API objects, move data end to end with no cloud: the CAPI spec into the module inputs, the outputs into CAPTF status and on into CAPI, the cluster's exports into the machine and pool inputs, the pinned digests into every later Job, and deletion into a full cleanup. The teardown sweep also asserts that no Job, `captf-*` Secret (run, inputs, applied), state Secret, Lease or runner RBAC is left behind. |
 | `make e2e-down` | | Deletes the e2e cluster; the artifacts are kept. |
 
 Run `e2e-foundation` first. `e2e-noop` fails at once, and never skips,
