@@ -24,15 +24,50 @@
   section indexes, so the card path follows from the URL); other pages use
   the brand image.
 -#}
+{#- The theme's head metadata, with two changes: the blog's archive and
+    category pages, which have no front matter of their own, get a
+    description that names them instead of the site's, and the 404 page is
+    kept out of search indexes. -#}
+{% block site_meta %}
+  {%- set url = page.url if page is defined and page and page.url is defined and page.url else "" -%}
+  {#- The 404 page, like the home page, has an empty url, but no canonical. -#}
+  {%- set is_404 = not url and not (page is defined and page and page.canonical_url) -%}
+  {%- set description = page.meta.description if page is defined and page and page.meta and page.meta.description else none -%}
+  {%- if not description and url[:14] == "blog/category/" -%}
+    {%- set description = "Posts in the " ~ page.title ~ " category of the " ~ config.site_name ~ " blog: news from the CAPTF project." -%}
+  {%- elif not description and url[:13] == "blog/archive/" -%}
+    {%- set description = "Every post from " ~ page.title ~ " on the " ~ config.site_name ~ " blog: news from the CAPTF project." -%}
+  {%- endif -%}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="{{ description or config.site_description }}">
+  {% if is_404 %}<meta name="robots" content="noindex">{% endif %}
+  {% if page is defined and page and page.canonical_url %}
+    <link rel="canonical" href="{{ page.canonical_url }}">
+  {% endif %}
+  {% if page is defined and page and page.previous_page %}
+    <link rel="prev" href="{{ page.previous_page.url | url }}">
+  {% endif %}
+  {% if page is defined and page and page.next_page %}
+    <link rel="next" href="{{ page.next_page.url | url }}">
+  {% endif %}
+  <link rel="icon" href="{{ config.theme.favicon | url }}">
+{% endblock %}
+
 {% block extrahead %}
   {{ super() }}
   {%- set site = config.site_url -%}
   {%- set brand_image = site ~ "assets/landing/og.jpg" -%}
+  {#- One Organization for the project, by @id: the home page describes it
+      in full, every other page names it as publisher. Its logo is a PNG,
+      which every consumer of the markup accepts. -#}
+  {%- set logo = {"@type": "ImageObject", "url": site ~ "assets/landing/apple-touch-icon.png", "width": 180, "height": 180} -%}
   {%- set org = {"@type": "Organization", "name": "The CAPTF Authors", "url": "https://github.com/captf-io"} -%}
-  {%- set publisher = {"@type": "Organization", "name": config.site_name, "url": site, "logo": {"@type": "ImageObject", "url": site ~ "assets/brand/mark.svg"}} -%}
-  {%- if page is defined and page -%}
+  {%- set publisher = {"@type": "Organization", "@id": site ~ "#organization", "name": config.site_name, "url": site, "logo": logo} -%}
+  {#- Not on the 404 page, which has neither a url nor a canonical. -#}
+  {%- if page is defined and page and (page.url or page.canonical_url) -%}
     {%- set meta = page.meta if page.meta is defined and page.meta else {} -%}
-    {%- set is_home = not page.url -%}
+    {%- set is_home = not page.url and page.canonical_url -%}
     {%- set is_post = page.authors is defined and page.authors and page.config is defined and page.config and page.config.date is defined and page.config.date -%}
     {%- set title = config.site_name if is_home else page.title ~ " - " ~ config.site_name -%}
     {%- set description = meta.description if meta.description is defined and meta.description else config.site_description -%}
@@ -68,9 +103,10 @@
         "@graph": [
           {"@type": "Organization", "@id": site ~ "#organization", "name": config.site_name,
            "alternateName": ["CAPTF", "CAPI Terraform", "Cluster API Provider Terraform"], "url": site,
-           "logo": site ~ "assets/brand/mark.svg", "image": brand_image, "description": description,
-           "sameAs": ["https://github.com/captf-io"]},
+           "logo": logo, "image": brand_image, "description": description,
+           "sameAs": ["https://github.com/captf-io", "https://registry.terraform.io/namespaces/captf-io"]},
           {"@type": "WebSite", "@id": site ~ "#website", "name": config.site_name, "url": site,
+           "alternateName": ["CAPTF", "Cluster API Provider Terraform", "CAPI Terraform"],
            "description": description, "inLanguage": "en", "publisher": {"@id": site ~ "#organization"},
            "potentialAction": {"@type": "SearchAction",
              "target": {"@type": "EntryPoint", "urlTemplate": site ~ "?q={search_term_string}"},
@@ -99,12 +135,17 @@
       <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
         {{- {"@type": "ListItem", "position": 1, "name": config.site_name, "item": site} | tojson -}}
         {%- for ancestor in ancestors | reverse -%}
-          {%- set link = ancestor.url if ancestor.url is defined and ancestor.url else none -%}
-          {%- if not link and ancestor.children is defined and ancestor.children -%}
-            {%- set first = ancestor.children | first -%}
-            {%- set link = first.url if first.url is defined and first.url else none -%}
-          {%- endif -%}
-          ,{{ {"@type": "ListItem", "position": loop.index + 1, "name": ancestor.title, "item": (site ~ link) if link else none} | tojson }}
+          {#- A section without a page of its own links to its first page,
+              however deeply nested (Operations starts with a subsection). -#}
+          {%- set crumb = namespace(node=ancestor, link=none) -%}
+          {%- for _ in range(6) if not crumb.link -%}
+            {%- if crumb.node.url is defined and crumb.node.url -%}
+              {%- set crumb.link = crumb.node.url -%}
+            {%- elif crumb.node.children is defined and crumb.node.children -%}
+              {%- set crumb.node = crumb.node.children | first -%}
+            {%- endif -%}
+          {%- endfor -%}
+          ,{{ {"@type": "ListItem", "position": loop.index + 1, "name": ancestor.title, "item": site ~ crumb.link} | tojson }}
         {%- endfor -%}
         ,{{ {"@type": "ListItem", "position": (ancestors | length) + 2, "name": page.title, "item": page.canonical_url} | tojson }}
       ]}</script>
