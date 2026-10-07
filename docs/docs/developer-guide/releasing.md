@@ -126,6 +126,23 @@ build the images or publish the release. The images are built by
 pinned by digest in `infrastructure-components.yaml`, which is what ties the
 components to one specific image build.
 
+### The hosted clusterctl config
+
+Users register the provider with <https://captf.io/clusterctl.yaml>
+([Register the provider](../operator-guide/installation.md#register-the-provider)),
+served from `docs/clusterctl.yaml` in the
+[website repository](https://github.com/captf-io/captf-io.github.io). Its
+`url` names `releases/latest/infrastructure-components.yaml`, so it needs no
+change per release: `clusterctl` lists the tags itself and fetches each
+version's assets by tag. That holds only while every release:
+
+- has a semantic version tag, `vX.Y.Z`; `clusterctl` skips other tags when
+  it picks the newest;
+- attaches `infrastructure-components.yaml` and `metadata.yaml`;
+- has its `major.minor` in `metadata.yaml`'s `releaseSeries`, mapped to the
+  Cluster API contract, which `clusterctl` checks before it installs a
+  version and uses to pick the newest one for the contract.
+
 ## Signatures and attestations
 
 `publish.yaml` signs and attests every image digest it pushes, from `main`

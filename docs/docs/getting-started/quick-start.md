@@ -47,28 +47,23 @@ Run every command below from the root of that clone.
 
 ## 1. Install the provider
 
-CAPTF is not one of `clusterctl`'s built-in providers, so point a
-`clusterctl` config at its release manifest; the config entry's `name` is
-`terraform`, CAPTF's registered provider name:
-
-```yaml title="clusterctl.yaml"
-providers:
-- name: terraform
-  type: InfrastructureProvider
-  url: https://github.com/captf-io/cluster-api-provider-terraform/releases/download/v0.2.0/infrastructure-components.yaml
-```
-
-Install that release:
+CAPTF is not one of `clusterctl`'s built-in providers, so `clusterctl`
+needs a config that registers it under the name `terraform`. captf.io
+publishes one, which `--config` reads straight from its URL. Install the
+release you checked out:
 
 ```sh
-clusterctl init --config clusterctl.yaml --infrastructure terraform:v0.2.0
+clusterctl init --config https://captf.io/clusterctl.yaml --infrastructure terraform:v0.2.0
 ```
 
 This also installs Cluster API's core, bootstrap and control-plane
 providers, and `cert-manager` itself if a compatible version is not already
 present, since CAPTF's webhooks need it. See
 [Installation](../operator-guide/installation.md) for what this creates
-and how to confirm it, and [Installing from a local
+and how to confirm it, [Register the
+provider](../operator-guide/installation.md#register-the-provider) for what
+the hosted config holds and when to use your own instead, and [Installing
+from a local
 repository](../developer-guide/releasing.md#installing-from-a-local-repository)
 for the general form of the local-repository steps.
 
@@ -85,15 +80,21 @@ for the general form of the local-repository steps.
       RELEASE_IMG="${IMG}" VERSION=v0.2.0
     ```
 
-    Then use the `file://` form of the `url` in `clusterctl.yaml`, with
-    `<you>` your user name, the absolute path of the directory
-    `manifests-release` just wrote:
+    Then write a `clusterctl.yaml` of your own whose `url` is the `file://`
+    path of the directory `manifests-release` just wrote, with `<you>` your
+    user name:
 
     ```yaml title="clusterctl.yaml"
     providers:
     - name: terraform
       type: InfrastructureProvider
       url: file:///home/<you>/local-repository/infrastructure-terraform/v0.2.0/infrastructure-components.yaml
+    ```
+
+    and pass it in place of the hosted one:
+
+    ```sh
+    clusterctl init --config clusterctl.yaml --infrastructure terraform:v0.2.0
     ```
 
 ## 2. Apply an identity
@@ -244,7 +245,7 @@ kubectl delete namespace team-a
 To remove the provider itself as well:
 
 ```sh
-clusterctl delete --config clusterctl.yaml --infrastructure terraform
+clusterctl delete --infrastructure terraform
 ```
 
 !!! related "See also"

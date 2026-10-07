@@ -40,31 +40,51 @@ administers the management cluster, not for cluster tenants.
 ## Register the provider
 
 CAPTF is not one of `clusterctl`'s built-in providers, so `clusterctl` needs
-a config file naming its release manifest. The config entry's `name` is
-`terraform`:
+a config file that registers it. captf.io publishes one at
+<https://captf.io/clusterctl.yaml>; pass its URL with `--config`, and
+`clusterctl` downloads it each time it runs. It holds a single entry, the
+provider `terraform`:
 
-```yaml title="clusterctl.yaml"
+```yaml title="https://captf.io/clusterctl.yaml"
 providers:
 - name: terraform
   type: InfrastructureProvider
   url: https://github.com/captf-io/cluster-api-provider-terraform/releases/latest/infrastructure-components.yaml
 ```
 
-`url` can also name a specific tag instead of `latest`, for example
-`.../releases/download/v0.2.0/infrastructure-components.yaml`, or a `file://` path
-into a local repository built from a release's assets; see [Installing from
-a local repository](../developer-guide/releasing.md#installing-from-a-local-repository)
-for the local repository layout and for pinning a version.
+The `latest` in `url` sets only the default version. `clusterctl` lists the
+repository's releases itself, so `terraform:vX.Y.Z` installs any tagged
+release, and `terraform` alone installs the newest stable release for the
+Cluster API contract (`v1beta2`), never a pre-release.
+
+Pass the config to every `clusterctl` command that fetches from the
+provider's releases: `init`, `upgrade plan`, `upgrade apply` and `generate
+cluster --infrastructure terraform`. Commands that work from what is
+installed in the management cluster, such as `delete`, `move` and
+`describe`, do not need it.
+
+!!! note "When you have your own clusterctl config"
+
+    `--config` replaces `clusterctl`'s config rather than adding to it: with
+    the hosted file, `clusterctl` does not read your own providers,
+    variables or image overrides. If you have a config of your own, copy the
+    `terraform` entry above into it instead. In the default location,
+    `~/.config/cluster-api/clusterctl.yaml`, `clusterctl` reads it without
+    `--config`. Do the same where the management cluster's network cannot
+    reach captf.io, with a `file://` `url` into a local repository built from
+    a release's assets; see [Installing from a local
+    repository](../developer-guide/releasing.md#installing-from-a-local-repository).
 
 !!! tip "Pin a version"
 
-    `latest` follows the newest release. For anything you keep, pin one:
-    `clusterctl init --config clusterctl.yaml --infrastructure terraform:v0.2.0`.
+    Without a version, `init` installs the newest release. For anything you
+    keep, pin one:
+    `clusterctl init --config https://captf.io/clusterctl.yaml --infrastructure terraform:v0.2.0`.
 
 ## Install with clusterctl init
 
 ```sh
-clusterctl init --config clusterctl.yaml --infrastructure terraform
+clusterctl init --config https://captf.io/clusterctl.yaml --infrastructure terraform
 ```
 
 `clusterctl init --infrastructure terraform:vX.Y.Z` pins a specific
@@ -76,7 +96,7 @@ providers. If you plan to use the ClusterClass flavor, enable the
 Cluster API and off by default:
 
 ```sh
-CLUSTER_TOPOLOGY=true clusterctl init --config clusterctl.yaml --infrastructure terraform
+CLUSTER_TOPOLOGY=true clusterctl init --config https://captf.io/clusterctl.yaml --infrastructure terraform
 ```
 
 `CLUSTER_TOPOLOGY=true` only takes effect when this `init` installs the

@@ -59,7 +59,8 @@ the flavor:
     export TERRAFORM_IDENTITY_NAME=<identity-name> \
       TERRAFORM_CLUSTER_IMAGE=<cluster-module-image> \
       TERRAFORM_MACHINE_IMAGE=<machine-module-image>
-    clusterctl generate cluster <cluster-name> --infrastructure terraform \
+    clusterctl generate cluster <cluster-name> \
+      --config https://captf.io/clusterctl.yaml --infrastructure terraform \
       --target-namespace <namespace> \
       --kubernetes-version <version> \
       --control-plane-machine-count <count> --worker-machine-count <count> \
@@ -75,7 +76,8 @@ the flavor:
 
     ```sh
     kubectl apply -n <namespace> -f templates/clusterclass-noop.yaml
-    clusterctl generate cluster <cluster-name> --infrastructure terraform \
+    clusterctl generate cluster <cluster-name> \
+      --config https://captf.io/clusterctl.yaml --infrastructure terraform \
       --flavor clusterclass --target-namespace <namespace> \
       --kubernetes-version <version> \
       --control-plane-machine-count <count> --worker-machine-count <count> \

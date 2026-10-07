@@ -287,7 +287,8 @@ Generate the default flavor with no workers; a `MachineDeployment` is
 still created, with `spec.replicas: 0`, rather than omitted:
 
 ```sh
-clusterctl generate cluster my-cluster --infrastructure terraform \
+clusterctl generate cluster my-cluster \
+  --config https://captf.io/clusterctl.yaml --infrastructure terraform \
   --target-namespace team-a \
   --kubernetes-version v1.31.4 \
   --control-plane-machine-count 1 --worker-machine-count 0 \

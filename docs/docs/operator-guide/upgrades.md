@@ -21,8 +21,12 @@ objects, where to read what changed, and how to roll back. See
 !!! info "Before you begin"
 
     - CAPTF already installed with `clusterctl init` (see
-      [Installation](installation.md)), and a `clusterctl.yaml` naming the
-      provider (`name: terraform`).
+      [Installation](installation.md)), and the `clusterctl` config that
+      registers it: the hosted <https://captf.io/clusterctl.yaml>, or your
+      own with the `terraform` entry ([Register the
+      provider](installation.md#register-the-provider)). The commands below
+      pass the hosted one; drop `--config` if yours is in the default
+      location.
     - `clusterctl`, at a version that supports upgrading the Cluster API
       release you run.
 
@@ -46,7 +50,7 @@ Staying on an old release means staying without later fixes.
 ## Upgrade with clusterctl
 
 ```sh
-clusterctl upgrade plan
+clusterctl upgrade plan --config https://captf.io/clusterctl.yaml
 ```
 
 lists the provider versions clusterctl can upgrade each installed
@@ -54,8 +58,8 @@ component to, grouped by the Cluster API contract they implement. Apply a
 plan, or name a version for CAPTF directly:
 
 ```sh
-clusterctl upgrade apply --contract v1beta2
-clusterctl upgrade apply --infrastructure terraform:vX.Y.Z
+clusterctl upgrade apply --config https://captf.io/clusterctl.yaml --contract v1beta2
+clusterctl upgrade apply --config https://captf.io/clusterctl.yaml --infrastructure terraform:vX.Y.Z
 ```
 
 !!! note "Only three releases exist"

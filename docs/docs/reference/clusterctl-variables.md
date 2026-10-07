@@ -112,7 +112,8 @@ export TERRAFORM_IDENTITY_NAME=<identity-name> \
   POD_CIDR=<pod-cidr> \
   TERRAFORM_UNHEALTHY_TIMEOUT=<seconds>
 
-clusterctl generate cluster <cluster-name> --infrastructure terraform \
+clusterctl generate cluster <cluster-name> \
+  --config https://captf.io/clusterctl.yaml --infrastructure terraform \
   --target-namespace <namespace> \
   --kubernetes-version <version> \
   --control-plane-machine-count 3 --worker-machine-count 2 \
@@ -140,7 +141,8 @@ and add `--flavor clusterclass`:
 
 ```sh
 kubectl apply -n <namespace> -f templates/clusterclass-noop.yaml
-clusterctl generate cluster <cluster-name> --infrastructure terraform \
+clusterctl generate cluster <cluster-name> \
+  --config https://captf.io/clusterctl.yaml --infrastructure terraform \
   --flavor clusterclass --target-namespace <namespace> \
   --kubernetes-version <version> \
   --control-plane-machine-count 3 --worker-machine-count 2 \
