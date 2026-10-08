@@ -205,8 +205,9 @@ module, so its resources are fixed and not configurable.
 | --- | --- | --- |
 | init (`runner`) | requests | `cpu=10m`, `memory=32Mi` |
 | init (`runner`) | limits | `cpu=100m`, `memory=64Mi` |
-| main (`source`), when `spec.jobs.resources` is unset | requests | `cpu=250m`, `memory=2Gi` |
+| main (`source`), when `spec.jobs.resources` is unset | requests | `cpu=250m`, `memory=2Gi`, `ephemeral-storage=1Gi` |
 | main (`source`), when `spec.jobs.resources` is unset | limits | `memory=2Gi`, and no CPU limit |
+| pod volumes, always | `emptyDir.sizeLimit` | `work` 8Gi, `tmp` 1Gi, `runner` 128Mi |
 
 The main container has no default CPU limit because throttling a slow apply
 is worse than a slow apply. The memory request equals the limit, so the pod

@@ -81,6 +81,7 @@ yet. In the `Ready` summary an absent input counts as `Unknown`, except
 | [`OutputsValid`](#outputsvalid) | All three | Normal | The module's outputs satisfy the contract. |
 | [`InfrastructureHealthy`](#infrastructurehealthy) | All three | Normal | The health the module reports. |
 | [`InputsApplied`](#inputsapplied) | All three | Normal | The current inputs are what the infrastructure was last applied with. Never feeds `Ready`. |
+| [`Reconciling`](#reconciling) | All three | Negative | The current inputs wait to be applied: what kstatus reads as in progress. Never feeds `Ready`. |
 | [`DriftJobSucceeded`](#driftjobsucceeded) | All three | Normal | Outcome of the newest refresh or drift Job. |
 | [`DriftDetected`](#driftdetected) | All three | Negative | The last drift check found differences. |
 | [`DeletionBlocked`](#deletionblocked) | `TerraformCluster` | Negative | A deleting cluster waits for its machines and pools. |
@@ -332,7 +333,23 @@ wide` shows it as a column.
 | `False` | `AwaitingApproval` | A `TerraformPlan` waits for its approval. |
 | `False` | `ApplyRunning` | An apply Job is active. |
 | `False` | `InputsApplyFailed` | The last apply failed and none has succeeded since. |
-| `Unknown` | `InputsUnavailable` | The current inputs cannot be built (a dependency or the variables gate them), so they cannot be compared with the applied ones. |
+| `Unknown` | `InputsUnavailable` | The current inputs cannot be built (a dependency or the variables gate them), so they cannot be compared with the applied ones; or an apply ended and the state is held (lost, unreadable, unconfirmed or retained), so it was not read: the message names the `StateReadable` reason. |
+
+## Reconciling
+
+Carried by all three. Polarity: negative (abnormal-true, the kstatus
+convention). Never feeds `Ready`.
+
+kstatus, and with it Flux's `wait` and Argo CD's health, reads
+`Reconciling=True` as in progress. Without it, `Ready=True` and an
+`observedGeneration` equal to `generation` would report an edit as done while
+it waits for its approval or its apply. It follows `InputsApplied` on every
+pass that sets that.
+
+| Status | Reason | Meaning |
+| --- | --- | --- |
+| `True` | `InputsNotApplied` | `InputsApplied` is `False` with `ApplyPending`, `AwaitingApproval` or `ApplyRunning`; the message names which. |
+| `False` | `Reconciled` | Nothing waits to be applied. A failed apply is `False` too: `InputsApplied` reports it, and `True` would read as in progress forever. |
 
 ## DriftJobSucceeded
 

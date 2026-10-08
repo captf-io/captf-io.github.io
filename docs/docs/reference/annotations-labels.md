@@ -24,6 +24,7 @@ page lists all of them, grouped by who uses them.
 | --- | --- | --- | --- |
 | `captf.io/restore-state` | `TerraformCluster`, `TerraformMachine`, `TerraformMachinePool` | Serial from `status.stateBackups` | Pushes that backup back as the state |
 | `captf.io/confirm-no-resources` | `TerraformCluster`, `TerraformMachine`, `TerraformMachinePool` | The Job name from the `ApplyOutcomeUnknown` message | Confirms an unconfirmed apply created nothing, releasing the hold |
+| `captf.io/destroy-image` | `TerraformCluster`, `TerraformMachine`, `TerraformMachinePool` | A module image reference | Lets a destroy run that image once every image of the release that applied fails to pull as missing. Set it only to an image that can destroy what the recorded one created |
 | `captf.io/variables` | A `ConfigMap` or `Secret` | `true` | Allows it as a `variablesFrom` source |
 | `captf.io/runner` | A `ServiceAccount` | `true` | Allows it as a custom runner account |
 
@@ -211,14 +212,14 @@ apply. Unlike `status`, these annotations move with the Secrets.
 | --- | --- | --- | --- |
 | `captf.io/image` | annotation | Durable inputs Secret, applied Secret, per-run Secret | `spec.source.image` of that attempt or apply |
 | `captf.io/inputs-hash` | annotation | Durable inputs Secret, applied Secret, per-run Secret (and the state Secret and Jobs) | The inputs hash the files were rendered with |
-| `captf.io/unpullable-images` | annotation | Durable inputs Secret | JSON list (at most 3, oldest first) of image references a destroy, refresh, drift or restore Job could not pull. The next such Job skips them. A successful apply removes it |
+| `captf.io/unpullable-images` | annotation | Durable inputs Secret | JSON list (at most 4, oldest first) of `{"ref", "at"}` entries: image references the registry reported missing to a destroy, refresh, drift or restore Job, and when. The next such Job skips an entry for an hour after it was recorded. A successful apply removes it |
 | `captf.io/job` | annotation | Durable inputs Secret, applied Secret | The apply Job the record belongs to |
 | `captf.io/image-digest` | annotation | Applied Secret only | The digest the image resolved to in the pod of the last successful apply. It always pairs with the applied files; the durable Secret no longer carries it |
-| `captf.io/may-have-applied` | annotation | Durable inputs Secret | `true` when the newest apply may have run its apply step: it newly failed after the step may have run (the result lists it, or there is no result and the runner started, or the pod is gone), or its Job vanished. The next attempt write removes it, and so does a successful restore. A destroy then renders this record |
+| `captf.io/may-have-applied` | annotation | Durable inputs Secret | `true` when an apply since the last successful one may have run its apply step: it failed after the step may have run (the result lists it, or there is no result and the runner started, or its pod is gone and it changed the state lock), or its Job vanished. A retry keeps it; a successful apply or restore removes it. A destroy then renders this record, and with no state it holds the object like `captf.io/unconfirmed-apply` |
 | `captf.io/identity` | annotation | Durable inputs Secret, applied Secret, per-run Secret, identity mirror | The `TerraformClusterIdentity` the credentials came from, or the Secret's name when `captf.io/identity-kind` is `Secret` |
 | `captf.io/identity-kind` | annotation | Durable inputs Secret, applied Secret, per-run Secret | `Secret` when the credentials came from a namespace-local Secret (`identityRef.kind: Secret`); absent for a `TerraformClusterIdentity`. Pins the kind with the name, so an immutable kind's destroy keeps the same credentials |
 | `captf.io/applied` | annotation | Durable inputs Secret | `true` once an apply succeeded or a state with an inputs hash was read, so a later missing state reads as lost, not never written |
-| `captf.io/unconfirmed-apply` | annotation | Durable inputs Secret of any kind | An apply Job whose outcome is unknown: it vanished while it ran, or it newly failed with no runner result after its runner started (or its pod is gone, for example an OOM or node loss). It may have applied part of its change, so an apply stays due, and is guarded, until one started after it succeeds; with no state and no earlier apply it holds the object at `StateReadable=False`/`ApplyOutcomeUnknown`. The old name `captf.io/interrupted-apply` is not read |
+| `captf.io/unconfirmed-apply` | annotation | Durable inputs Secret of any kind | An apply Job whose outcome is unknown: it vanished while it ran, or it newly failed with no runner result after its runner started (or its pod is gone, for example an OOM or node loss, and it changed the state lock: a Job that never ran is not recorded). It may have applied part of its change, so an apply stays due, and is guarded, until one started after it succeeds; with no state and no earlier apply it holds the object at `StateReadable=False`/`ApplyOutcomeUnknown`. The old name `captf.io/interrupted-apply` is not read |
 | `captf.io/pending-cluster-outputs` | annotation | A pool's durable inputs Secret | A change of the cluster's exports whose pool apply was blocked before a destructive plan, as JSON. The pool keeps applying the exports of its last successful apply until you approve its `TerraformPlan` |
 | `captf.io/partial-cluster-outputs` | annotation | A pool's durable inputs Secret | A change of the cluster's exports whose pool apply failed, so the state may hold part of it, as JSON. Every apply is guarded until one succeeds |
 | `captf.io/applied-cluster-outputs-hash` | annotation | A pool's durable inputs Secret | The hash of the cluster exports the last successful pool apply rendered. A hash, never an exported value |
@@ -242,6 +243,7 @@ apply. Unlike `status`, these annotations move with the Secrets.
 | `captf.io/after-interrupted-apply` | annotation | Job | The unconfirmed apply Job that this apply started after. Its success removes the `captf.io/unconfirmed-apply` record |
 | `captf.io/image-fallbacks` | annotation | Destroy, refresh, drift and restore Job | JSON list of the images the Job falls back to, in order, if its own image does not pull. Absent on the last candidate |
 | `captf.io/restore-serial` | annotation | Restore Job | The backup serial the Job pushes |
+| `captf.io/state-lock-version` | annotation | Apply Job | The state lock Lease's `resourceVersion` when the Job was created, or `none`. A Job that ended with neither a pod nor a result and left the Lease as recorded never reached its runtime, so it created nothing |
 | `captf.io/approval-hash` | annotation | Pool apply Job | The approval hash of a pool apply guarded for a change of the cluster's exports: the `spec.inputsHash` of the `ExportsChange` `TerraformPlan`, and the value of `--allow-deletes-hash` |
 | `captf.io/cluster-outputs-hash` | annotation | Pool apply Job | The hash of the cluster exports the apply renders |
 | `captf.io/held-cluster-outputs` | annotation | Pool apply Job | That the apply rendered the exports of the last successful apply while a change waited for approval, so its success does not count as applying that change |
@@ -257,6 +259,16 @@ cleaned up its Secrets.
 | `terraformcluster.infrastructure.cluster.x-k8s.io` | `TerraformCluster` | The cluster's Terraform-managed resources |
 | `terraformmachine.infrastructure.cluster.x-k8s.io` | `TerraformMachine` | The machine's Terraform-managed resources |
 | `terraformmachinepool.infrastructure.cluster.x-k8s.io` | `TerraformMachinePool` | The pool's Terraform-managed resources |
+
+CAPTF also puts `captf.io/state-protection` on the Secrets it cannot
+rebuild: the base state Secret, every state backup chunk, and the durable
+and applied inputs Secrets. They are owner-referenced to their object, and
+the object's finalizer does not keep the garbage collector from deleting
+them in a foreground cascading deletion; this finalizer does. CAPTF removes
+it before each delete of its own (cleanup after a destroy, backup pruning)
+and from the Secrets `deletionPolicy: Retain` keeps, unless the Secret is
+already being deleted. Terraform's `-part-N` state chunks do not carry it:
+the backend deletes the surplus ones itself.
 
 `TerraformClusterIdentity` and the `*Template` kinds have no finalizer.
 Nothing external depends on an identity directly, so a delete webhook
@@ -279,6 +291,7 @@ as noted.
 | `cluster.x-k8s.io/remediate-machine` | annotation | `Machine` | Sets it with `captf.io/remediation-requested` when health sampling finds an unhealthy instance, and removes it once the instance reads `Healthy` and only if CAPTF set it. Cluster API then remediates the `Machine` |
 | `cluster.x-k8s.io/managed-by` | annotation | `TerraformCluster`, and the machines and pools of its Cluster | Marks the object as externally managed: a live one is skipped untouched. A deleting one has only CAPTF's finalizer removed (`ExternallyManagedReleased`); before, it hung forever. State, Secrets and infrastructure are left to the external manager. |
 | `cluster.x-k8s.io/replicas-managed-by` | annotation | `MachinePool` | Sets it to `captf` on an autoscaled pool, so Cluster API stops treating `spec.replicas` as authoritative. Removes only a `captf` value. A foreign value (anything but absent, `false` or `captf`) is left alone: CAPTF stops writing replicas back and renders `spec.replicas` as is (1 if unset) to the module |
+| `captf.io/replicas-written` | annotation | `MachinePool` | The `spec.replicas` CAPTF last wrote back on an autoscaled pool. A `spec.replicas` that differs from it was set by another writer, which the next write-back reverts with a `ReplicasOverridden` Warning. Removed with CAPTF's `replicas-managed-by` |
 | `cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size` | annotation | `MachinePool` | You set it. The pool's minimum replica count |
 | `cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size` | annotation | `MachinePool` | You set it. The pool's maximum replica count |
 | `cluster.x-k8s.io/cloned-from-name` | annotation | `Terraform*` objects | Reads it as the `captf.io/template` tag. Cluster API sets it when it clones from a template |

@@ -62,7 +62,7 @@ by chunk index, and concatenates their payloads before decompressing.
 [State Storage: Terraform and OpenTofu](secret-management/runtimes.md)
 compares the two backends and what each does at its limit.
 
-CAPTF caps what it is willing to read: at most 32 chunks and 64 MiB of
+CAPTF caps what it is willing to read: at most 32 chunks and 16 MiB of
 decompressed state. Real state compresses 10-20x, so these limits are far
 beyond any plausible cluster or machine state; a state that exceeds them,
 or whose chunk set is incomplete, duplicated or names an unexpected

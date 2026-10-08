@@ -168,6 +168,16 @@ them. Whoever holds `patch` on a `TerraformCluster` can edit its spec, set
 created approved (`clusterctl move` creates plans again). Grant it only to the
 manager and the identity that runs `clusterctl move`.
 
+An approval must name its approver: `spec.approvedBy` is the requesting
+user's name. The webhook enforces that, and so does the
+`ValidatingAdmissionPolicy` `captf-plan-approval` the components ship, which
+the API server evaluates on its own. With the manager down and its
+`ValidatingWebhookConfiguration` removed, nobody can approve a plan in
+someone else's name. The rules that only the manager may change a plan's
+phase label, a machine's `providerID`, or a pool's `providerID` and
+`providerIDList` stay in the webhook: a policy expression cannot follow the
+namespace `clusterctl` installs the manager into.
+
 The pattern for a tenant, from [Operating the
 gates](../concepts/approvals/operating.md#who-can-approve):
 

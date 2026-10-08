@@ -19,7 +19,24 @@ compatibility guarantee (see [`README.md`](README.md#versioning)
 
 ## Unreleased
 
+### Changed
+
+- `health.message` is cut to 1 KiB and `health.reasons` to 16 entries of
+  128 bytes in the `InfrastructureHealthy` condition message: an unbounded
+  one could exceed the API's 32 KiB condition limit and fail every status
+  write of the object (see [`common.md`](common.md)).
+- A failed apply or destroy that could not save its state (Terraform's
+  `errored.tfstate`) has it pushed to the backend by the runner before the
+  Job ends.
+
 ### Added
+
+- The `Reconciling` condition (`InputsNotApplied` | `Reconciled`) on
+  `TerraformCluster`, `TerraformMachine` and `TerraformMachinePool`, the
+  kstatus convention for "in progress" while the current inputs wait to be
+  applied.
+- The `captf.io/destroy-image` annotation, the only way a destroy runs an
+  image of another release than the one that applied.
 
 - `TerraformPlan`, a namespaced kind the controller creates for a plan that
   waits for an approval (additive within v1alpha1; the module contract is

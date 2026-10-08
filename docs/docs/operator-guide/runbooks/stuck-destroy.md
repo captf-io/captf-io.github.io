@@ -102,7 +102,12 @@ A deleting object needs credentials only when it runs a Job. With the
 namespace terminating, an object that never applied finishes at once, and
 a held one can be retained. A destroy or restore waiting on credentials
 shows the `Deleting` condition message `The <op> Job waits for its
-credentials: …` and retries.
+credentials: …` and retries. One whose credentials are ready still cannot
+create its run Lease or Job there: `Deleting` says `Namespace <ns> is
+terminating, so the destroy Job cannot be created`, and the object is
+retried every 30 seconds without an error. The namespace's deletion removes
+the state Secrets too, so set `spec.deletionPolicy: Retain` (after copying the
+state out) or stop the namespace deletion if the destroy must run.
 
 !!! info "Before you begin"
 

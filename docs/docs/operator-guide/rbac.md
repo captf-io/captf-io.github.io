@@ -46,10 +46,10 @@ namespace, is bound to one ClusterRole scoped to exactly what reconciling
 | `secrets` | get, list, watch, create, update, patch, delete | Reads and writes every Secret in [Secrets](secrets.md) |
 | `namespaces` | get, list, watch | Evaluates a `TerraformClusterIdentity`'s `allowedNamespaces` selector |
 | `configmaps` | get, list, watch | Reads `spec.variablesFrom` ConfigMap sources labeled `captf.io/variables=true` |
-| `serviceaccounts` | get, list, watch, create, delete | Creates the default runner ServiceAccount, reads any override, and the [orphan sweep](#the-orphan-sweep) deletes unused ones |
-| `rolebindings` | get, list, watch, create, update, delete | Manages the per-namespace runner RoleBinding below |
+| `serviceaccounts` | get, list, create, delete | Creates the default runner ServiceAccount, reads any override, and the [orphan sweep](#the-orphan-sweep) deletes unused ones |
+| `rolebindings` | get, list, create, update, delete | Manages the per-namespace runner RoleBinding below |
 | `clusterroles`, resource name `captf-runner` | bind | Lets the manager bind that ClusterRole without holding its permissions itself |
-| `leases` | get, list, watch, create, update, delete | Its own run and cluster-operation-gate leases, and cleaning up the backend's state lock lease on delete |
+| `leases` | get, list, create, update, delete | Its own run and cluster-operation-gate leases, and cleaning up the backend's state lock lease on delete |
 | `jobs` | get, list, watch, create, patch, delete | Creates, watches and prunes the runner Jobs |
 | `jobs/finalizers` | update | Granted alongside `jobs`; the controller itself never sets a finalizer on a Job |
 | `pods` | get, list | Reads a Job's pod status for its outcome and the image digest it ran (no `watch`) |

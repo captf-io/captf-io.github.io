@@ -62,10 +62,10 @@ setting changes it:
   [Chunking and compression](state.md#chunking-and-compression).
 
 The backend sets no upper bound on the number of pieces. CAPTF does: its
-reader accepts at most 32 Secrets and 64 MiB of decompressed state (see
+reader accepts at most 32 Secrets and 16 MiB of decompressed state (see
 [Chunking and size caps](../state.md#chunking-and-size-caps)), and reports
 anything larger as `StateCorrupt`. With real state compressing 10-20x, the
-64 MiB decompressed cap is the one a Terraform state reaches first.
+16 MiB decompressed cap is the one a Terraform state reaches first.
 
 ## OpenTofu: one Secret
 
@@ -100,7 +100,7 @@ server's own validation error.
 | Chunks state | Yes, since 1.6.0 | No (through 1.12.7) |
 | Secrets per state | 1 + one `-part-N` per further MiB, compressed | Always 1 |
 | Compressed-size ceiling | None in the backend; CAPTF reads up to 32 Secrets | 1 MiB |
-| Decompressed ceiling under CAPTF | 64 MiB | About 1 MiB times the compression ratio |
+| Decompressed ceiling under CAPTF | 16 MiB | About 1 MiB times the compression ratio |
 | At the ceiling | CAPTF reports `StateCorrupt` and does not read the state | The apply fails to save state (see above) |
 | `CAPTFStateNearSecretLimit` means | The state is about to need another Secret | The state is about to stop fitting |
 | Base images | `terraform-base` (Terraform 1.16.5) | `opentofu-base` (OpenTofu 1.12.7) |

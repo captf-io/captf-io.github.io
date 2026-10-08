@@ -56,7 +56,7 @@ applied.
 | `StateCorrupt` | The payload cannot be decoded, exceeds the reader's caps, or has an unsupported version | Restore a backup taken before it broke |
 | `StateEncrypted` | The state carries OpenTofu's client-side encryption envelope; CAPTF cannot read it | No backup exists (an unreadable state is never backed up) |
 | `StateInconsistent` | The chunks do not form one complete state | A missing or duplicated chunk, or a stray Secret in the set |
-| `ApplyOutcomeUnknown` | No state, the object never applied before, and an apply Job ended without a result or vanished | The apply may have created resources before any state was written; see [Apply outcome unknown](#apply-outcome-unknown) |
+| `ApplyOutcomeUnknown` | No state, the object never applied before, and an apply Job ended without a result, vanished, or failed after its apply step without saving a state | The apply may have created resources before any state was written; see [Apply outcome unknown](#apply-outcome-unknown) |
 
 The condition message adds how to leave the hold: the restore annotation,
 or `spec.deletionPolicy: Retain`. Each reason's cause and
@@ -71,14 +71,23 @@ fails. See [Stale State Lock](../../operator-guide/runbooks/stale-lock.md).
 `StateReadable=False`/`ApplyOutcomeUnknown` is a hold for an object with no
 state that has not applied before (no applied marker, no applied record, no
 backup, not provisioned), when an apply Job ended without a runner result
-after its runner started (an OOM kill, a node loss), or disappeared while it
-ran. That Job may have created resources before any state was written, so a
-second first apply would create a second set. The controller records the Job
-as `captf.io/unconfirmed-apply` on the durable inputs Secret, for every kind
-including immutable machines. No apply runs, and a deleting object keeps its
-finalizer. The message names the Job and the exits. Entering the state emits a
-`StateLost` Warning event. An object that applied before gets `StateLost`
-instead, which takes precedence.
+after its runner started (an OOM kill, a node loss), disappeared while it
+ran, or failed after its apply step without saving a state (the final state
+write to the backend failed; the runner pushes Terraform's `errored.tfstate`
+first, so this is rare). That Job may have created resources before any state
+was written, so a second first apply would create a second set. The
+controller records the Job as `captf.io/unconfirmed-apply`, or keeps the
+attempt record's `captf.io/may-have-applied` mark, on the durable inputs
+Secret, for every kind including immutable machines. No apply runs, and a
+deleting object keeps its finalizer. The message names the Job and the exits.
+Entering the state emits a `StateLost` Warning event. An object that applied
+before gets `StateLost` instead, which takes precedence.
+
+A Job that never ran is not held: one whose pod never started (refused by a
+quota, unschedulable until its deadline) and that left the state lock as it
+found it (`captf.io/state-lock-version`) changed nothing, and the next apply
+starts. An object whose owner reference is gone also waits for bookkeeping to
+read its last apply before its finalizer can come off.
 
 The exits:
 

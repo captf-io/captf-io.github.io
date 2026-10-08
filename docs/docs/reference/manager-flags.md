@@ -113,6 +113,7 @@ reconciles at once.
 | `--namespace` | `string` | empty | Restricts the manager to one namespace. Empty watches all, which is what `clusterctl init` installs. A manager watches one namespace or all of them, never a chosen set. `TerraformClusterIdentity` is cluster-scoped and is watched everywhere regardless. |
 | `--sync-period` | `duration` | `10m` | The minimum interval at which the informers re-enqueue every cached object, on top of event-driven reconciles. Also the interval of the orphan sweep. It reads the local cache only and does not set the drift or health cadence. Must be positive. |
 | `--terraformcluster-concurrency` | `int` | `10` | How many `TerraformCluster` objects reconcile at once. Must be at least 1. |
+| `--terraformclusteridentity-concurrency` | `int` | `4` | How many `TerraformClusterIdentity` objects reconcile at once. Each reads its source Secret live, bounded at 15 seconds. Must be at least 1. |
 | `--terraformmachine-concurrency` | `int` | `10` | How many `TerraformMachine` objects reconcile at once. Must be at least 1. |
 | `--terraformmachinepool-concurrency` | `int` | `10` | How many `TerraformMachinePool` objects reconcile at once. Must be at least 1. |
 | `--terraformmachinetemplate-concurrency` | `int` | `10` | How many `TerraformMachineTemplate` objects reconcile at once. Must be at least 1. |

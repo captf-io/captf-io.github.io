@@ -108,11 +108,36 @@ applies decides the pass.
 | A `TerraformCluster` with machines or pools left | `DeletionBlocked=True`/`DependentsExist`, no destroy yet | [Order](order.md#the-cluster-waits-for-its-machines) |
 | No state, and the object never applied | The finalizer comes off at once | [Held](held.md#ever-applied) |
 | No state, and the object applied before | Held: `StateReadable=False`/`StateLost` | [Held](held.md) |
+| No state, and an apply may have created resources without saving any | Held: `StateReadable=False`/`ApplyOutcomeUnknown` until `captf.io/confirm-no-resources` | [Held](held.md) |
 | State exists but cannot be read | Held: `StateCorrupt`, `StateEncrypted` or `StateInconsistent` | [Held](held.md) |
 | `spec.deletionPolicy: Retain` | No destroy: the state, backups and inputs Secrets are kept, and the finalizer comes off | [Retain](retain.md) |
 | Readable state | A destroy Job runs; no gate or approval applies | [Destroy](destroy-job.md) |
 | The destroy succeeded | Cleanup runs and the finalizer comes off | [Cleanup](cleanup.md) |
 | The destroy failed or cannot start | Retried with backoff, forever; `Retain` releases it | [Held](held.md#retain) |
+
+## Foreground deletion
+
+An object's state Secrets, state backups and inputs Secrets carry an owner
+reference to it, so they go with the object. The object's finalizer keeps
+the object until its destroy is done, but not those dependents: with
+`propagationPolicy: Foreground` (`kubectl delete --cascade=foreground`, Argo
+CD's default prune, a `Cluster` deleted that way), the garbage collector
+deletes every dependent at once. Two things keep that from losing the state:
+
+- The Secrets CAPTF cannot rebuild (the base state Secret, every backup chunk,
+  both inputs records) carry the finalizer `captf.io/state-protection`. A
+  cascading delete only marks them, and their data stays readable until
+  CAPTF's own cleanup removes them.
+- On its first pass, CAPTF removes the object's `foregroundDeletion`
+  finalizer (`ForegroundDeletionConverted`), turning the deletion into a
+  background one: the dependents then go only after the object, after the
+  destroy.
+
+What the collector deleted before that pass is lost if it was not protected:
+a running Job, and the `-part-N` chunks of a large state, which the backend
+deletes itself when a state shrinks and so cannot carry the finalizer. A
+state left without them reads as inconsistent and holds the deletion for a
+[restore](../../operator-guide/runbooks/state-restore.md) from a backup.
 
 ## What the controller never does
 

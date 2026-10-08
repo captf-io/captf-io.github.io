@@ -94,7 +94,7 @@ each failure maps to a `StateReadable` reason:
 2. It orders the base Secret and the `-part-N` chunks. A gap, a duplicate,
    an unexpected name or a base Secret without the `tfstate` key is
    `StateInconsistent`.
-3. It refuses more than 32 Secrets, or more than 64 MiB once decompressed:
+3. It refuses more than 32 Secrets, or more than 16 MiB once decompressed:
    `StateCorrupt`. The decompression stops at the first gzip member, so a
    trailing chunk left behind when the state shrank is ignored rather than
    misread.

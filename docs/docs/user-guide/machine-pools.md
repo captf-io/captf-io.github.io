@@ -218,7 +218,10 @@ See [`AutoscalingActive`](../reference/conditions.md#autoscalingactive).
     It requires MachinePool Machines, which CAPTF does not implement (see
     [Pool or MachineDeployment](#pool-or-machinedeployment)). Running it
     against a CAPTF pool is unsupported, since its `spec.replicas` patches
-    would be overwritten by the write-back above. Its cloud providers work:
+    would be overwritten by the write-back above. CAPTF records what it last
+    wrote (`captf.io/replicas-written`), and when it reverts a
+    `spec.replicas` someone else set (this provider, a `kubectl scale`), it
+    says so with a `ReplicasOverridden` Warning. Its cloud providers work:
     see the next section.
 
 ## Autoscale with the Kubernetes Cluster Autoscaler

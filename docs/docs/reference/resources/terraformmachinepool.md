@@ -146,7 +146,7 @@ them, and a template accepts but does not use them.
 | Field | Type | Description |
 | --- | --- | --- |
 | `spec.providerID` | string | The scaling group's provider ID, from the module's `provider_id` output. Optional in the Cluster API `InfraMachinePool` contract and may stay unset for modules that have no group object. **Optional.** **Mutable.** **Range:** 1 to 512 characters. |
-| `spec.providerIDList` | list of strings | The provider IDs of every non-terminated member, from the module's `provider_id_list` output, sorted and deduplicated. Each entry must equal the corresponding Node's `spec.providerID`. Cluster API copies the list to `MachinePool.spec.providerIDList`, and a Node stays unschedulable until its ID is in it. **Optional.** **Mutable.** **Range:** at most 10000 entries, each 1 to 512 characters. |
+| `spec.providerIDList` | list of strings | The provider IDs of every non-terminated member, from the module's `provider_id_list` output, sorted and deduplicated. Each entry must equal the corresponding Node's `spec.providerID`. Cluster API copies the list to `MachinePool.spec.providerIDList`, and a Node stays unschedulable until its ID is in it. **Optional.** **Mutable** by the manager only: the webhook refuses another user's change, since the list binds Nodes to the pool. **Range:** at most 10000 entries, each 1 to 512 characters. |
 
 The list changes whenever the group's membership does, which is why neither
 field is immutable.

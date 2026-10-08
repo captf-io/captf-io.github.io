@@ -143,21 +143,35 @@ reconcile retry — no manual retrigger is needed.
 
 Apply and plan run `spec.source.image`. The other operations run the **pinned
 digest** of the record they render, and a registry can garbage collect a
-digest that no tag points to. So when a destroy, refresh, drift or restore Job
-has had no ready pod for 2 minutes and its `source` container is stuck in
-`ErrImagePull`, `ImagePullBackOff` or `InvalidImageName`, CAPTF falls back:
+digest that no tag points to. So when a destroy, refresh, drift or restore Job's
+`source` container has been pulling for 2 minutes (counted from when its pod
+was initialized) and the registry reports the image **missing** (the kubelet's
+message says not found, manifest unknown or name unknown, or the reason is
+`InvalidImageName`), CAPTF falls back:
 
 1. It tries the images in order: the pinned `repo@digest`, then the image tag
-   the record ran (`captf.io/image`), then `spec.source.image`.
+   the record ran (`captf.io/image`), then `spec.source.image`. A **destroy**
+   stops at the release that applied: only references to the recorded image's
+   repository and tag. Run with other module code, a destroy may fail on the
+   state, or succeed while forgetting resources that code no longer declares,
+   after which the state is deleted. To destroy with another image anyway,
+   annotate the object `captf.io/destroy-image=<image>`; it is tried last.
 2. It records the image that failed in the `captf.io/unpullable-images`
-   annotation on the durable inputs Secret (`captf-inputs-*`, at most 3
-   entries), clears `status.activeJob`, deletes the stuck Job and emits the
-   Warning `ImagePullFallback`: "Could not pull X (reason): deleted destroy Job
-   J; retrying destroy with Y". The next pass starts the operation again with
-   the same Job name on the next image. A deleted Job counts as no failure, so
-   there is no backoff. The new Job carries `captf.io/image-fallbacks` with
-   the images still to try, and its `JobCreated` note says it falls back.
-3. A successful apply re-pins the digest and clears the list.
+   annotation on the durable inputs Secret (`captf-inputs-*`, at most 4
+   entries, each passed over for an hour), clears `status.activeJob`, deletes
+   the stuck Job and emits the Warning `ImagePullFallback`: "Could not pull X
+   (reason): deleted destroy Job J; retrying destroy with Y". The next pass
+   starts the operation again with the same Job name on the next image. A
+   deleted Job counts as no failure, so there is no backoff. The new Job
+   carries `captf.io/image-fallbacks` with the images still to try, and its
+   `JobCreated` note says it falls back.
+3. A successful apply re-pins the digest and clears the list; an entry also
+   lapses after an hour, so a pushed-back image is tried again.
+
+A pull that fails any other way (an expired registry token, `401`, `403`,
+`429`, a network or DNS error) falls back to nothing: the image may well
+exist, and another image is no fix. The Job is left to the kubelet's retries
+and the operation's condition says `ImagePullFailed`, quoting the kubelet.
 
 On the **last** image (or with no durable inputs Secret to record on), the Job
 is left to run to its deadline and the operation's condition is set to
@@ -168,7 +182,8 @@ restore. The message names the image and the exits:
 - push the image back, or let the Job's pull secrets reach it;
 - for a mutable kind, set `spec.source.image` to an image that can be pulled
   (it is honored live, also for the running Job's fallback decision);
-- for a destroy, set `spec.deletionPolicy: Retain`.
+- for a destroy, annotate `captf.io/destroy-image` with an image that can
+  destroy what the recorded one created, or set `spec.deletionPolicy: Retain`.
 
 An init container (the runner image) that cannot pull never falls back. To keep
 digests pullable, exclude them from the registry's lifecycle rules.

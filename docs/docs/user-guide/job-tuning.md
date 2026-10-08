@@ -38,9 +38,11 @@ Job's exact shape (containers, mounts, args) see
 ## Resources
 
 `spec.jobs.resources` sets the main container's `resources` as a whole;
-when unset the controller applies its own default (250m CPU / 2Gi memory
-requested, 2Gi memory limit, deliberately no CPU limit — throttling a slow
-apply is worse than a slow apply). Raise it when a module pulls large
+when unset the controller applies its own default (250m CPU / 2Gi memory /
+1Gi ephemeral storage requested, 2Gi memory limit, deliberately no CPU
+limit — throttling a slow apply is worse than a slow apply). The pod's
+scratch volumes are bounded whatever you set: `work`, which holds
+`.terraform` and its providers, at 8Gi, and `tmp` at 1Gi. Raise it when a module pulls large
 provider plugins or holds a large plan in memory; the init container that
 copies the runner binary is not configurable, since it never varies with
 the module. See
