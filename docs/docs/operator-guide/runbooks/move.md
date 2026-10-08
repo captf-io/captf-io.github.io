@@ -45,9 +45,10 @@ again on its own):
     all — its per-run inputs Secret is missing and every pod it created is
     still `Pending` a minute after the Job was created — in which case the
     paused reconcile deletes it so the next reconcile starts it again.
-    The same applies to a destroy, refresh, drift or restore Job whose module
-    image cannot be pulled for 2 minutes: it is deleted so it cannot hold
-    `block-move` until its deadline. With another image left, that image is
+    The same applies to any Job whose module image cannot be pulled for 2
+    minutes: it is deleted so it cannot hold `block-move` until its
+    deadline. An apply or plan never falls back to another image. With
+    another image left, that image is
     recorded (`captf.io/unpullable-images`) and `ImagePullFallback` says the
     next image runs once the object is unpaused. On the last image, the
     operation's condition shows `ImagePullFailed` ("…it was deleted, as the

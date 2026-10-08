@@ -242,6 +242,7 @@ apply. Unlike `status`, these annotations move with the Secrets.
 | `captf.io/after-failed-apply` | annotation | Job | That the apply started while the newest apply had failed, so an earlier failure still counts and the apply waits for approval instead of being dropped |
 | `captf.io/after-interrupted-apply` | annotation | Job | The unconfirmed apply Job that this apply started after. Its success removes the `captf.io/unconfirmed-apply` record |
 | `captf.io/image-fallbacks` | annotation | Destroy, refresh, drift and restore Job | JSON list of the images the Job falls back to, in order, if its own image does not pull. Absent on the last candidate |
+| `captf.io/image-pull-failed` | annotation | Job | The kubelet's reason and message for a module image that has not pulled for 2 minutes, on a Job left to its deadline. Its outcome is then `ImagePullFailed`, not `JobDeadlineExceeded`, after the deadline deletes the pod. Removed if the pod becomes ready |
 | `captf.io/restore-serial` | annotation | Restore Job | The backup serial the Job pushes |
 | `captf.io/state-lock-version` | annotation | Apply Job | The state lock Lease's `resourceVersion` when the Job was created, or `none`. A Job that ended with neither a pod nor a result and left the Lease as recorded never reached its runtime, so it created nothing |
 | `captf.io/approval-hash` | annotation | Pool apply Job | The approval hash of a pool apply guarded for a change of the cluster's exports: the `spec.inputsHash` of the `ExportsChange` `TerraformPlan`, and the value of `--allow-deletes-hash` |

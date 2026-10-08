@@ -49,7 +49,7 @@ list of reasons each condition can carry. The ones that matter here:
 | Reason | What it means | Go to |
 | --- | --- | --- |
 | `ApplyFailed`, `DestroyFailed` or `DriftJobFailed` | A Job ran and its runtime failed partway through. `status.lastRun` carries the detail. | Step 3 |
-| `ImagePullFailed` | A container stayed in `ErrImagePull` or `ImagePullBackOff` until the Job's deadline. No step ever ran, so `status.lastRun` carries nothing useful. | [Image pull failures](#image-pull-failures) |
+| `ImagePullFailed` | A container stayed in `ErrImagePull` or `ImagePullBackOff`: the module image for 2 minutes while the Job still runs, or any image until the Job's deadline. No step ever ran, so `status.lastRun` carries nothing useful. | [Image pull failures](#image-pull-failures) |
 | `ImageInvalid` | The image does not follow the module contract. | [Image layout errors](#image-layout-errors) |
 | `JobDeadlineExceeded` | The Job's pod ran past `activeDeadlineSeconds` without finishing. | [Deadline exceeded](#deadline-exceeded) |
 | `DestructivePlanBlocked` or `PlanChanged` | Not a failure: an apply stopped on purpose, waiting for an approval, and does not count toward `CAPTFJobFailing`. | [Plan Approval](../../user-guide/plan-approval.md) |
@@ -116,17 +116,28 @@ even after the Job itself is pruned.
 ## Image pull failures
 
 `ImagePullFailed` means a container was stuck pulling its image — never that
-the module ran and failed. For an apply or plan it is reported at the Job's
-deadline; for a destroy, refresh, drift or restore it can appear earlier, once
-the last image CAPTF can try is stuck (see [Destroy, refresh, drift and
-restore](#destroy-refresh-drift-and-restore-fall-back-to-another-image)). Two images can be
-at fault:
+the module ran and failed. For an apply or plan, it is reported once the
+`source` container has been pulling for 2 minutes. The Job is not deleted:
+the kubelet keeps retrying until the Job's deadline, and no other image is
+tried, since an apply runs only `spec.source.image`. A paused object's Job
+is the exception: it is deleted so it cannot hold `clusterctl move`. For a
+destroy, refresh, drift or restore, it appears once the last image CAPTF can
+try is stuck (see [Destroy, refresh, drift and
+restore](#destroy-refresh-drift-and-restore-fall-back-to-another-image)).
+
+CAPTF records the kubelet's reason on a Job it leaves to its deadline, in the
+`captf.io/image-pull-failed` annotation. The deadline deletes the pod, and
+without the annotation the outcome would read `JobDeadlineExceeded`. A Job
+whose pod becomes ready after all loses the annotation.
+
+Two images can be at fault:
 
 - the `source` container's image, `spec.source.image` — check for a typo,
   a missing pull secret, or a tag that was deleted from the registry;
 - the runner init container's image, the manager's `--runner-image`
   (defaults to the manager's own image) — a cluster-wide problem, not
-  specific to this object.
+  specific to this object. CAPTF reports this one only from the pod, so
+  once the deadline has deleted the pod it reads `JobDeadlineExceeded`.
 
 ```sh
 kubectl get pods -n <ns> -l batch.kubernetes.io/job-name=<job-name>

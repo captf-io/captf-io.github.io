@@ -52,7 +52,10 @@ A deadline kill is a failure, with three condition reasons by op:
     [Retries](retries.md#counting-failures).
 
 An image that cannot be pulled also ends on the deadline, but its more
-specific reason, `ImagePullFailed`, is checked first.
+specific reason, `ImagePullFailed`, is checked first. CAPTF reads it from
+the pod. If the deadline has already deleted the pod, it reads the reason
+from the `captf.io/image-pull-failed` annotation, which it puts on a Job
+whose module image has not pulled for 2 minutes.
 
 !!! tip "Raise the deadline for a slow module"
 
